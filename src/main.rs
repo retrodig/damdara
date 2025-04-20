@@ -1,5 +1,6 @@
 mod constants;
 mod growth_type;
+mod string_utils;
 
 use growth_type::calculate_growth_type;
 use constants::status::get_status_by_level;
