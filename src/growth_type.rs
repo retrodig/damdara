@@ -7,9 +7,21 @@ pub fn calculate_growth_type(name: &str) -> u8 {
         char_to_value.insert(c, (i % 16) as u8);
     }
 
-    let sum: u32 = name.chars()
+    // 有効文字だけを抽出
+    let mut valid_chars: Vec<char> = name
+        .chars()
+        .filter(|c| char_to_value.contains_key(c))
+        .collect();
+
+    // 足りない分は空白で補完
+    while valid_chars.len() < NAME_MAX_LENGTH {
+        valid_chars.push('　');
+    }
+
+    let sum: u32 = valid_chars
+        .iter()
         .take(NAME_MAX_LENGTH)
-        .filter_map(|c| char_to_value.get(&c).copied())
+        .filter_map(|c| char_to_value.get(c).copied())
         .map(|v| v as u32)
         .sum();
 
@@ -41,20 +53,27 @@ mod tests {
 
     #[test]
     fn test_無効文字含む() {
-        // 文字「X」「Y」は kana_table に含まれない → 無視される
-        // か=15, な=14 → 15+14 = 29 → 29 % 16 = 13
-        assert_eq!(calculate_growth_type("かXなY"), 13);
+        // 有効: か=15, な=14 → 15+14=29
+        // 残り2文字分は空白（15）→ 合計 = 29 + 15 + 15 = 59 → %16 = 11
+        assert_eq!(calculate_growth_type("かXなY"), 11);
     }
 
     #[test]
-    fn test_空文字列() {
-        // 何も入力されない → 合計 0 → 0 % 16 = 0
-        assert_eq!(calculate_growth_type(""), 0);
+    fn test_１文字() {
+        // う = 12, 空白=15×3 → 合計 = 12 + 15*3 = 57 → %16 = 9
+        assert_eq!(calculate_growth_type("う"), 9);
     }
 
     #[test]
-    fn test_全角スペース() {
-        // 「　」＝全角スペース → 対応表では 15
-        assert_eq!(calculate_growth_type("　"), 15);
+    fn test_２文字() {
+        // ゆ=14, う=12, 空白=15×2 → 合計 = 14 + 12 + 15 + 15 = 56 → %16 = 8
+        assert_eq!(calculate_growth_type("ゆう"), 8);
     }
+
+    #[test]
+    fn test_３文字() {
+        // や=13, お=14, う=12, 空白=15 → 合計 = 13 + 14 + 12 + 15 = 54 → %16 = 6
+        assert_eq!(calculate_growth_type("やおう"), 6);
+    }
+
 }
