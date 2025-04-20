@@ -2,7 +2,7 @@ mod constants;
 mod growth_type;
 
 use growth_type::calculate_growth_type;
-use constants::get_status_by_level;
+use constants::status::get_status_by_level;
 
 fn main() {
     let name = "ゆうてい";

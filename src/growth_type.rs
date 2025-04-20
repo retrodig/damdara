@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::constants::{KANA_TABLE, NAME_MAX_LENGTH};
+use crate::constants::status::{KANA_TABLE, NAME_MAX_LENGTH};
 
 pub fn calculate_growth_type(name: &str) -> u8 {
     let mut char_to_value = HashMap::new();
