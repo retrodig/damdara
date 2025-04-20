@@ -59,19 +59,19 @@ mod tests {
     }
 
     #[test]
-    fn test_１文字() {
+    fn test_1_moji() {
         // う = 12, 空白=15×3 → 合計 = 12 + 15*3 = 57 → %16 = 9
         assert_eq!(calculate_growth_type("う"), 9);
     }
 
     #[test]
-    fn test_２文字() {
+    fn test_2_moji() {
         // ゆ=14, う=12, 空白=15×2 → 合計 = 14 + 12 + 15 + 15 = 56 → %16 = 8
         assert_eq!(calculate_growth_type("ゆう"), 8);
     }
 
     #[test]
-    fn test_３文字() {
+    fn test_3_moji() {
         // や=13, お=14, う=12, 空白=15 → 合計 = 13 + 14 + 12 + 15 = 54 → %16 = 6
         assert_eq!(calculate_growth_type("やおう"), 6);
     }
