@@ -1,5 +1,52 @@
 use std::collections::HashMap;
-use crate::constants::status::{KANA_TABLE, NAME_MAX_LENGTH};
+use crate::constants::text::{KANA_TABLE, NAME_MAX_LENGTH, DAKUTEN_PAIRS, HANDAKUTEN_PAIRS};
+
+pub fn filter_valid_chars(input: &str) -> String {
+    let valid_set: std::collections::HashSet<char> = KANA_TABLE.iter().copied().collect();
+
+    input.chars()
+        .filter(|c| valid_set.contains(c))
+        .collect()
+}
+
+pub fn build_dakuten_map() -> HashMap<char, (char, Option<char>)> {
+    let mut map = HashMap::new();
+
+    for &(voiced, base) in DAKUTEN_PAIRS {
+        map.insert(voiced, (base, Some('゛')));
+    }
+    for &(voiced, base) in HANDAKUTEN_PAIRS {
+        map.insert(voiced, (base, Some('゜')));
+    }
+    map
+}
+
+pub fn split_dakuten(input: &str) -> String {
+    let dakuten_map = build_dakuten_map();
+
+    let mut result = String::new();
+    for c in input.chars() {
+        if let Some((base, mark)) = dakuten_map.get(&c) {
+            result.push(*base);
+            if let Some(m) = mark {
+                result.push(*m);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
+pub fn normalize_to_4_chars(input: &str) -> String {
+    let mut chars: Vec<char> = input.chars().collect();
+    chars.truncate(NAME_MAX_LENGTH);
+
+    while chars.len() < NAME_MAX_LENGTH {
+        chars.push('　');
+    }
+    chars.into_iter().collect()
+}
 
 pub fn calculate_growth_type(name: &str) -> u8 {
     let mut char_to_value = HashMap::new();
@@ -7,21 +54,14 @@ pub fn calculate_growth_type(name: &str) -> u8 {
         char_to_value.insert(c, (i % 16) as u8);
     }
 
-    // 有効文字だけを抽出
-    let mut valid_chars: Vec<char> = name
+    // 無効文字を除去 → 濁音分解 → 4文字整形
+    let cleaned = filter_valid_chars(name);
+    let normalized = normalize_to_4_chars(&split_dakuten(&cleaned));
+
+    // 各文字を合計
+    let sum: u32 = normalized
         .chars()
-        .filter(|c| char_to_value.contains_key(c))
-        .collect();
-
-    // 足りない分は空白で補完
-    while valid_chars.len() < NAME_MAX_LENGTH {
-        valid_chars.push('　');
-    }
-
-    let sum: u32 = valid_chars
-        .iter()
-        .take(NAME_MAX_LENGTH)
-        .filter_map(|c| char_to_value.get(c).copied())
+        .filter_map(|c| char_to_value.get(&c).copied())
         .map(|v| v as u32)
         .sum();
 
@@ -76,4 +116,48 @@ mod tests {
         assert_eq!(calculate_growth_type("やおう"), 6);
     }
 
+    #[test]
+    fn test_split_dakuten_simple() {
+        assert_eq!(split_dakuten("だい"), "た゛い");
+        assert_eq!(split_dakuten("がぎぐげご"), "か゛き゛く゛け゛こ゛");
+        assert_eq!(split_dakuten("ぱぴぷぺぽ"), "は゜ひ゜ふ゜へ゜ほ゜");
+    }
+
+    #[test]
+    fn test_split_dakuten_mixed() {
+        assert_eq!(split_dakuten("だいがく"), "た゛いか゛く");
+        assert_eq!(split_dakuten("おはよう"), "おはよう"); // 濁点なし → そのまま
+        assert_eq!(split_dakuten("ばななとぱいん"), "は゛ななとは゜いん");
+    }
+
+    #[test]
+    fn test_split_dakuten_empty() {
+        assert_eq!(split_dakuten(""), "");
+    }
+
+    #[test]
+    fn test_exactly_4_chars() {
+        assert_eq!(normalize_to_4_chars("あいうえ"), "あいうえ");
+    }
+
+    #[test]
+    fn test_less_than_4_chars() {
+        assert_eq!(normalize_to_4_chars("あい"), "あい　　"); // 全角スペース2つ補完
+        assert_eq!(normalize_to_4_chars("た"), "た　　　"); // 全角スペース3つ補完
+        assert_eq!(normalize_to_4_chars(""), "　　　　");  // 全角スペース4つ補完
+    }
+
+    #[test]
+    fn test_more_than_4_chars() {
+        assert_eq!(normalize_to_4_chars("あいうえお"), "あいうえ");
+        assert_eq!(normalize_to_4_chars("だいがくせい"), "だいがく");
+    }
+
+    #[test]
+    fn test_combined_with_dakuten() {
+        // た゛い → 3文字（'た', '゛', 'い'）なので補完1文字必要
+        assert_eq!(normalize_to_4_chars("た゛い"), "た゛い　");
+        // た゛いた゛い → 6文字 → 先頭4文字のみ
+        assert_eq!(normalize_to_4_chars("た゛いた゛い"), "た゛いた");
+    }
 }
