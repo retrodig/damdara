@@ -1,4 +1,4 @@
-use crate::constants::text::DEFAULT_NAME;
+use crate::constants::text::{DEFAULT_NAME, PASSWORD_TABLE};
 use crate::string_utils::{
     build_kana_map, combine_bits, kana_index, normalize_to_4_chars, nth_char,
 };
@@ -352,6 +352,125 @@ impl SaveData {
             self.sum_item_index_binary(2, 1)?,                  // アイテム2 + 1
         ])
     }
+
+    pub fn build_password_bits(&self) -> Result<Vec<String>, String> {
+        let mut bits = self.build_password_base()?;
+        let checksum = calculate_crc_from_bits(&bits)?;
+        bits[0] = checksum; // 先頭に反映
+        Ok(bits)
+    }
+
+    pub fn build_password_bitstring(&self) -> Result<String, String> {
+        let bits = self.build_password_bits()?;
+        Ok(bits.concat())
+    }
+
+    pub fn to_password_string(&self) -> Result<String, String> {
+        let bitstring = self.build_password_bitstring()?; // Step3
+        let reordered = reorder_password_bits(&bitstring)?; // Step4
+        let kana_indices = apply_password_offsets(&reordered)?; // Step5
+        let password = indices_to_password_kana(&kana_indices)?; // Step6
+        Ok(password)
+    }
+}
+
+pub fn calculate_crc_from_bits(bits: &[String]) -> Result<String, String> {
+    if bits.len() != 15 {
+        return Err(format!(
+            "ビット列は15個必要です（実際は {} 個）",
+            bits.len()
+        ));
+    }
+
+    let mut crc: u16 = 0;
+    for i in 1..15 {
+        let mut octet =
+            u8::from_str_radix(&bits[i], 2).map_err(|_| format!("無効な2進数: {}", bits[i]))?;
+
+        for _ in 0..8 {
+            let carry_bit = (((crc >> 8) as u8) ^ octet) & 0x80 != 0;
+            crc = (crc << 1) & 0xffff;
+            octet = (octet << 1) & 0xff;
+            if carry_bit {
+                crc ^= 0x1021;
+            }
+        }
+    }
+    Ok(format!("{:08b}", crc & 0xff)) // 下位8bit（8文字の2進文字列）
+}
+
+pub fn reorder_password_bits(bitstring: &str) -> Result<Vec<String>, String> {
+    if bitstring.len() != 120 {
+        return Err(format!(
+            "ビット列は120bit必要です（現在: {}bit）",
+            bitstring.len()
+        ));
+    }
+
+    let mut result = Vec::new();
+
+    for chunk in bitstring.as_bytes().chunks(24) {
+        let chunk_str = std::str::from_utf8(chunk).unwrap(); // 安全: ASCIIのみ
+
+        // 8bit × 3 に分ける
+        let a = &chunk_str[0..8];
+        let b = &chunk_str[8..16];
+        let c = &chunk_str[16..24];
+
+        // 左右反転: C, B, A
+        let reversed = format!("{}{}{}", c, b, a);
+
+        // 6bit × 4 に分割
+        let s1 = &reversed[0..6];
+        let s2 = &reversed[6..12];
+        let s3 = &reversed[12..18];
+        let s4 = &reversed[18..24];
+
+        // 後ろから順に並べる
+        result.extend_from_slice(&[
+            s4.to_string(),
+            s3.to_string(),
+            s2.to_string(),
+            s1.to_string(),
+        ]);
+    }
+
+    Ok(result)
+}
+
+pub fn apply_password_offsets(base: &[String]) -> Result<Vec<u8>, String> {
+    if base.len() != 20 {
+        return Err(format!(
+            "6bit文字列は20個必要です（現在: {}個）",
+            base.len()
+        ));
+    }
+
+    let mut result = Vec::with_capacity(20);
+    let mut previous = 0u8;
+
+    for bin in base {
+        let mut value = u8::from_str_radix(bin, 2).map_err(|_| format!("無効な2進数: {}", bin))?;
+
+        value = value.wrapping_add(4).wrapping_add(previous) & 0b111111;
+
+        result.push(value);
+        previous = value;
+    }
+
+    Ok(result)
+}
+
+pub fn indices_to_password_kana(indices: &[u8]) -> Result<String, String> {
+    indices
+        .iter()
+        .map(|&i| {
+            PASSWORD_TABLE
+                .get(i as usize)
+                .copied()
+                .ok_or_else(|| format!("無効なインデックス: {}", i))
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -500,5 +619,40 @@ mod tests {
                 i
             );
         }
+    }
+
+    #[test]
+    fn test_calculate_crc_from_bits() {
+        let dummy = vec![
+            "00000000", "01010010", "00001101", "10010111", "00100111", "00010010", "01011100",
+            "10011001", "01001100", "00111011", "00010100", "10100010", "00001011", "11001001",
+            "01010000",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect::<Vec<_>>();
+
+        let crc = calculate_crc_from_bits(&dummy).unwrap();
+        assert_eq!(crc.len(), 8);
+        assert!(crc.chars().all(|c| c == '0' || c == '1'));
+    }
+
+    #[test]
+    fn test_reorder_block() {
+        let input = "111011110011110100010001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        let reordered = reorder_password_bits(input).unwrap();
+
+        assert_eq!(reordered[0], "101111");
+        assert_eq!(reordered[1], "110111");
+        assert_eq!(reordered[2], "010011");
+        assert_eq!(reordered[3], "000100");
+        assert_eq!(reordered.len(), 20);
+    }
+
+    #[test]
+    fn test_to_password_string_is_20_chars() {
+        let save = SaveData::new();
+        let password = save.to_password_string().unwrap();
+        assert_eq!(password.chars().count(), 20);
     }
 }
