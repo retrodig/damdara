@@ -54,6 +54,14 @@ pub fn build_kana_map() -> HashMap<char, u8> {
         .collect()
 }
 
+pub fn kana_index(c: char) -> Result<u8, String> {
+    KANA_TABLE
+        .iter()
+        .position(|&k| k == c)
+        .map(|i| i as u8)
+        .ok_or_else(|| format!("文字 '{}' はKANA_TABLEに存在しません", c))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
