@@ -1,6 +1,6 @@
 use crate::constants::text::{DEFAULT_NAME, PASSWORD_TABLE};
 use crate::string_utils::{
-    build_kana_map, combine_bits, kana_index, normalize_to_4_chars, nth_char,
+    build_kana_map, combine_bits, kana_index, normalize_to_4_chars, nth_char, split_dakuten,
 };
 use std::collections::HashMap;
 
@@ -90,8 +90,10 @@ impl SaveData {
     }
 
     pub fn new_with(args: SaveDataArgs) -> Self {
+        let name = split_dakuten(&args.name.unwrap_or_else(|| DEFAULT_NAME.to_string()));
+
         Self {
-            name: normalize_to_4_chars(&args.name.unwrap_or_else(|| DEFAULT_NAME.to_string())),
+            name: normalize_to_4_chars(&name),
             experience: args.experience.unwrap_or(0),
             gold: args.gold.unwrap_or(0),
             weapon: args.weapon.unwrap_or(0),
