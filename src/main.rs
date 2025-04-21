@@ -5,6 +5,7 @@ mod string_utils;
 
 use constants::status::get_status_by_level;
 use growth_type::calculate_growth_type;
+use save::SaveData;
 
 fn main() {
     let name = "ゆうてい";
@@ -16,4 +17,15 @@ fn main() {
     } else {
         println!("指定されたレベルのデータが見つかりません。");
     }
+
+    let default_save = SaveData::new();
+
+    // let bits = encode_name_to_bits("００").unwrap();
+    println!(
+        "ビット列: {:024b} = {}",
+        default_save.encode_name_to_bits().unwrap(),
+        default_save.encode_name_to_bits().unwrap(),
+    );
+
+    println!("{}", default_save.check_code());
 }

@@ -1,12 +1,10 @@
+use crate::constants::text::{DAKUTEN_PAIRS, HANDAKUTEN_PAIRS, KANA_TABLE, NAME_MAX_LENGTH};
 use std::collections::HashMap;
-use crate::constants::text::{KANA_TABLE, NAME_MAX_LENGTH, DAKUTEN_PAIRS, HANDAKUTEN_PAIRS};
 
 pub fn filter_valid_chars(input: &str) -> String {
     let valid_set: std::collections::HashSet<char> = KANA_TABLE.iter().copied().collect();
 
-    input.chars()
-        .filter(|c| valid_set.contains(c))
-        .collect()
+    input.chars().filter(|c| valid_set.contains(c)).collect()
 }
 
 pub fn build_dakuten_map() -> HashMap<char, (char, Option<char>)> {
@@ -48,6 +46,14 @@ pub fn normalize_to_4_chars(input: &str) -> String {
     chars.into_iter().collect()
 }
 
+pub fn build_kana_map() -> HashMap<char, u8> {
+    KANA_TABLE
+        .iter()
+        .enumerate()
+        .map(|(i, &kana)| (kana, i as u8))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -80,7 +86,7 @@ mod tests {
     fn test_less_than_4_chars() {
         assert_eq!(normalize_to_4_chars("あい"), "あい　　"); // 全角スペース2つ補完
         assert_eq!(normalize_to_4_chars("た"), "た　　　"); // 全角スペース3つ補完
-        assert_eq!(normalize_to_4_chars(""), "　　　　");  // 全角スペース4つ補完
+        assert_eq!(normalize_to_4_chars(""), "　　　　"); // 全角スペース4つ補完
     }
 
     #[test]
