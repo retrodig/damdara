@@ -10,8 +10,8 @@ pub struct SaveData {
     pub armor: u8,                 // よろい: 0–7 （3bit）
     pub shield: u8,                // たて: 0–3 （2bit）
     pub items: [u8; 8],            // アイテム: 各 0–15（4bit×8）
-    pub herbs: u8,                 // やくそうの数: 0–6（3bit）
-    pub keys: u8,                  // かぎの数: 0–6（3bit）
+    pub herbs: u8,                 // やくそうの数: 0–6（4bit）
+    pub keys: u8,                  // かぎの数: 0–6（4bit）
     pub has_dragon_scale: bool,    // りゅうのうろこを装備したか
     pub has_warrior_ring: bool,    // せんしのゆびわを装備したか
     pub has_cursed_necklace: bool, // しのくびかざりを入手したか
@@ -262,6 +262,26 @@ impl SaveData {
 
         Ok((pattern_bit << 7) | (cursed_bit << 6) | kana_index)
     }
+
+    fn get_item_value(&self, position: usize) -> Result<u8, String> {
+        if position == 0 || position > self.items.len() {
+            return Err(format!("無効なアイテム位置: {}", position));
+        }
+        Ok(self.items[position - 1] & 0x0F)
+    }
+
+    /// N番目のアイテム（1始まり）を取得（4bit想定）
+    pub fn item_index_binary(&self, position: usize) -> Result<String, String> {
+        let value = self.get_item_value(position)?;
+        Ok(format!("{:04b}", value))
+    }
+
+    /// 指定された2つのアイテム位置の4bit値を結合して8bitの2進文字列を返す
+    pub fn sum_item_index_binary(&self, pos1: usize, pos2: usize) -> Result<String, String> {
+        let high = self.get_item_value(pos1)?;
+        let low = self.get_item_value(pos2)?;
+        Ok(format!("{:08b}", (high << 4) | low))
+    }
 }
 
 #[cfg(test)]
@@ -288,7 +308,6 @@ mod tests {
     fn test_full_bitstring_length_is_120() {
         let save = SaveData::new();
         let bitstring = save.full_bitstring().unwrap();
-
         assert_eq!(bitstring.len(), 120, "bitstring length is not 120");
     }
 
@@ -362,5 +381,34 @@ mod tests {
         // P3 = 1, cursed = 1, index(て) = 28 = 0b011100
         // => 1_1_011100 = 0b11011100 = 0xDC = 220
         assert_eq!(result, 0b11011100);
+    }
+
+    #[test]
+    fn test_item_index_binary() {
+        let save = SaveData {
+            items: [1, 2, 3, 4, 0, 0, 0, 0],
+            ..Default::default()
+        };
+
+        assert_eq!(save.item_index_binary(4), Ok("0100".to_string()));
+        assert_eq!(save.item_index_binary(3), Ok("0011".to_string()));
+        assert!(save.item_index_binary(0).is_err());
+        assert!(save.item_index_binary(9).is_err());
+    }
+
+    #[test]
+    fn test_sum_item_index_binary() {
+        let save = SaveData {
+            items: [1, 2, 3, 4, 0, 0, 0, 0],
+            ..Default::default()
+        };
+
+        // 4 = 0100, 3 = 0011 → 01000011
+        assert_eq!(save.sum_item_index_binary(4, 3), Ok("01000011".to_string()));
+        // 1 = 0001, 2 = 0010 → 00010010
+        assert_eq!(save.sum_item_index_binary(1, 2), Ok("00010010".to_string()));
+        // 無効位置
+        assert!(save.sum_item_index_binary(0, 3).is_err());
+        assert!(save.sum_item_index_binary(3, 9).is_err());
     }
 }

@@ -19,13 +19,9 @@ fn main() {
     }
 
     let default_save = SaveData::new();
-
-    // let bits = encode_name_to_bits("００").unwrap();
     println!(
         "ビット列: {:024b} = {}",
         default_save.encode_name_to_bits().unwrap(),
         default_save.encode_name_to_bits().unwrap(),
     );
-
-    println!("{}", default_save.check_code());
 }
