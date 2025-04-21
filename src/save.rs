@@ -1,5 +1,7 @@
 use crate::constants::text::DEFAULT_NAME;
-use crate::string_utils::{build_kana_map, kana_index, normalize_to_4_chars};
+use crate::string_utils::{
+    build_kana_map, combine_bits, kana_index, normalize_to_4_chars, nth_char,
+};
 use std::collections::HashMap;
 
 pub struct SaveData {
@@ -249,20 +251,6 @@ impl SaveData {
         }
     }
 
-    /// パターン3bit目 + has_cursed_necklace + 名前3文字目 の8bit合成
-    pub fn cursed_check_code(&self) -> Result<u8, String> {
-        let pattern_bit = self.pattern_bit_index(3)?; // ← 最上位ビット
-        let cursed_bit = if self.has_cursed_necklace { 1 } else { 0 };
-        let kana_char = self
-            .name
-            .chars()
-            .nth(2)
-            .ok_or_else(|| "名前が3文字未満です".to_string())?;
-        let kana_index = kana_index(kana_char)?; // 6bit値
-
-        Ok((pattern_bit << 7) | (cursed_bit << 6) | kana_index)
-    }
-
     fn get_item_value(&self, position: usize) -> Result<u8, String> {
         if position == 0 || position > self.items.len() {
             return Err(format!("無効なアイテム位置: {}", position));
@@ -281,6 +269,36 @@ impl SaveData {
         let high = self.get_item_value(pos1)?;
         let low = self.get_item_value(pos2)?;
         Ok(format!("{:08b}", (high << 4) | low))
+    }
+
+    // チェックコード（8bit）
+    // 経験値の後ろ半分（8bit）
+    // パターンの3bit目 ＋ しのくびかざり装備した？ ＋ 名前の3文字目（1bit + 1bit + 6bit）
+    //
+    // 4つ目のアイテム ＋ 3つ目のアイテム（4bit + 4bit）
+    // ゴールドの後ろ半分（8bit）
+    // 名前の1文字目 ＋ ゴーレム倒した？ ＋ パターンの2bit目（6bit + 1bit + 1bit）
+    //
+    // 8つ目のアイテム ＋ 7つ目のアイテム（4bit + 4bit）
+    // パターンの1bit目 ＋ ドラゴン倒した？ ＋ 名前の4文字目（1bit + 1bit + 6bit）
+    // ぶき ＋ よろい ＋ たて（3bit + 3bit + 2bit）
+    //
+    // ゴールドの前半分（8bit）
+    // かぎの数 ＋ やくそうの数（4bit + 4bit）
+    // 6つ目のアイテム ＋ 5つ目のアイテム（4bit + 4bit）
+    //
+    // 経験値の前半分（8bit）
+    // りゅうのうろこ装備した？ ＋ 名前の2文字目 ＋ せんしのゆびわ装備した？（1bit + 6bit + 1bit）
+    // 2つ目のアイテム ＋ 1つ目のアイテム（4bit + 4bit）
+
+    /// パターン3bit目 + has_cursed_necklace + 名前3文字目 の8bit合成
+    pub fn cursed_check_code(&self) -> Result<u8, String> {
+        let pattern_bit = self.pattern_bit_index(3)?; // 1bit
+        let cursed_bit = if self.has_cursed_necklace { 1 } else { 0 };
+        let kana_char = nth_char(&self.name, 3)?;
+        let kana_index = kana_index(kana_char)?; // 6bit
+
+        combine_bits(&[(pattern_bit, 1), (cursed_bit, 1), (kana_index, 6)])
     }
 }
 

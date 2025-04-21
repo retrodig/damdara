@@ -62,6 +62,35 @@ pub fn kana_index(c: char) -> Result<u8, String> {
         .ok_or_else(|| format!("文字 '{}' はKANA_TABLEに存在しません", c))
 }
 
+/// 指定された文字列の position（1始まり）番目の文字を返す
+pub fn nth_char(s: &str, position: usize) -> Result<char, String> {
+    if position == 0 {
+        return Err("位置は1以上である必要があります".to_string());
+    }
+
+    s.chars()
+        .nth(position - 1)
+        .ok_or_else(|| format!("{}文字目が見つかりません（文字列: {}）", position, s))
+}
+
+/// 任意のビット列の (値, ビット幅) タプルを受け取り、上位から順に結合して u8 を返す
+pub fn combine_bits(bits: &[(u8, u8)]) -> Result<u8, String> {
+    let total_bits: u8 = bits.iter().map(|&(_, width)| width).sum();
+    if total_bits > 8 {
+        return Err(format!("合計ビット数が8を超えています: {}", total_bits));
+    }
+
+    let mut result: u8 = 0;
+    let mut shift = total_bits;
+
+    for &(value, width) in bits {
+        shift -= width;
+        result |= (value & ((1 << width) - 1)) << shift;
+    }
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,5 +138,19 @@ mod tests {
         assert_eq!(normalize_to_4_chars("た゛い"), "た゛い　");
         // た゛いた゛い → 6文字 → 先頭4文字のみ
         assert_eq!(normalize_to_4_chars("た゛いた゛い"), "た゛いた");
+    }
+
+    #[test]
+    fn test_nth_char() {
+        assert_eq!(nth_char("あいうえ", 1), Ok('あ'));
+        assert_eq!(nth_char("あいうえ", 4), Ok('え'));
+        assert!(nth_char("あい", 5).is_err());
+        assert!(nth_char("うえ", 0).is_err());
+    }
+
+    #[test]
+    fn test_combine_bits_simple() {
+        let byte = combine_bits(&[(0b101, 3), (0b011, 3), (0b10, 2)]).unwrap();
+        assert_eq!(byte, 0b10101110);
     }
 }

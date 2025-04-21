@@ -19,6 +19,8 @@ fn main() {
     }
 
     let default_save = SaveData::new();
+    let _ = default_save.cursed_check_code();
+
     println!(
         "ビット列: {:024b} = {}",
         default_save.encode_name_to_bits().unwrap(),
