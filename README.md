@@ -1,6 +1,8 @@
 # Damdara
 
-<img width="600" src="https://github.com/retrodig/damdara/blob/main/assets/images/main_logo.png">
+<p align="center">
+  <img width="450" src="https://github.com/retrodig/damdara/blob/main/assets/images/main_logo.png">
+</p>
 
 Damdara is a logic crate for retro fantasy that can be built in Rust, while fully reproducing the "Fukkatsu no Jumon"
 system of the NES version of Dragon Quest,
