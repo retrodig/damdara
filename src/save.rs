@@ -271,6 +271,46 @@ impl SaveData {
         Ok(format!("{:08b}", (high << 4) | low))
     }
 
+    /// パターン3bit目 + has_cursed_necklace + 名前3文字目 の8bit合成
+    pub fn cursed_check_code(&self) -> Result<u8, String> {
+        let pattern_bit = self.pattern_bit_index(3)?; // 1bit
+        let cursed_bit = if self.has_cursed_necklace { 1 } else { 0 };
+        let kana_char = nth_char(&self.name, 3)?;
+        let kana_index = kana_index(kana_char)?; // 6bit
+        combine_bits(&[(pattern_bit, 1), (cursed_bit, 1), (kana_index, 6)])
+    }
+
+    /// 名前の1文字目 ＋ ゴーレム倒した？ ＋ パターンの2bit目（6bit + 1bit + 1bit）
+    pub fn golem_check_code(&self) -> Result<u8, String> {
+        let kana_char = nth_char(&self.name, 1)?;
+        let kana_index = kana_index(kana_char)?; // 6bit
+        let golem_bit = if self.defeated_golem { 1 } else { 0 };
+        let pattern_bit = self.pattern_bit_index(2)?; // 1bit
+        combine_bits(&[(kana_index, 6), (golem_bit, 1), (pattern_bit, 1)])
+    }
+
+    /// パターンの1bit目 ＋ ドラゴン倒した？ ＋ 名前の4文字目（1bit + 1bit + 6bit）
+    pub fn dragon_check_code(&self) -> Result<u8, String> {
+        let pattern_bit = self.pattern_bit_index(1)?; // 1bit
+        let dragon_bit = if self.defeated_dragon { 1 } else { 0 };
+        let kana_char = nth_char(&self.name, 4)?;
+        let kana_index = kana_index(kana_char)?; // 6bit
+        combine_bits(&[(pattern_bit, 1), (dragon_bit, 1), (kana_index, 6)])
+    }
+
+    /// りゅうのうろこ装備した？ ＋ 名前の2文字目 ＋ せんしのゆびわ装備した？（1bit + 6bit + 1bit）
+    pub fn dragon_scale_check_code(&self) -> Result<u8, String> {
+        let dragon_scale_bit = if self.has_dragon_scale { 1 } else { 0 };
+        let kana_char = nth_char(&self.name, 2)?;
+        let kana_index = kana_index(kana_char)?; // 6bit
+        let warrior_ring_bit = if self.has_warrior_ring { 1 } else { 0 };
+        combine_bits(&[
+            (dragon_scale_bit, 1),
+            (kana_index, 6),
+            (warrior_ring_bit, 1),
+        ])
+    }
+
     // チェックコード（8bit）
     // 経験値の後ろ半分（8bit）
     // パターンの3bit目 ＋ しのくびかざり装備した？ ＋ 名前の3文字目（1bit + 1bit + 6bit）
@@ -290,15 +330,27 @@ impl SaveData {
     // 経験値の前半分（8bit）
     // りゅうのうろこ装備した？ ＋ 名前の2文字目 ＋ せんしのゆびわ装備した？（1bit + 6bit + 1bit）
     // 2つ目のアイテム ＋ 1つ目のアイテム（4bit + 4bit）
-
-    /// パターン3bit目 + has_cursed_necklace + 名前3文字目 の8bit合成
-    pub fn cursed_check_code(&self) -> Result<u8, String> {
-        let pattern_bit = self.pattern_bit_index(3)?; // 1bit
-        let cursed_bit = if self.has_cursed_necklace { 1 } else { 0 };
-        let kana_char = nth_char(&self.name, 3)?;
-        let kana_index = kana_index(kana_char)?; // 6bit
-
-        combine_bits(&[(pattern_bit, 1), (cursed_bit, 1), (kana_index, 6)])
+    pub fn build_password_base(&self) -> Result<Vec<String>, String> {
+        Ok(vec![
+            "00000000".to_string(),                        // チェックコード（仮）
+            format!("{:08b}", self.experience_low_byte()), // 経験値下位8bit
+            format!("{:08b}", self.cursed_check_code()?), // パターン3bit目 + くびかざり + 名前3文字目
+            self.sum_item_index_binary(4, 3)?,            // アイテム4 + 3
+            format!("{:08b}", self.gold_low_byte()),      // ゴールド下位8bit
+            format!("{:08b}", self.golem_check_code()?),  // 名前1 + ゴーレム + パターン2bit目
+            self.sum_item_index_binary(8, 7)?,            // アイテム8 + 7
+            format!("{:08b}", self.dragon_check_code()?), // パターン1bit目 + ドラゴン + 名前4
+            format!(
+                "{:08b}",
+                combine_bits(&[(self.weapon, 3), (self.armor, 3), (self.shield, 2),])?
+            ), // 装備：武器 + 鎧 + 盾
+            format!("{:08b}", self.gold_high_byte()),     // ゴールド上位8bit
+            format!("{:08b}", combine_bits(&[(self.keys, 4), (self.herbs, 4),])?), // かぎ + やくそう
+            self.sum_item_index_binary(6, 5)?,                                     // アイテム6 + 5
+            format!("{:08b}", self.experience_high_byte()),                        // 経験値上位8bit
+            format!("{:08b}", self.dragon_scale_check_code()?), // りゅうのうろこ + 名前2 + 戦士の指輪
+            self.sum_item_index_binary(2, 1)?,                  // アイテム2 + 1
+        ])
     }
 }
 
@@ -428,5 +480,25 @@ mod tests {
         // 無効位置
         assert!(save.sum_item_index_binary(0, 3).is_err());
         assert!(save.sum_item_index_binary(3, 9).is_err());
+    }
+
+    #[test]
+    fn test_build_password_base_bit_length() {
+        let save = SaveData::new();
+        let result = save.build_password_base().unwrap();
+
+        assert_eq!(result.len(), 15, "出力の要素数が15ではありません");
+
+        let total_len: usize = result.iter().map(|s| s.len()).sum();
+        assert_eq!(total_len, 120, "合計ビット長が120ではありません");
+
+        for (i, s) in result.iter().enumerate() {
+            assert_eq!(s.len(), 8, "インデックス {} の長さが8bitではありません", i);
+            assert!(
+                s.chars().all(|c| c == '0' || c == '1'),
+                "インデックス {} に無効な文字があります",
+                i
+            );
+        }
     }
 }
