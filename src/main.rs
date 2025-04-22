@@ -28,8 +28,10 @@ fn main() {
     // );
 
     let save = SaveData::new_with(SaveDataArgs {
-        name: Some("ゆうてい".to_string()),
-        gold: Some(777),
+        name: Some("だい".to_string()),
+        gold: Some(20777),
+        experience: Some(56777),
+        weapon: Some(7),
         ..Default::default()
     });
     let password = save.to_password_string().unwrap();
