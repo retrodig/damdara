@@ -1,5 +1,14 @@
 use crate::growth_type::GrowthModifiers;
 
+#[derive(Default, Debug)]
+pub struct Flags {
+    pub has_dragon_scale: bool,    // りゅうのうろこを装備したか
+    pub has_warrior_ring: bool,    // せんしのゆびわを装備したか
+    pub has_cursed_necklace: bool, // しのくびかざりを入手したか
+    pub defeated_dragon: bool,     // ドラゴンを倒したか
+    pub defeated_golem: bool,      // ゴーレムを倒したか
+}
+
 #[derive(Debug)]
 pub struct Status {
     pub level: u8,

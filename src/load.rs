@@ -1,15 +1,8 @@
 use crate::binary_utils::{validate_6bit_array, validate_120bit};
 use crate::constants::save_data::SaveData;
+use crate::constants::status::Flags;
 use crate::constants::text::KANA_TABLE;
 use crate::constants::text::build_password_map;
-
-pub struct Flags {
-    pub has_dragon_scale: bool,
-    pub has_warrior_ring: bool,
-    pub has_cursed_necklace: bool,
-    pub defeated_dragon: bool,
-    pub defeated_golem: bool,
-}
 
 pub fn decode_password_string(s: &str) -> Result<Vec<u8>, String> {
     if s.chars().count() != 20 {

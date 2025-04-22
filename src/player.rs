@@ -1,4 +1,5 @@
 use crate::constants::save_data::{SaveData, SaveDataArgs};
+use crate::constants::status::Flags;
 use crate::constants::status::{DEFAULT_STATUS, Status, get_level_by_exp, get_status_by_level};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{GrowthModifiers, calculate_abc, calculate_name_total};
@@ -10,6 +11,13 @@ pub struct Player {
     pub mp: u16,
     pub exp: u16,
     pub gold: u16,
+    pub weapon: u8,
+    pub armor: u8,
+    pub shield: u8,
+    pub items: [u8; 8],
+    pub herbs: u8,
+    pub keys: u8,
+    pub flags: Flags,
 }
 
 #[derive(Default)]
@@ -18,6 +26,13 @@ pub struct PlayerArgs {
     pub level: Option<u8>,
     pub exp: Option<u16>,
     pub gold: Option<u16>,
+    pub weapon: Option<u8>,
+    pub armor: Option<u8>,
+    pub shield: Option<u8>,
+    pub items: Option<[u8; 8]>,
+    pub herbs: Option<u8>,
+    pub keys: Option<u8>,
+    pub flags: Option<Flags>,
 }
 
 impl Player {
@@ -51,6 +66,13 @@ impl Player {
             mp: adjusted.max_mp,
             exp: final_exp,
             gold,
+            weapon: args.weapon.unwrap_or(0),
+            armor: args.armor.unwrap_or(0),
+            shield: args.shield.unwrap_or(0),
+            items: args.items.unwrap_or([0; 8]),
+            herbs: args.herbs.unwrap_or(0),
+            keys: args.keys.unwrap_or(0),
+            flags: args.flags.unwrap_or_default(),
         }
     }
 
@@ -92,9 +114,39 @@ impl Player {
             name: Some(self.name.clone()),
             experience: Some(self.exp),
             gold: Some(self.gold),
+            weapon: Some(self.weapon),
+            armor: Some(self.armor),
+            shield: Some(self.shield),
+            items: Some(self.items),
+            herbs: Some(self.herbs),
+            keys: Some(self.keys),
+            has_dragon_scale: Some(self.flags.has_dragon_scale),
+            has_warrior_ring: Some(self.flags.has_warrior_ring),
+            has_cursed_necklace: Some(self.flags.has_cursed_necklace),
+            defeated_dragon: Some(self.flags.defeated_dragon),
+            defeated_golem: Some(self.flags.defeated_golem),
+            pattern: None,
             ..Default::default()
         });
         save.to_password_string()
+    }
+
+    pub fn maximize(&mut self) {
+        self.exp = 65535;
+        self.gold = 65535;
+        self.weapon = 7;
+        self.armor = 7;
+        self.shield = 3;
+        self.items = [4, 6, 7, 8, 10, 12, 13, 14]; // 要調整
+        self.herbs = 6;
+        self.keys = 6;
+        self.flags = Flags {
+            has_dragon_scale: true,
+            has_warrior_ring: true,
+            has_cursed_necklace: true,
+            defeated_dragon: true,
+            defeated_golem: true,
+        };
     }
 }
 
@@ -147,6 +199,7 @@ mod tests {
             level: Some(5),
             exp: Some(10000),
             gold: Some(20000),
+            ..Default::default()
         });
 
         assert!(player.level() >= 5);

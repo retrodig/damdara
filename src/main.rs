@@ -6,21 +6,21 @@ mod player;
 mod save;
 mod string_utils;
 
-use player::Player;
-
+use crate::constants::status::Flags;
 use crate::load::{
     decode_password_string, parse_bitstring_to_save_data, reorder_blocks_back,
     undo_password_addition,
 };
 use crate::player::PlayerArgs;
+use player::Player;
 
 fn main() {
-    let player = Player::new_with(PlayerArgs {
+    let mut player = Player::new_with(PlayerArgs {
         name: Some("だい".to_string()),
-        level: Some(20),
-        exp: None,
-        gold: Some(3452),
+        level: Some(30),
+        ..Default::default()
     });
+    player.maximize();
 
     println!("player name: {}", player.name);
     println!("player adjusted_status: {:?}", player.adjusted_status());
