@@ -5,10 +5,7 @@ mod player;
 mod save;
 mod utility;
 
-use crate::load::{
-    decode_password_string, parse_bitstring_to_save_data, reorder_blocks_back,
-    undo_password_addition,
-};
+use crate::load::decode_from_password_string;
 use crate::player::PlayerArgs;
 use player::Player;
 
@@ -22,19 +19,10 @@ fn main() {
 
     println!("player name: {}", player.name);
     println!("player adjusted_status: {:?}", player.adjusted_status());
-    println!("Password: {}", player.to_password_string().unwrap());
 
-    let encoded = decode_password_string(&player.to_password_string().unwrap()).unwrap();
-    println!("encoded: {:?}", encoded);
+    let password = player.to_password_string().unwrap();
+    println!("Password: {}", password);
 
-    let raw = undo_password_addition(&encoded).unwrap();
-    println!("raw: {:?}", raw);
-
-    let bit_block = reorder_blocks_back(&raw).unwrap();
-    println!("bit_block: {:?}", bit_block);
-
-    println!(
-        "decode status: {:?}",
-        parse_bitstring_to_save_data(&bit_block)
-    );
+    let status = decode_from_password_string(&password).unwrap();
+    println!("decode save data: {:?}", status);
 }

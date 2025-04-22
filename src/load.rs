@@ -187,6 +187,13 @@ pub fn parse_bitstring_to_save_data(bits: &[u8]) -> Result<SaveData, String> {
     })
 }
 
+pub fn decode_from_password_string(password: &str) -> Result<SaveData, String> {
+    let encoded = decode_password_string(password)?;
+    let raw = undo_password_addition(&encoded)?;
+    let bit_block = reorder_blocks_back(&raw)?;
+    parse_bitstring_to_save_data(&bit_block)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
