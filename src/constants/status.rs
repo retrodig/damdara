@@ -1,10 +1,13 @@
+use crate::growth_type::GrowthModifiers;
+
+#[derive(Debug)]
 pub struct Status {
     pub level: u8,
     pub strength: u16,
     pub agility: u16,
     pub max_hp: u16,
     pub max_mp: u16,
-    pub required_exp: u32,
+    pub required_exp: u16,
     pub spell: Option<&'static str>,
 }
 
@@ -20,6 +23,26 @@ impl Status {
             self.required_exp,
             self.spell.unwrap_or("なし")
         )
+    }
+
+    pub fn apply_abc_modifiers(&self, abc: &GrowthModifiers) -> Status {
+        Status {
+            level: self.level,
+            strength: apply_modifier(self.strength, abc.c == 1, abc.a),
+            agility: apply_modifier(self.agility, abc.b == 1, abc.a),
+            max_hp: apply_modifier(self.max_hp, abc.b == 0, abc.a),
+            max_mp: apply_modifier(self.max_mp, abc.c == 0, abc.a),
+            required_exp: self.required_exp,
+            spell: self.spell,
+        }
+    }
+}
+
+fn apply_modifier(base: u16, keep_base: bool, a: u16) -> u16 {
+    if keep_base {
+        base
+    } else {
+        ((base as f32 * 0.9).floor() as u16) + a
     }
 }
 
@@ -303,6 +326,16 @@ pub fn get_status_by_level(level: u8) -> Option<&'static Status> {
         None
     }
 }
+
+pub static DEFAULT_STATUS: Status = Status {
+    level: 1,
+    strength: 0,
+    agility: 0,
+    max_hp: 0,
+    max_mp: 0,
+    required_exp: 0,
+    spell: None,
+};
 
 #[test]
 fn test_get_status_by_level() {

@@ -3,6 +3,40 @@ use std::collections::HashMap;
 use crate::constants::text::KANA_TABLE;
 use crate::string_utils::name_normalize;
 
+// pub enum GrowthType {
+//     A,
+//     B,
+//     C,
+//     D,
+// }
+//
+// pub struct GrowthPattern {
+//     pub growth_type: GrowthType,
+//     pub bonus: u8, // 0〜3
+// }
+
+// pub fn determine_growth_pattern(total: u8) -> GrowthPattern {
+//     let pattern = total % 16;
+//     let growth_type = match pattern % 4 {
+//         0 => GrowthType::A,
+//         1 => GrowthType::B,
+//         2 => GrowthType::C,
+//         3 => GrowthType::D,
+//         _ => unreachable!(),
+//     };
+//     let bonus = pattern / 4;
+//     GrowthPattern { growth_type, bonus }
+// }
+
+pub fn calculate_name_total(name: &str) -> u16 {
+    let normalized = name_normalize(name);
+    normalized
+        .chars()
+        .filter_map(|c| KANA_TABLE.iter().position(|&k| k == c))
+        .map(|i| i as u16)
+        .sum()
+}
+
 pub fn calculate_growth_type(name: &str) -> u8 {
     let mut char_to_value = HashMap::new();
     for (i, &c) in KANA_TABLE.iter().enumerate() {
@@ -18,6 +52,20 @@ pub fn calculate_growth_type(name: &str) -> u8 {
         .sum();
 
     (sum % 16) as u8
+}
+
+pub struct GrowthModifiers {
+    pub a: u16,
+    pub b: u16,
+    pub c: u16,
+}
+
+pub fn calculate_abc(total: u16) -> GrowthModifiers {
+    GrowthModifiers {
+        a: (total / 4) % 4,
+        b: (total / 2) % 2,
+        c: total % 2,
+    }
 }
 
 #[cfg(test)]

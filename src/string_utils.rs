@@ -48,10 +48,10 @@ pub fn normalize_to_4_chars(input: &str) -> String {
     chars.into_iter().collect()
 }
 
-/// 無効文字を除去 → 濁音分解 → 4文字整形
+/// 濁音分解 → 無効文字を除去 → 4文字整形
 pub fn name_normalize(name: &str) -> String {
-    let cleaned = filter_valid_chars(name);
-    normalize_to_4_chars(&split_dakuten(&cleaned))
+    let split_name = split_dakuten(name);
+    normalize_to_4_chars(&filter_valid_chars(&split_name))
 }
 
 pub fn build_kana_map() -> HashMap<char, u8> {
