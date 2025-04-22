@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub const DEFAULT_NAME: &str = "ゆうてい";
 pub const NAME_MAX_LENGTH: usize = 4;
 pub const KANA_TABLE: [char; 64] = [
@@ -70,6 +72,16 @@ pub const PASSWORD_TABLE: [&str; 64] = [
     "む", "め", "も", "や", "ゆ", "よ", "ら", "り", "る", "れ", "ろ", "わ", "が", "ぎ", "ぐ", "げ",
     "ご", "ざ", "じ", "ず", "ぜ", "ぞ", "だ", "ぢ", "づ", "で", "ど", "ば", "び", "ぶ", "べ", "ぼ",
 ];
+
+pub fn build_password_map() -> HashMap<char, u8> {
+    let mut map = HashMap::new();
+    for (i, &kana) in PASSWORD_TABLE.iter().enumerate() {
+        if let Some(c) = kana.chars().next() {
+            map.insert(c, i as u8);
+        }
+    }
+    map
+}
 
 pub const DAKUTEN_PAIRS: &[(char, char)] = &[
     ('が', 'か'),

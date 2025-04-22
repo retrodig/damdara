@@ -58,6 +58,7 @@ pull request.
 - [ドラゴンクエスト 攻略・解析](https://gcgx.games/dq1/)
 - [ドラゴンクエスト (FC) 復活の呪文計算機](https://taotao54321.github.io/DQ1PasswordCalc/)
 - [主人公の名前と能力成長の基礎 FCDQ1](https://dqff.sakura.ne.jp/dq1fc/data/lvup-name.html)
+- [DQ1(FC版)強さ判断プログラム](https://sutton-kyouwa.com/cgi-bin/dq1.cgi)
 
 ## License
 
