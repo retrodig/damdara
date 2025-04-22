@@ -3,8 +3,10 @@ use crate::constants::status::Flags;
 use crate::constants::status::{DEFAULT_STATUS, Status, get_level_by_exp, get_status_by_level};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{GrowthModifiers, calculate_abc, calculate_name_total};
+use crate::load::decode_from_password_string;
 use crate::utility::string_utils::name_normalize;
 
+#[derive(Debug)]
 pub struct Player {
     pub name: String,
     pub hp: u16,
@@ -33,6 +35,31 @@ pub struct PlayerArgs {
     pub herbs: Option<u8>,
     pub keys: Option<u8>,
     pub flags: Option<Flags>,
+}
+
+impl PlayerArgs {
+    pub fn from_save_data(save: &SaveData) -> Self {
+        Self {
+            name: Some(save.name.clone()),
+            exp: Some(save.experience),
+            gold: Some(save.gold),
+            weapon: Some(save.weapon),
+            armor: Some(save.armor),
+            shield: Some(save.shield),
+            items: Some(save.items),
+            herbs: Some(save.herbs),
+            keys: Some(save.keys),
+            flags: Some(Flags {
+                has_dragon_scale: save.flags.has_dragon_scale,
+                has_warrior_ring: save.flags.has_warrior_ring,
+                has_cursed_necklace: save.flags.has_cursed_necklace,
+                defeated_dragon: save.flags.defeated_dragon,
+                defeated_golem: save.flags.defeated_golem,
+            })
+            .into(),
+            ..Default::default()
+        }
+    }
 }
 
 impl Player {
@@ -74,6 +101,15 @@ impl Player {
             keys: args.keys.unwrap_or(0),
             flags: args.flags.unwrap_or_default(),
         }
+    }
+
+    pub fn from_password_string(s: &str) -> Result<Self, String> {
+        let save = decode_from_password_string(s)?;
+        Ok(Self::from_save_data(&save))
+    }
+
+    pub fn from_save_data(save: &SaveData) -> Self {
+        Self::new_with(PlayerArgs::from_save_data(save))
     }
 
     pub fn level(&self) -> u8 {

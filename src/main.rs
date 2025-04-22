@@ -5,16 +5,10 @@ mod player;
 mod save;
 mod utility;
 
-use crate::load::decode_from_password_string;
-use crate::player::PlayerArgs;
 use player::Player;
 
 fn main() {
-    let mut player = Player::new_with(PlayerArgs {
-        name: Some("だい".to_string()),
-        level: Some(30),
-        ..Default::default()
-    });
+    let mut player = Player::new("だい");
     player.maximize();
 
     println!("player name: {}", player.name);
@@ -23,6 +17,6 @@ fn main() {
     let password = player.to_password_string().unwrap();
     println!("Password: {}", password);
 
-    let status = decode_from_password_string(&password).unwrap();
-    println!("decode save data: {:?}", status);
+    let new_player = Player::from_password_string(&password);
+    println!("new_player from Password: {:?}", new_player.unwrap());
 }
