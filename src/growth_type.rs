@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-
+use crate::constants::status::{STATUS_TABLE, Status};
 use crate::constants::text::{GROWTH_VALUE_TABLE, KANA_TABLE};
 use crate::utility::string_utils::name_normalize;
+use std::collections::HashMap;
 
 // pub enum GrowthType {
 //     A,
@@ -74,6 +74,22 @@ pub fn calculate_abc(total: u16) -> GrowthModifiers {
         b: (total / 2) % 2,
         c: total % 2,
     }
+}
+
+pub fn get_adjusted_status_list(name: &str) -> Vec<Status> {
+    let abc = calculate_abc(calculate_name_total(&name));
+    STATUS_TABLE
+        .iter()
+        .map(|base| base.apply_abc_modifiers(&abc))
+        .collect()
+}
+
+pub fn get_adjusted_status_by_name_lv(name: &str, lv: u8) -> Status {
+    let abc = calculate_abc(calculate_name_total(&name));
+    let base = STATUS_TABLE
+        .get((lv.saturating_sub(1)) as usize)
+        .unwrap_or(&STATUS_TABLE[0]);
+    base.apply_abc_modifiers(&abc)
 }
 
 #[cfg(test)]

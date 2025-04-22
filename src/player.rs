@@ -1,9 +1,12 @@
 use crate::constants::save_data::{SaveData, SaveDataArgs};
 use crate::constants::status::Flags;
-use crate::constants::status::{DEFAULT_STATUS, Status, get_level_by_exp, get_status_by_level};
+use crate::constants::status::{DEFAULT_STATUS, Status};
 use crate::constants::text::DEFAULT_NAME;
-use crate::growth_type::{GrowthModifiers, calculate_abc, calculate_name_total};
+use crate::growth_type::{
+    GrowthModifiers, calculate_abc, calculate_name_total, get_adjusted_status_by_name_lv,
+};
 use crate::load::decode_from_password_string;
+use crate::utility::status_utils::{get_level_by_exp, get_status_by_level, resolve_experience};
 use crate::utility::string_utils::name_normalize;
 
 #[derive(Debug)]
@@ -73,26 +76,16 @@ impl Player {
     pub fn new_with(args: PlayerArgs) -> Self {
         let name = name_normalize(&args.name.unwrap_or_else(|| DEFAULT_NAME.to_string()));
         let base_level = args.level.unwrap_or(1);
-        let gold = args.gold.unwrap_or(0);
-
-        let base_status = get_status_by_level(base_level).unwrap_or(&DEFAULT_STATUS);
-        let abc = calculate_abc(calculate_name_total(&name));
-
-        let mut final_exp = args.exp.unwrap_or(base_status.required_exp);
-        if let Some(user_exp) = args.exp {
-            final_exp = final_exp.max(user_exp);
-        }
-
+        let final_exp = resolve_experience(base_level, args.exp);
         let level = get_level_by_exp(final_exp);
-        let status = get_status_by_level(level).unwrap_or(&DEFAULT_STATUS);
-        let adjusted = status.apply_abc_modifiers(&abc);
+        let adjusted = get_adjusted_status_by_name_lv(&name, level);
 
         Self {
             name,
             hp: adjusted.max_hp,
             mp: adjusted.max_mp,
             exp: final_exp,
-            gold,
+            gold: args.gold.unwrap_or(0),
             weapon: args.weapon.unwrap_or(0),
             armor: args.armor.unwrap_or(0),
             shield: args.shield.unwrap_or(0),
@@ -116,20 +109,16 @@ impl Player {
         get_level_by_exp(self.exp)
     }
 
-    pub fn get_status_by_level(&self, level: u8) -> Option<Status> {
-        get_status_by_level(level).map(|base| base.apply_abc_modifiers(&self.abc()))
-    }
-
     pub fn name_total(&self) -> u16 {
         calculate_name_total(&self.name)
     }
 
     pub fn strength(&self) -> Option<u16> {
-        self.adjusted_status().map(|s| s.strength)
+        self.status().map(|s| s.strength)
     }
 
     pub fn agility(&self) -> Option<u16> {
-        self.adjusted_status().map(|s| s.agility)
+        self.status().map(|s| s.agility)
     }
 
     pub fn abc(&self) -> GrowthModifiers {
@@ -140,9 +129,9 @@ impl Player {
         get_status_by_level(self.level())
     }
 
-    pub fn adjusted_status(&self) -> Option<Status> {
+    pub fn status(&self) -> Option<Status> {
         self.base_status()
-            .map(|s| s.apply_abc_modifiers(&self.abc()))
+            .map(|base| base.apply_abc_modifiers(&self.abc()))
     }
 
     pub fn to_password_string(&self) -> Result<String, String> {

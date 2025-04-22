@@ -12,7 +12,7 @@ fn main() {
     player.maximize();
 
     println!("player name: {}", player.name);
-    println!("player adjusted_status: {:?}", player.adjusted_status());
+    println!("player adjusted status: {:?}", player.status());
 
     let password = player.to_password_string().unwrap();
     println!("Password: {}", password);
