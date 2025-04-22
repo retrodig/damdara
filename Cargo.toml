@@ -3,10 +3,10 @@ name = "damdara"
 version = "0.1.0"
 edition = "2024"
 authors = ["Daisuke Takayama <info@webcyou.com>"]
-description = "A simple letter feed crate."
+description = "Dragon Quest Core Module, created in Rust."
 license = "MIT"
-repository = "https://github.com/webcyou-org/typeflow"
-homepage = "https://github.com/webcyou-org/typeflow"
+repository = "https://github.com/retrodig/damdara"
+homepage = "https://github.com/retrodig/damdara"
 readme = "README.md"
 
 [dependencies]
