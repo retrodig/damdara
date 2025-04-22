@@ -1,9 +1,9 @@
 use crate::constants::text::{DAKUTEN_PAIRS, HANDAKUTEN_PAIRS, KANA_TABLE, NAME_MAX_LENGTH};
 use std::collections::HashMap;
 
+/// 無効文字を除去
 pub fn filter_valid_chars(input: &str) -> String {
     let valid_set: std::collections::HashSet<char> = KANA_TABLE.iter().copied().collect();
-
     input.chars().filter(|c| valid_set.contains(c)).collect()
 }
 
@@ -19,6 +19,7 @@ pub fn build_dakuten_map() -> HashMap<char, (char, Option<char>)> {
     map
 }
 
+/// 濁音分解
 pub fn split_dakuten(input: &str) -> String {
     let dakuten_map = build_dakuten_map();
 
@@ -36,6 +37,7 @@ pub fn split_dakuten(input: &str) -> String {
     result
 }
 
+/// 4文字整形
 pub fn normalize_to_4_chars(input: &str) -> String {
     let mut chars: Vec<char> = input.chars().collect();
     chars.truncate(NAME_MAX_LENGTH);
@@ -44,6 +46,12 @@ pub fn normalize_to_4_chars(input: &str) -> String {
         chars.push('　');
     }
     chars.into_iter().collect()
+}
+
+/// 無効文字を除去 → 濁音分解 → 4文字整形
+pub fn name_normalize(name: &str) -> String {
+    let cleaned = filter_valid_chars(name);
+    normalize_to_4_chars(&split_dakuten(&cleaned))
 }
 
 pub fn build_kana_map() -> HashMap<char, u8> {

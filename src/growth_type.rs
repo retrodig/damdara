@@ -1,18 +1,15 @@
 use std::collections::HashMap;
 
 use crate::constants::text::KANA_TABLE;
-use crate::string_utils::{filter_valid_chars, normalize_to_4_chars, split_dakuten};
+use crate::string_utils::name_normalize;
 
 pub fn calculate_growth_type(name: &str) -> u8 {
     let mut char_to_value = HashMap::new();
     for (i, &c) in KANA_TABLE.iter().enumerate() {
         char_to_value.insert(c, (i % 16) as u8);
     }
-
     // 無効文字を除去 → 濁音分解 → 4文字整形
-    let cleaned = filter_valid_chars(name);
-    let normalized = normalize_to_4_chars(&split_dakuten(&cleaned));
-
+    let normalized = name_normalize(name);
     // 各文字を合計
     let sum: u32 = normalized
         .chars()
@@ -44,7 +41,6 @@ mod tests {
         // あ=10, い=11, う=12, え=13 → 合計46 → %16 = 14（おは無視される）
         assert_eq!(calculate_growth_type("あいうえお"), 14);
     }
-
 
     #[test]
     fn test_無効文字含む() {
