@@ -1,6 +1,6 @@
 use crate::constants::save_data::{SaveData, SaveDataArgs};
 use crate::constants::status::Flags;
-use crate::constants::status::{DEFAULT_STATUS, Status};
+use crate::constants::status::Status;
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{
     GrowthModifiers, calculate_abc, calculate_name_total, get_adjusted_status_by_name_lv,
@@ -226,5 +226,13 @@ mod tests {
         assert!(player.level() >= 5);
         assert_eq!(player.exp, 10000);
         assert_eq!(player.gold, 20000);
+    }
+
+    #[test]
+    fn test_player_maximize_password() {
+        let mut player = Player::new("だい");
+        player.maximize();
+        let password = player.to_password_string().unwrap();
+        assert_eq!(password, "へへみぞあうぞてえきいおくらちきこぜくゆ");
     }
 }

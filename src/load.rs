@@ -49,7 +49,7 @@ pub fn reorder_blocks_back(bits: &[u8]) -> Result<Vec<u8>, String> {
         let block_6bit = &bits[block_i * 4..(block_i + 1) * 4];
 
         // Step4で並びを逆順にされた → 元の順に戻す
-        let mut reversed_6bit = block_6bit.iter().rev().cloned().collect::<Vec<_>>();
+        let reversed_6bit = block_6bit.iter().rev().cloned().collect::<Vec<_>>();
 
         // 6bit × 4 → 24bit に復元（ビット列結合）
         let mut combined: u32 = 0;
