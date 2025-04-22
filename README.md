@@ -1,4 +1,4 @@
-# Damdara 🦀
+# 🏰 Damdara 🦀
 
 ![Rust](https://img.shields.io/badge/made%20with-Rust-red)
 ![crate](https://img.shields.io/crates/v/damdara.svg)
