@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::constants::text::KANA_TABLE;
+use crate::constants::text::{GROWTH_VALUE_TABLE, KANA_TABLE};
 use crate::string_utils::name_normalize;
 
 // pub enum GrowthType {
@@ -28,13 +28,20 @@ use crate::string_utils::name_normalize;
 //     GrowthPattern { growth_type, bonus }
 // }
 
+pub fn growth_table_index(c: char) -> Option<u8> {
+    GROWTH_VALUE_TABLE
+        .iter()
+        .find(|&&(ch, _)| ch == c)
+        .map(|&(_, val)| val)
+}
+
 pub fn calculate_name_total(name: &str) -> u16 {
     let normalized = name_normalize(name);
     normalized
         .chars()
-        .filter_map(|c| KANA_TABLE.iter().position(|&k| k == c))
-        .map(|i| i as u16)
-        .sum()
+        .filter_map(growth_table_index)
+        .map(u16::from)
+        .sum::<u16>()
 }
 
 pub fn calculate_growth_type(name: &str) -> u8 {
@@ -54,6 +61,7 @@ pub fn calculate_growth_type(name: &str) -> u8 {
     (sum % 16) as u8
 }
 
+#[derive(Debug)]
 pub struct GrowthModifiers {
     pub a: u16,
     pub b: u16,

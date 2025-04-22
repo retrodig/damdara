@@ -15,7 +15,10 @@ impl Player {
     pub fn new(name: &str, level: Option<u8>) -> Self {
         let name = name_normalize(name);
         let level = level.unwrap_or(1);
+        println!("{:?}", calculate_name_total(&name));
+
         let abc = calculate_abc(calculate_name_total(&name));
+        println!("{:?}", abc);
         let base = get_status_by_level(level).unwrap_or(&DEFAULT_STATUS);
         let adjusted = base.apply_abc_modifiers(&abc);
 

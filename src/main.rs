@@ -46,8 +46,9 @@ fn main() {
     // let password = save.to_password_string().unwrap();
     // println!("ふっかつのじゅもん: {}", password);
 
-    let player = Player::new("だい", Some(22));
+    let player = Player::new("だい", Some(23));
 
     println!("{}", player.name);
     println!("{:?}", player.adjusted_status());
+    println!("{}", player.to_password_string().unwrap());
 }
