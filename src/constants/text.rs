@@ -1,5 +1,4 @@
 pub const DEFAULT_NAME: &str = "ゆうてい";
-
 pub const NAME_MAX_LENGTH: usize = 4;
 pub const KANA_TABLE: [char; 64] = [
     '０', '１', '２', '３', '４', '５', '６', '７', '８', '９', 'あ', 'い', 'う', 'え', 'お', 'か',

@@ -327,6 +327,15 @@ pub fn get_status_by_level(level: u8) -> Option<&'static Status> {
     }
 }
 
+pub fn get_level_by_exp(exp: u16) -> u8 {
+    for status in STATUS_TABLE.iter().rev() {
+        if exp >= status.required_exp {
+            return status.level;
+        }
+    }
+    1
+}
+
 pub static DEFAULT_STATUS: Status = Status {
     level: 1,
     strength: 0,
