@@ -1,6 +1,6 @@
 use crate::growth_type::GrowthModifiers;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Flags {
     pub has_dragon_scale: bool,    // りゅうのうろこを装備したか
     pub has_warrior_ring: bool,    // せんしのゆびわを装備したか

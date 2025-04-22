@@ -120,11 +120,7 @@ impl Player {
             items: Some(self.items),
             herbs: Some(self.herbs),
             keys: Some(self.keys),
-            has_dragon_scale: Some(self.flags.has_dragon_scale),
-            has_warrior_ring: Some(self.flags.has_warrior_ring),
-            has_cursed_necklace: Some(self.flags.has_cursed_necklace),
-            defeated_dragon: Some(self.flags.defeated_dragon),
-            defeated_golem: Some(self.flags.defeated_golem),
+            flags: Some(self.flags.clone()),
             pattern: None,
             ..Default::default()
         });

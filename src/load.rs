@@ -169,7 +169,7 @@ pub fn extract_herbs_and_keys_from_bits(bits: &[u8]) -> Result<(u8, u8), String>
 pub fn parse_bitstring_to_save_data(bits: &[u8]) -> Result<SaveData, String> {
     validate_120bit(bits)?;
 
-    let flag = extract_flags_from_bits(&bits)?;
+    let flags = extract_flags_from_bits(&bits)?;
     let (herbs, keys) = extract_herbs_and_keys_from_bits(&bits)?;
 
     Ok(SaveData {
@@ -182,11 +182,7 @@ pub fn parse_bitstring_to_save_data(bits: &[u8]) -> Result<SaveData, String> {
         items: extract_items_from_bits(&bits)?,
         herbs,
         keys,
-        has_dragon_scale: flag.has_dragon_scale,
-        has_warrior_ring: flag.has_warrior_ring,
-        has_cursed_necklace: flag.has_cursed_necklace,
-        defeated_dragon: flag.defeated_dragon,
-        defeated_golem: flag.defeated_golem,
+        flags,
         pattern: extract_pattern_from_bits(&bits)?,
     })
 }

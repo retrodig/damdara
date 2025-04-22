@@ -1,4 +1,5 @@
 use crate::constants::save_data::{SaveData, SaveDataArgs};
+use crate::constants::status::Flags;
 use crate::constants::text::{DEFAULT_NAME, PASSWORD_TABLE};
 use crate::utility::binary_utils::combine_bits;
 use crate::utility::string_utils::{build_kana_map, kana_index, name_normalize, nth_char};
@@ -22,11 +23,7 @@ impl SaveData {
             items: args.items.unwrap_or([0; 8]),
             herbs: args.herbs.unwrap_or(0),
             keys: args.keys.unwrap_or(0),
-            has_dragon_scale: args.has_dragon_scale.unwrap_or(false),
-            has_warrior_ring: args.has_warrior_ring.unwrap_or(false),
-            has_cursed_necklace: args.has_cursed_necklace.unwrap_or(false),
-            defeated_dragon: args.defeated_dragon.unwrap_or(false),
-            defeated_golem: args.defeated_golem.unwrap_or(false),
+            flags: args.flags.unwrap_or_else(Flags::default),
             pattern: args.pattern.unwrap_or(0),
         }
     }
@@ -109,11 +106,11 @@ impl SaveData {
     pub fn flags_as_binary(&self) -> String {
         format!(
             "{}{}{}{}{}",
-            self.has_dragon_scale as u8,
-            self.has_warrior_ring as u8,
-            self.has_cursed_necklace as u8,
-            self.defeated_dragon as u8,
-            self.defeated_golem as u8
+            self.flags.has_dragon_scale as u8,
+            self.flags.has_warrior_ring as u8,
+            self.flags.has_cursed_necklace as u8,
+            self.flags.defeated_dragon as u8,
+            self.flags.defeated_golem as u8
         )
     }
 
@@ -196,7 +193,7 @@ impl SaveData {
     /// パターン3bit目 + has_cursed_necklace + 名前3文字目 の8bit合成
     pub fn cursed_check_code(&self) -> Result<u8, String> {
         let pattern_bit = self.pattern_bit_index(3)?; // 1bit
-        let cursed_bit = if self.has_cursed_necklace { 1 } else { 0 };
+        let cursed_bit = if self.flags.has_cursed_necklace { 1 } else { 0 };
         let kana_char = nth_char(&self.name, 3)?;
         let kana_index = kana_index(kana_char)?; // 6bit
         combine_bits(&[(pattern_bit, 1), (cursed_bit, 1), (kana_index, 6)])
@@ -206,7 +203,7 @@ impl SaveData {
     pub fn golem_check_code(&self) -> Result<u8, String> {
         let kana_char = nth_char(&self.name, 1)?;
         let kana_index = kana_index(kana_char)?; // 6bit
-        let golem_bit = if self.defeated_golem { 1 } else { 0 };
+        let golem_bit = if self.flags.defeated_golem { 1 } else { 0 };
         let pattern_bit = self.pattern_bit_index(2)?; // 1bit
         combine_bits(&[(kana_index, 6), (golem_bit, 1), (pattern_bit, 1)])
     }
@@ -214,7 +211,7 @@ impl SaveData {
     /// パターンの1bit目 ＋ ドラゴン倒した？ ＋ 名前の4文字目（1bit + 1bit + 6bit）
     pub fn dragon_check_code(&self) -> Result<u8, String> {
         let pattern_bit = self.pattern_bit_index(1)?; // 1bit
-        let dragon_bit = if self.defeated_dragon { 1 } else { 0 };
+        let dragon_bit = if self.flags.defeated_dragon { 1 } else { 0 };
         let kana_char = nth_char(&self.name, 4)?;
         let kana_index = kana_index(kana_char)?; // 6bit
         combine_bits(&[(pattern_bit, 1), (dragon_bit, 1), (kana_index, 6)])
@@ -222,10 +219,10 @@ impl SaveData {
 
     /// りゅうのうろこ装備した？ ＋ 名前の2文字目 ＋ せんしのゆびわ装備した？（1bit + 6bit + 1bit）
     pub fn dragon_scale_check_code(&self) -> Result<u8, String> {
-        let dragon_scale_bit = if self.has_dragon_scale { 1 } else { 0 };
+        let dragon_scale_bit = if self.flags.has_dragon_scale { 1 } else { 0 };
         let kana_char = nth_char(&self.name, 2)?;
         let kana_index = kana_index(kana_char)?; // 6bit
-        let warrior_ring_bit = if self.has_warrior_ring { 1 } else { 0 };
+        let warrior_ring_bit = if self.flags.has_warrior_ring { 1 } else { 0 };
         combine_bits(&[
             (dragon_scale_bit, 1),
             (kana_index, 6),
@@ -484,7 +481,10 @@ mod tests {
     fn test_cursed_check_code() {
         let save = SaveData {
             pattern: 0b100, // pattern_bit_3 = 1
-            has_cursed_necklace: true,
+            flags: Flags {
+                has_cursed_necklace: true,
+                ..Default::default()
+            },
             ..Default::default()
         };
 
