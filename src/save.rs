@@ -1,7 +1,7 @@
-use crate::binary_utils::combine_bits;
 use crate::constants::save_data::{SaveData, SaveDataArgs};
 use crate::constants::text::{DEFAULT_NAME, PASSWORD_TABLE};
-use crate::string_utils::{build_kana_map, kana_index, name_normalize, nth_char};
+use crate::utility::binary_utils::combine_bits;
+use crate::utility::string_utils::{build_kana_map, kana_index, name_normalize, nth_char};
 use std::collections::HashMap;
 
 impl SaveData {

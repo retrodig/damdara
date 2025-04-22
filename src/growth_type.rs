@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::constants::text::{GROWTH_VALUE_TABLE, KANA_TABLE};
-use crate::string_utils::name_normalize;
+use crate::utility::string_utils::name_normalize;
 
 // pub enum GrowthType {
 //     A,

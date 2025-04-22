@@ -1,10 +1,9 @@
-mod binary_utils;
 mod constants;
 mod growth_type;
 mod load;
 mod player;
 mod save;
-mod string_utils;
+mod utility;
 
 use crate::load::{
     decode_password_string, parse_bitstring_to_save_data, reorder_blocks_back,

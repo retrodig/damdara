@@ -3,7 +3,7 @@ use crate::constants::status::Flags;
 use crate::constants::status::{DEFAULT_STATUS, Status, get_level_by_exp, get_status_by_level};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{GrowthModifiers, calculate_abc, calculate_name_total};
-use crate::string_utils::name_normalize;
+use crate::utility::string_utils::name_normalize;
 
 pub struct Player {
     pub name: String,
