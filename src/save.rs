@@ -1,5 +1,6 @@
+use crate::binary_utils::combine_bits;
 use crate::constants::text::{DEFAULT_NAME, PASSWORD_TABLE};
-use crate::string_utils::{build_kana_map, combine_bits, kana_index, name_normalize, nth_char};
+use crate::string_utils::{build_kana_map, kana_index, name_normalize, nth_char};
 use std::collections::HashMap;
 
 pub struct SaveData {
