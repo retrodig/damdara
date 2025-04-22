@@ -1,5 +1,22 @@
 use crate::constants::text::DEFAULT_NAME;
 
+// bits[0]  = Checksum
+// bits[1]  = experience lower 8 bits
+// bits[2]  = pattern bit 2 (1), cursed necklace (1), name[2] index (6)
+// bits[3]  = item[3] (4), item[2] (4)
+// bits[4]  = gold lower 8 bits
+// bits[5]  = name[0] (6), golem (1), pattern bit 1 (1)
+// bits[6]  = item[7] (4), item[6] (4)
+// bits[7]  = pattern bit 0 (1), defeated_dragon (1), name[3] (6)
+// bits[8]  = weapon (3), armor (3), shield (2)
+// bits[9]  = gold upper 8 bits
+// bits[10] = keys (4), herbs (4)
+// bits[11] = item[5] (4), item[4] (4)
+// bits[12] = experience upper 8 bits
+// bits[13] = has_dragon_scale (1), name[1] (6), has_warrior_ring (1)
+// bits[14] = item[1] (4), item[0] (4)
+
+#[derive(Debug)]
 pub struct SaveData {
     pub name: String,              // 名前: 6bit×4文字
     pub experience: u16,           // 経験値: 0–65535 （16bit）

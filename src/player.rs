@@ -9,6 +9,7 @@ pub struct Player {
     pub hp: u16,
     pub mp: u16,
     pub exp: u16,
+    pub gold: u16,
 }
 
 #[derive(Default)]
@@ -16,6 +17,7 @@ pub struct PlayerArgs {
     pub name: Option<String>,
     pub level: Option<u8>,
     pub exp: Option<u16>,
+    pub gold: Option<u16>,
 }
 
 impl Player {
@@ -29,6 +31,8 @@ impl Player {
     pub fn new_with(args: PlayerArgs) -> Self {
         let name = name_normalize(&args.name.unwrap_or_else(|| DEFAULT_NAME.to_string()));
         let base_level = args.level.unwrap_or(1);
+        let gold = args.gold.unwrap_or(0);
+
         let base_status = get_status_by_level(base_level).unwrap_or(&DEFAULT_STATUS);
         let abc = calculate_abc(calculate_name_total(&name));
 
@@ -46,6 +50,7 @@ impl Player {
             hp: adjusted.max_hp,
             mp: adjusted.max_mp,
             exp: final_exp,
+            gold,
         }
     }
 
@@ -86,6 +91,7 @@ impl Player {
         let save = SaveData::new_with(SaveDataArgs {
             name: Some(self.name.clone()),
             experience: Some(self.exp),
+            gold: Some(self.gold),
             ..Default::default()
         });
         save.to_password_string()

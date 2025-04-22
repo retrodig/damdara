@@ -29,6 +29,26 @@ the player's name, item equipping, and battle processing.
 
 ## Features
 
+Bit configuration mapping table for password generation.
+
+ Byte Index | Field Description                               | Bits (from MSB to LSB) 
+------------|-------------------------------------------------|------------------------
+ 0          | Checksum (CRC-8)                                | [7:0]                  
+ 1          | Experience (lower 8 bits)                       | [7:0]                  
+ 2          | Pattern[2] (1) + Necklace (1) + Name[2] (6)     | [7], [6], [5:0]        
+ 3          | Item[3] + Item[2]                               | [7:4], [3:0]           
+ 4          | Gold (lower 8 bits)                             | [7:0]                  
+ 5          | Name[0] (6) + Golem (1) + Pattern[1] (1)        | [7:2], [1], [0]        
+ 6          | Item[7] + Item[6]                               | [7:4], [3:0]           
+ 7          | Pattern[0] + Dragon (1) + Name[3] (6)           | [7], [6], [5:0]        
+ 8          | Weapon (3) + Armor (3) + Shield (2)             | [7:5], [4:2], [1:0]    
+ 9          | Gold (upper 8 bits)                             | [7:0]                  
+ 10         | Keys + Herbs                                    | [7:4], [3:0]           
+ 11         | Item[5] + Item[4]                               | [7:4], [3:0]           
+ 12         | Experience (upper 8 bits)                       | [7:0]                  
+ 13         | DragonScale (1) + Name[1] (6) + WarriorRing (1) | [7], [6:1], [0]        
+ 14         | Item[1] + Item[0]                               | [7:4], [3:0]           
+
 ## Installation
 
 ## Usage
