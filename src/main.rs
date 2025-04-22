@@ -6,7 +6,6 @@ mod player;
 mod save;
 mod string_utils;
 
-use crate::constants::status::Flags;
 use crate::load::{
     decode_password_string, parse_bitstring_to_save_data, reorder_blocks_back,
     undo_password_addition,
