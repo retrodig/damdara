@@ -146,9 +146,11 @@ mod tests {
             name: Some("こういち".to_string()),
             level: Some(5),
             exp: Some(10000),
+            gold: Some(20000),
         });
 
         assert!(player.level() >= 5);
         assert_eq!(player.exp, 10000);
+        assert_eq!(player.gold, 20000);
     }
 }

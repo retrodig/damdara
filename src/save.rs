@@ -33,7 +33,7 @@ impl SaveData {
 
     pub fn full_bitstring(&self) -> Result<String, String> {
         Ok([
-            self.check_code(),
+            self.check_sum(),
             self.name_as_binary(),
             self.ex_as_binary(),
             self.gold_as_binary(),
@@ -121,7 +121,7 @@ impl SaveData {
         format!("{:03b}", self.pattern & 0b111)
     }
 
-    pub fn check_code(&self) -> String {
+    pub fn check_sum(&self) -> String {
         format!("{:08b}", 0b00000000)
     }
 
