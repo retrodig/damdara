@@ -56,6 +56,28 @@ pub struct Status {
     pub spell: Option<&'static str>,
 }
 
+pub struct PlayerSummary {
+    pub name: String,
+    pub level: u8,
+    pub hp: u16,
+    pub mp: u16,
+    pub gold: u16,
+    pub experience: u32,
+}
+
+pub struct StrengthStatus {
+    pub level: u8,
+    pub strength: u16,
+    pub agility: u16,
+    pub max_hp: u16,
+    pub max_mp: u16,
+    pub attack_power: u16,
+    pub defense_power: u16,
+    pub weapon: String,
+    pub armor: String,
+    pub shield: String,
+}
+
 pub static DEFAULT_STATUS: Status = Status {
     level: 1,
     strength: 0,

@@ -29,14 +29,18 @@ pub struct Cli {
     pub keys: u8,
     #[arg(long, default_value_t = Flags::default())]
     pub flags: Flags,
-    #[clap(short, long, default_value_t = String::from(DEFAULT_MODE))]
-    pub mode: String,
     #[clap(
         short,
         long,
         default_value_t = String::from(DEFAULT_MAX_PARAMETER_PASSWORD)
     )]
     pub password: String,
+    #[clap(short, long, default_value_t = String::from(DEFAULT_MODE))]
+    pub mode: String,
+    #[clap(long)]
+    pub format: Option<String>,
+    #[clap(long)]
+    pub view: Option<String>,
     #[clap(short, long)]
     pub option: Vec<String>,
 }

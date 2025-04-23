@@ -1,6 +1,6 @@
+use crate::constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
 use crate::constants::save_data::{SaveData, SaveDataArgs};
-use crate::constants::status::Flags;
-use crate::constants::status::Status;
+use crate::constants::status::{Flags, Status};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{
     GrowthModifiers, calculate_abc, calculate_name_total, get_adjusted_status_by_name_lv,
@@ -132,6 +132,43 @@ impl Player {
     pub fn status(&self) -> Option<Status> {
         self.base_status()
             .map(|base| base.apply_abc_modifiers(&self.abc()))
+    }
+
+    pub fn attack_power(&self) -> u16 {
+        let weapon = WEAPON_MASTER
+            .get(self.weapon as usize)
+            .unwrap_or(&WEAPON_MASTER[0]);
+        let ring_bonus = if self.flags.has_warrior_ring { 2 } else { 0 };
+
+        self.status()
+            .map(|s| s.strength + weapon.attack + ring_bonus)
+            .unwrap_or(weapon.attack + ring_bonus)
+    }
+
+    pub fn defense_power(&self) -> u16 {
+        let armor = ARMOR_MASTER
+            .get(self.armor as usize)
+            .unwrap_or(&ARMOR_MASTER[0]);
+        let shield = SHIELD_MASTER
+            .get(self.shield as usize)
+            .unwrap_or(&SHIELD_MASTER[0]);
+        let scale_bonus = if self.flags.has_dragon_scale { 2 } else { 0 };
+
+        self.status()
+            .map(|s| s.agility / 2 + armor.defense + shield.defense + scale_bonus)
+            .unwrap_or(armor.defense + shield.defense + scale_bonus)
+    }
+
+    pub fn item_list(&self) -> Vec<&'static str> {
+        self.items
+            .iter()
+            .map(|&id| {
+                ITEM_MASTER
+                    .get(id as usize)
+                    .map(|i| i.name)
+                    .unwrap_or("なし")
+            })
+            .collect()
     }
 
     pub fn to_password_string(&self) -> Result<String, String> {
