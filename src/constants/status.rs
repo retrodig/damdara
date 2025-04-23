@@ -1,3 +1,7 @@
+use std::fmt;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+
 #[derive(Default, Debug, Clone)]
 pub struct Flags {
     pub has_dragon_scale: bool,    // りゅうのうろこを装備したか
@@ -5,6 +9,40 @@ pub struct Flags {
     pub has_cursed_necklace: bool, // しのくびかざりを入手したか
     pub defeated_dragon: bool,     // ドラゴンを倒したか
     pub defeated_golem: bool,      // ゴーレムを倒したか
+}
+
+impl FromStr for Flags {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 5 {
+            return Err("フラグは5文字の01文字列で指定してください".into());
+        }
+
+        let chars: Vec<char> = s.chars().collect();
+        Ok(Self {
+            has_dragon_scale: chars[0] == '1',
+            has_warrior_ring: chars[1] == '1',
+            has_cursed_necklace: chars[2] == '1',
+            defeated_dragon: chars[3] == '1',
+            defeated_golem: chars[4] == '1',
+        })
+    }
+}
+
+impl Display for Flags {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        // "1" or "0" を順番に並べて文字列化
+        write!(
+            f,
+            "{}{}{}{}{}",
+            self.has_dragon_scale as u8,
+            self.has_warrior_ring as u8,
+            self.has_cursed_necklace as u8,
+            self.defeated_dragon as u8,
+            self.defeated_golem as u8,
+        )
+    }
 }
 
 #[derive(Debug)]

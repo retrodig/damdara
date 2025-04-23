@@ -1,3 +1,5 @@
+use clap::Parser;
+
 mod constants;
 mod growth_type;
 mod load;
@@ -5,18 +7,9 @@ mod player;
 mod save;
 mod utility;
 
-use player::Player;
+use damdara::Cli;
 
 fn main() {
-    let mut player = Player::new("だい");
-    player.maximize();
-
-    println!("player name: {}", player.name);
-    println!("player adjusted status: {:?}", player.status());
-
-    let password = player.to_password_string().unwrap();
-    println!("Password: {}", password);
-
-    let new_player = Player::from_password_string(&password);
-    println!("new_player from Password: {:?}", new_player.unwrap());
+    let args = Cli::parse();
+    damdara::run_from_args(args);
 }
