@@ -23,7 +23,9 @@ the player's name, item equipping, and battle processing.
     - [Cargo](#cargo)
     - [Brew](#brew)
 - [Usage](#usage)
-    - [Example](#example)
+    - [Mode](#mode)
+    - [Status Option](#status-option)
+    - [Format Option](#format-option)
 - [Additional Resources](#additional-resources)
 - [Contributing to Damdara](#contributing-to-Damdara)
 - [References](#references)
@@ -97,6 +99,40 @@ brew install damdara
 ```
 
 ## Usage
+
+```
+cargo run <input>
+```
+
+or
+
+```
+damdara <input>
+```
+
+If input is not present, the default brave value is returned.
+
+```
+cargo run
+
+player name: ゆうてい
+status: Some(Status { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, required_exp: 0, spell: None })
+```
+
+The name can be specified by giving -n
+
+```
+cargo run -- -n だい
+
+player name: た゛い
+status: Some(Status { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, required_exp: 0, spell: None })
+```
+
+### Mode
+
+### Status Option
+
+### Format Option
 
 ### Example
 
