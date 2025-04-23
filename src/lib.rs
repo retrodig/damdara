@@ -12,23 +12,23 @@ use constants::config::Mode;
 use player::Player;
 
 pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
-    // let config = Config::from_cli(&args);
-    println!("{:?}", &args);
+    let mut player = Player::new_with(args.to_player_args());
+    if args.option.iter().any(|opt| opt == "max") {
+        player.maximize();
+    }
 
-    let mode = Mode::from_str(&args.mode).unwrap_or_else(|_| Mode::default());
+    let mode = args.mode();
     match mode {
         Mode::Start => {
-            let mut player = Player::new(&args.name);
-            player.maximize();
-
             println!("player name: {}", player.name);
-            println!("player adjusted status: {:?}", player.status());
-
-            let password = player.to_password_string().unwrap();
-            println!("Password: {}", password);
-
-            let new_player = Player::from_password_string(&password);
-            println!("new_player from Password: {:?}", new_player.unwrap());
+            println!("status: {:?}", player.status());
+        }
+        Mode::Save => {
+            println!("password: {}", player.to_password_string()?);
+        }
+        Mode::Load => {
+            let new_player = Player::from_password_string(&args.password)?;
+            println!("new_player from Password: {:?}", new_player.status());
         }
     }
     Ok(())
