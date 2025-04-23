@@ -20,7 +20,10 @@ the player's name, item equipping, and battle processing.
 
 - [Features](#features)
 - [Installation](#installation)
+    - [Cargo](#cargo)
+    - [Brew](#brew)
 - [Usage](#usage)
+    - [Example](#example)
 - [Additional Resources](#additional-resources)
 - [Contributing to Damdara](#contributing-to-Damdara)
 - [References](#references)
@@ -28,6 +31,29 @@ the player's name, item equipping, and battle processing.
 - [Author](#author)
 
 ## Features
+
+- [x] Generate resurrection spells from parameters （Parameters to Password）
+- [x] Parameters generated from resurrection spells (Password to Parameters)
+- [x] Calculate parameters enhanced by name
+- [ ] See list of monsters
+- [ ] Refer to any monster information
+- [ ] See parameter list
+- [ ] Refer to any parameter
+- [ ] See list of Item
+- [ ] Refer to any Item information
+- [ ] See list of Weapon
+- [ ] Refer to any Weapon information
+- [ ] See list of Armor
+- [ ] Refer to any Armor information
+- [ ] See list of Shield
+- [ ] Refer to any Shield information
+- [ ] Reproduction of battle scenes
+- [ ] See list of Town
+- [ ] Refer to any Town information
+- [ ] Refer to any World information
+- [ ] See list of Message
+- [ ] Explore the field
+- [ ] Explore the Town
 
 Bit configuration mapping table for password generation.
 
@@ -51,7 +77,28 @@ Bit configuration mapping table for password generation.
 
 ## Installation
 
+### Cargo
+
+```
+cargo install damdara
+```
+
+**Add to project**
+
+```
+cargo add damdara
+```
+
+### Brew
+
+```
+brew tap webcyou-org/tap
+brew install damdara
+```
+
 ## Usage
+
+### Example
 
 ## Additional Resources
 
