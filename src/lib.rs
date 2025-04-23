@@ -11,7 +11,7 @@ pub use constants::config::Cli;
 use constants::config::Mode;
 use player::Player;
 
-pub fn run_from_args(args: Cli) {
+pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
     // let config = Config::from_cli(&args);
     println!("{:?}", &args);
 
@@ -31,4 +31,5 @@ pub fn run_from_args(args: Cli) {
             println!("new_player from Password: {:?}", new_player.unwrap());
         }
     }
+    Ok(())
 }

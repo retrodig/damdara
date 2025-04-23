@@ -28,11 +28,14 @@ pub fn undo_password_addition(values: &[u8]) -> Result<Vec<u8>, String> {
 
     let mut result = vec![0u8; 20];
     for i in 0..20 {
-        if i == 0 {
-            result[0] = (values[0] + 64 - 4) % 64;
+        result[i] = if i == 0 {
+            (values[0] + 64 - 4) % 64
         } else {
-            result[i] = (values[i] + 64 - 4 - values[i - 1]) % 64;
-        }
+            // signedにして安全に演算し、modで戻す
+            let current = values[i] as i16;
+            let prev = values[i - 1] as i16;
+            ((current - 4 - prev + 64 * 2) % 64) as u8
+        };
     }
 
     Ok(result)
