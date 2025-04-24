@@ -78,6 +78,7 @@ pub enum Mode {
     Start,
     Save,
     Load,
+    Status,
 }
 
 impl Mode {
@@ -94,6 +95,7 @@ impl FromStr for Mode {
             "start" => Ok(Mode::Start),
             "save" => Ok(Mode::Save),
             "load" => Ok(Mode::Load),
+            "status" => Ok(Mode::Status),
             _ => Err(()),
         }
     }

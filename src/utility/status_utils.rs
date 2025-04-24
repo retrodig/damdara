@@ -44,6 +44,10 @@ pub fn get_status_by_level(level: u8) -> Option<&'static Status> {
     }
 }
 
+pub fn get_status_list() -> [Status; 30] {
+    STATUS_TABLE
+}
+
 pub fn get_level_by_exp(exp: u16) -> u8 {
     for status in STATUS_TABLE.iter().rev() {
         if exp >= status.required_exp {
