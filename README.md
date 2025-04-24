@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/github/license/retrodig/damdara)
 
 <p align="center">
-  <img width="450" src="https://github.com/user-attachments/assets/d6a206a2-3f08-4e7d-8192-1266e8f803a9">
+  <img width="450" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/main_logo_cmp.png">
 </p>
 
 Damdara is a logic crate for retro fantasy that can be built in Rust, while fully reproducing the "Fukkatsu no Jumon"
