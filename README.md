@@ -116,7 +116,8 @@ If input is not present, the default brave value is returned.
 cargo run
 
 player name: ゆうてい
-status: Some(Status { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, required_exp: 0, spell: None })
+summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
 The name can be specified by giving -n
@@ -125,14 +126,61 @@ The name can be specified by giving -n
 cargo run -- -n だい
 
 player name: た゛い
-status: Some(Status { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, required_exp: 0, spell: None })
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
 ### Mode
 
+You can specify the mode by giving `--mode` or the shortcut `-m`.
+
+```
+cargo run -- --mode <input>
+cargo run -- -m <input>
+```
+
+**example**
+
+```
+cargo run -- -n だい -m save
+ぢばげぞでぶいまももれぎざぞでぶいよごぜ
+```
+
+ Mode Name | Description                                                                   
+-----------|-------------------------------------------------------------------------------|
+ start     | Calculate enhanced parameters from name only                                  |                  
+ save      | Generate "Fukkatsu no Jumon" from arbitrary parameters (e.g. exp, gold, etc.) |                  
+ load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |                  
+
 ### Status Option
 
+`--option` or the shortcut `-o` can be used to specify status options
+
+```
+cargo run -- -o <input>
+```
+
+**example**
+
+```
+cargo run -- -o max
+player name: ゆうてい
+summary: PlayerSummary { name: "ゆうてい", level: 30, hp: 15, mp: 3, gold: 65535, experience: 65535 }
+strength_status: StrengthStatus { level: 30, strength: 140, agility: 120, max_hp: 210, max_mp: 183, attack_power: 182, defense_power: 110, weapon: "ロトのつるぎ", armor: "ロトのよろい", shield: "みかがみのたて" }
+```
+
 ### Format Option
+
+The output format can be changed by giving the `--format`.
+
+```
+cargo run -- --format <input>
+```
+
+ Format Name | Description                                                       
+-------------|-------------------------------------------------------------------|
+ print       | It will be a print statement output. This is the default setting. |                  
+ json        | Output in JSON format                                             |          
 
 ### Example
 
