@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 mod constants;
 mod growth_type;
 mod load;
@@ -21,14 +19,18 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
     match mode {
         Mode::Start => {
             println!("player name: {}", player.name);
-            println!("status: {:?}", player.status());
+            println!("summary: {:?}", player.summary());
+            println!("strength_status: {:?}", player.strength_status());
         }
         Mode::Save => {
             println!("password: {}", player.to_password_string()?);
         }
         Mode::Load => {
             let new_player = Player::from_password_string(&args.password)?;
-            println!("new_player from Password: {:?}", new_player.status());
+            println!("new_player from Password");
+            println!("player name: {}", new_player.name);
+            println!("summary: {:?}", new_player.summary());
+            println!("strength_status: {:?}", new_player.strength_status());
         }
     }
     Ok(())

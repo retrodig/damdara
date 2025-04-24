@@ -56,15 +56,17 @@ pub struct Status {
     pub spell: Option<&'static str>,
 }
 
+#[derive(Debug)]
 pub struct PlayerSummary {
     pub name: String,
     pub level: u8,
     pub hp: u16,
     pub mp: u16,
     pub gold: u16,
-    pub experience: u32,
+    pub experience: u16,
 }
 
+#[derive(Debug)]
 pub struct StrengthStatus {
     pub level: u8,
     pub strength: u16,

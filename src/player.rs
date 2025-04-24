@@ -1,6 +1,6 @@
 use crate::constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
 use crate::constants::save_data::{SaveData, SaveDataArgs};
-use crate::constants::status::{Flags, Status};
+use crate::constants::status::{Flags, PlayerSummary, Status, StrengthStatus};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{
     GrowthModifiers, calculate_abc, calculate_name_total, get_adjusted_status_by_name_lv,
@@ -205,6 +205,43 @@ impl Player {
             defeated_dragon: true,
             defeated_golem: true,
         };
+    }
+
+    pub fn summary(&self) -> PlayerSummary {
+        PlayerSummary {
+            name: self.name.clone(),
+            level: self.level(),
+            hp: self.hp,
+            mp: self.mp,
+            gold: self.gold,
+            experience: self.exp,
+        }
+    }
+
+    pub fn strength_status(&self) -> StrengthStatus {
+        let status = self.status().unwrap();
+        let weapon = WEAPON_MASTER
+            .get(self.weapon as usize)
+            .unwrap_or(&WEAPON_MASTER[0]);
+        let armor = ARMOR_MASTER
+            .get(self.armor as usize)
+            .unwrap_or(&ARMOR_MASTER[0]);
+        let shield = SHIELD_MASTER
+            .get(self.shield as usize)
+            .unwrap_or(&SHIELD_MASTER[0]);
+
+        StrengthStatus {
+            level: self.level(),
+            strength: status.strength,
+            agility: status.agility,
+            max_hp: status.max_hp,
+            max_mp: status.max_mp,
+            attack_power: self.attack_power(),
+            defense_power: self.defense_power(),
+            weapon: weapon.name.to_string(),
+            armor: armor.name.to_string(),
+            shield: shield.name.to_string(),
+        }
     }
 }
 
