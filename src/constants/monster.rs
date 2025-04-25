@@ -1,14 +1,34 @@
+use crate::constants::spell::{Spell, SpellResistance};
+
 pub struct Monster {
-    pub name: &'static str,
-    pub hp: u16,
-    pub attack: u16,
-    pub defense: u16,
-    pub exp: u16,
-    pub gold: u16,
+    pub stats: MonsterStats,
+    pub behavior: MonsterBehavior,
 }
 
-pub const MONSTER_MASTER: [Monster; 40] = [
-    Monster {
+pub struct MonsterStats {
+    pub name: &'static str,
+    pub hp: u8,
+    pub attack: u8,
+    pub defense: u8,
+    pub exp: u8,
+    pub gold: u8,
+}
+
+pub struct MonsterAction {
+    pub spell: Spell,
+    pub rate: u8, // 発動率（0, 25, 50, 75%）
+}
+
+pub struct MonsterBehavior {
+    pub name: &'static str,
+    pub resist: SpellResistance,
+    pub evade_rate: f32,
+    pub action_a: Option<MonsterAction>,
+    pub action_b: Option<MonsterAction>,
+}
+
+pub const MONSTER_MASTER: [MonsterStats; 40] = [
+    MonsterStats {
         name: "スライム",
         hp: 3,
         attack: 5,
@@ -16,7 +36,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 1,
         gold: 2,
     },
-    Monster {
+    MonsterStats {
         name: "スライムベス",
         hp: 4,
         attack: 7,
@@ -24,7 +44,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 1,
         gold: 2,
     },
-    Monster {
+    MonsterStats {
         name: "ドラキー",
         hp: 6,
         attack: 9,
@@ -32,7 +52,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 2,
         gold: 2,
     },
-    Monster {
+    MonsterStats {
         name: "ゴースト",
         hp: 7,
         attack: 11,
@@ -40,7 +60,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 3,
         gold: 4,
     },
-    Monster {
+    MonsterStats {
         name: "まほうつかい",
         hp: 13,
         attack: 11,
@@ -48,7 +68,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 4,
         gold: 11,
     },
-    Monster {
+    MonsterStats {
         name: "メイジドラキー",
         hp: 15,
         attack: 14,
@@ -56,7 +76,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 5,
         gold: 11,
     },
-    Monster {
+    MonsterStats {
         name: "おおさそり",
         hp: 20,
         attack: 18,
@@ -64,7 +84,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 6,
         gold: 15,
     },
-    Monster {
+    MonsterStats {
         name: "がいこつ",
         hp: 30,
         attack: 28,
@@ -72,7 +92,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 11,
         gold: 29,
     },
-    Monster {
+    MonsterStats {
         name: "メーダ",
         hp: 22,
         attack: 20,
@@ -80,7 +100,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 7,
         gold: 15,
     },
-    Monster {
+    MonsterStats {
         name: "メトロゴースト",
         hp: 23,
         attack: 18,
@@ -88,7 +108,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 8,
         gold: 17,
     },
-    Monster {
+    MonsterStats {
         name: "ドロル",
         hp: 25,
         attack: 24,
@@ -96,7 +116,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 10,
         gold: 24,
     },
-    Monster {
+    MonsterStats {
         name: "ドラキーマ",
         hp: 20,
         attack: 22,
@@ -104,7 +124,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 11,
         gold: 19,
     },
-    Monster {
+    MonsterStats {
         name: "まどうし",
         hp: 30,
         attack: 28,
@@ -112,7 +132,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 13,
         gold: 34,
     },
-    Monster {
+    MonsterStats {
         name: "てつのさそり",
         hp: 22,
         attack: 36,
@@ -120,7 +140,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 14,
         gold: 39,
     },
-    Monster {
+    MonsterStats {
         name: "リカント",
         hp: 34,
         attack: 40,
@@ -128,7 +148,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 16,
         gold: 49,
     },
-    Monster {
+    MonsterStats {
         name: "しりょう",
         hp: 36,
         attack: 44,
@@ -136,7 +156,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 17,
         gold: 59,
     },
-    Monster {
+    MonsterStats {
         name: "リカントマムル",
         hp: 38,
         attack: 50,
@@ -144,7 +164,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 20,
         gold: 79,
     },
-    Monster {
+    MonsterStats {
         name: "キメラ",
         hp: 42,
         attack: 56,
@@ -152,7 +172,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 24,
         gold: 99,
     },
-    Monster {
+    MonsterStats {
         name: "ゴールドマン",
         hp: 50,
         attack: 48,
@@ -160,7 +180,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 6,
         gold: 199,
     },
-    Monster {
+    MonsterStats {
         name: "ヘルゴースト",
         hp: 36,
         attack: 40,
@@ -168,7 +188,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 18,
         gold: 69,
     },
-    Monster {
+    MonsterStats {
         name: "メーダロード",
         hp: 35,
         attack: 47,
@@ -176,7 +196,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 20,
         gold: 84,
     },
-    Monster {
+    MonsterStats {
         name: "ドロルメイジ",
         hp: 38,
         attack: 52,
@@ -184,7 +204,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 22,
         gold: 89,
     },
-    Monster {
+    MonsterStats {
         name: "しりょうのきし",
         hp: 46,
         attack: 68,
@@ -192,7 +212,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 28,
         gold: 119,
     },
-    Monster {
+    MonsterStats {
         name: "しのさそり",
         hp: 35,
         attack: 60,
@@ -200,7 +220,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 26,
         gold: 109,
     },
-    Monster {
+    MonsterStats {
         name: "よろいのきし",
         hp: 55,
         attack: 76,
@@ -208,7 +228,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 33,
         gold: 129,
     },
-    Monster {
+    MonsterStats {
         name: "かげのきし",
         hp: 50,
         attack: 79,
@@ -216,7 +236,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 37,
         gold: 149,
     },
-    Monster {
+    MonsterStats {
         name: "メイジキメラ",
         hp: 58,
         attack: 78,
@@ -224,7 +244,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 34,
         gold: 139,
     },
-    Monster {
+    MonsterStats {
         name: "メタルスライム",
         hp: 4,
         attack: 10,
@@ -232,7 +252,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 115,
         gold: 5,
     },
-    Monster {
+    MonsterStats {
         name: "キラーリカント",
         hp: 60,
         attack: 86,
@@ -240,7 +260,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 40,
         gold: 154,
     },
-    Monster {
+    MonsterStats {
         name: "スターキメラ",
         hp: 65,
         attack: 86,
@@ -248,7 +268,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 43,
         gold: 159,
     },
-    Monster {
+    MonsterStats {
         name: "ドラゴン",
         hp: 65,
         attack: 88,
@@ -256,7 +276,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 45,
         gold: 159,
     },
-    Monster {
+    MonsterStats {
         name: "だいまどう",
         hp: 65,
         attack: 80,
@@ -264,7 +284,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 50,
         gold: 164,
     },
-    Monster {
+    MonsterStats {
         name: "ゴーレム",
         hp: 70,
         attack: 120,
@@ -272,7 +292,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 5,
         gold: 9,
     },
-    Monster {
+    MonsterStats {
         name: "あくまのきし",
         hp: 70,
         attack: 94,
@@ -280,7 +300,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 54,
         gold: 164,
     },
-    Monster {
+    MonsterStats {
         name: "キースドラゴン",
         hp: 70,
         attack: 98,
@@ -288,7 +308,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 60,
         gold: 149,
     },
-    Monster {
+    MonsterStats {
         name: "ストーンマン",
         hp: 160,
         attack: 100,
@@ -296,7 +316,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 65,
         gold: 139,
     },
-    Monster {
+    MonsterStats {
         name: "しにがみのきし",
         hp: 90,
         attack: 105,
@@ -304,7 +324,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 70,
         gold: 139,
     },
-    Monster {
+    MonsterStats {
         name: "ダースドラゴン",
         hp: 100,
         attack: 120,
@@ -312,7 +332,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 100,
         gold: 139,
     },
-    Monster {
+    MonsterStats {
         name: "りゅうおう",
         hp: 100,
         attack: 90,
@@ -320,7 +340,7 @@ pub const MONSTER_MASTER: [Monster; 40] = [
         exp: 0,
         gold: 0,
     },
-    Monster {
+    MonsterStats {
         name: "りゅうおう（竜型）",
         hp: 130,
         attack: 140,
