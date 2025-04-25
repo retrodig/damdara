@@ -165,8 +165,16 @@ cargo run -- -m display --view item 5
 item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, defense: 0 }
 ```
 
-Display Patterns
-- 
+**Display Patterns**
+
+- item
+- weapon
+- armor
+- shield
+- status
+- monster
+- town
+- message
 
 ### Status Option
 
@@ -230,6 +238,8 @@ pull request.
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for details.
+
+All monsters, images and other copyrights belong to Square Enix.
 
 ## Author
 
