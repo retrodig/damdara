@@ -39,8 +39,8 @@ pub struct Cli {
     pub mode: String,
     #[clap(long)]
     pub format: Option<String>,
-    #[clap(long)]
-    pub view: Option<String>,
+    #[clap(long, num_args = 1..)]
+    pub view: Option<Vec<String>>,
     #[clap(short, long)]
     pub option: Vec<String>,
 }
@@ -79,6 +79,7 @@ pub enum Mode {
     Save,
     Load,
     Status,
+    Display,
 }
 
 impl Mode {
@@ -96,6 +97,7 @@ impl FromStr for Mode {
             "save" => Ok(Mode::Save),
             "load" => Ok(Mode::Load),
             "status" => Ok(Mode::Status),
+            "display" => Ok(Mode::Display),
             _ => Err(()),
         }
     }

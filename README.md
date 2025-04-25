@@ -39,16 +39,16 @@ the player's name, item equipping, and battle processing.
 - [x] Calculate parameters enhanced by name
 - [ ] See list of monsters
 - [ ] Refer to any monster information
-- [ ] See parameter list
-- [ ] Refer to any parameter
-- [ ] See list of Item
-- [ ] Refer to any Item information
-- [ ] See list of Weapon
-- [ ] Refer to any Weapon information
-- [ ] See list of Armor
-- [ ] Refer to any Armor information
-- [ ] See list of Shield
-- [ ] Refer to any Shield information
+- [x] See parameter list
+- [x] Refer to any parameter
+- [x] See list of Item
+- [x] Refer to any Item information
+- [x] See list of Weapon
+- [x] Refer to any Weapon information
+- [x] See list of Armor
+- [x] Refer to any Armor information
+- [x] See list of Shield
+- [x] Refer to any Shield information
 - [ ] Reproduction of battle scenes
 - [ ] See list of Town
 - [ ] Refer to any Town information
@@ -150,7 +150,23 @@ cargo run -- -n だい -m save
 -----------|-------------------------------------------------------------------------------|
  start     | Calculate enhanced parameters from name only                                  |                  
  save      | Generate "Fukkatsu no Jumon" from arbitrary parameters (e.g. exp, gold, etc.) |                  
- load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |                  
+ load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
+ display   | Supports list and individual display of master data                           |
+
+**display mode**
+
+```
+cargo run -- -m display --view item
+[Equipment { name: "なし", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "たいまつ", price: 8, sell: 4, attack: 0, defense: 0 }, Equipment { name: "せいすい", price: 12, sell: 6, attack: 0, defense: 0 }, Equipment { name: "キメラのつばさ", price: 24, sell: 12, attack: 0, defense: 0 }, Equipment { name: "りゅうのうろこ", price: 20, sell: 10, attack: 0, defense: 2 }, Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "せんしのゆびわ", price: 0, sell: 0, attack: 2, defense: 0 }, Equipment { name: "ロトのしるし", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "おうじょのあい", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "のろいのベルト", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "ぎんのたてごと", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "しのくびかざり", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "たいようのいし", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "あまぐものつえ", price: 0, sell: 0, attack: 0, defense: 0 }, Equipment { name: "にじのしずく", price: 0, sell: 0, attack: 0, defense: 0 }]
+```
+
+```
+cargo run -- -m display --view item 5
+item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, defense: 0 }
+```
+
+Display Patterns
+- 
 
 ### Status Option
 
