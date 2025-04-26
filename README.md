@@ -146,7 +146,7 @@ cargo run -- -m <input>
  load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
  display   | Supports list and individual display of master data                           |
 
-**start mode**
+**■ Start Mode**
 
 Generate parameters from the names of brave men
 
@@ -169,7 +169,7 @@ summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0,
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-**save mode**
+**■ Save Mode**
 
 Generates the "Fukkatsu no Jumon" from the parameters of the hero.
 
@@ -180,7 +180,7 @@ cargo run -- -n だい -m save
 ぢばげぞでぶいまももれぎざぞでぶいよごぜ
 ```
 
-**load mode**
+**■ Load Mode**
 
 Generates a brave man from the "Fukkatsu no Jumon" of fortune.
 
@@ -195,7 +195,7 @@ summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gol
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-**display mode**
+**■ Display Mode**
 
 ```
 cargo run -- -m display --view item
