@@ -130,6 +130,86 @@ summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gol
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
+By granting options, you can change parameters, possess items, change equipment, and do many other things.
+
+If you want to give 200 experience. The level is automatically reflected.
+
+```
+cargo run -- -n だい -e 200
+
+player name: た゛い
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 5, hp: 32, mp: 20, gold: 0, experience: 200 }
+strength_status: StrengthStatus { level: 5, strength: 11, agility: 10, max_hp: 32, max_mp: 20, attack_power: 11, defense_power: 5, weapon: "なし", armor: "なし", shield: "なし" }
+```
+
+Furthermore, if you wish to grant 300 Gold.
+
+```
+cargo run -- -n だい -e 200 -g 300
+
+player name: た゛い
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 5, hp: 32, mp: 20, gold: 300, experience: 200 }
+strength_status: StrengthStatus { level: 5, strength: 11, agility: 10, max_hp: 32, max_mp: 20, attack_power: 11, defense_power: 5, weapon: "なし", armor: "なし", shield: "なし" }
+```
+
+If you want to change the item possession, pass the corresponding item IDs separated by commas.
+
+```
+cargo run -- -n だい -i 2,3,4
+
+player name: た゛い
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
+item: ["せいすい", "キメラのつばさ", "りゅうのうろこ", "なし", "なし", "なし", "なし", "なし"]
+```
+
+The equipment is also given an ID after specifying each option.
+
+```
+cargo run -- -n だい -w 3 -a 5 -s 3
+
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 14, defense_power: 46, weapon: "どうのつるぎ", armor: "はがねのよろい", shield: "みかがみのたて" }
+item: ["なし", "なし", "なし", "なし", "なし", "なし", "なし", "なし"]
+```
+
+`flags` are a group of flags that indicate whether a player has equipped a particular item or defeated a boss monster.
+
+They can be specified collectively as a 5-digit bit string with the command line argument `--flags`.
+
+```
+cargo run -- -n だい --flags 01010
+```
+
+### List of CLI options
+
+| option             | type                     | default value                 | Description                                    |
+|:-------------------|:-------------------------|:------------------------------|:-----------------------------------------------|
+| `-n`, `--name`     | String                   | `"ゆうてい"`                      | Main character's name                          |
+| `-e`, `--exp`      | u16                      | `0`                           | XP                                             |
+| `-g`, `--gold`     | u16                      | `0`                           | Gold in possession                             |
+| `-w`, `--weapon`   | u8                       | `0`                           | The number of the weapon you are equipped with |
+| `-a`, `--armor`    | u8                       | `0`                           | The number of the armor you are equipped with  |
+| `-s`, `--shield`   | u8                       | `0`                           | The number of the shield you are equipped with |
+| `-i`, `--item`     | Vec<u8>(comma delimited) | not in possession             | List of item numbers                           |
+| `-y`, `--herbs`    | u8                       | `0`                           | Number of herbs held                           |
+| `-k`, `--keys`     | u8                       | `0`                           | Number of keys held                            |
+| `--flags`          | Flags structure          | All false                     | status flag                                    |
+| `-p`, `--password` | String                   | Maximum Strengthened Password | Fukkatsu no Jumon                              |
+
+### Flags option details（--flags）
+
+| digit position | bit | Field Name          | Description                             |
+|:--------------:|:---:|:--------------------|:----------------------------------------|
+|   1st digit    | 0/1 | has_dragon_scale    | Equipped with the scales of a dragon?   |
+|   2st digit    | 0/1 | has_warrior_ring    | Are you equipped with a warrior's ring? |
+|   3st digit    | 0/1 | has_cursed_necklace | Did you get the beak necklace?          |
+|   4st digit    | 0/1 | defeated_dragon     | You slayed the dragon.                  |
+|   5st digit    | 0/1 | defeated_golem      | You beat the golem.                     |
+
+- Specify with **5 digits 0/1** like `--flags 01000`.
+- If not specified, default `“00000”` (all false)
+
 ### Mode
 
 You can specify the mode by giving `--mode` or the shortcut `-m`.
@@ -164,6 +244,7 @@ The default setting of the mode is here, so if you omit it, the default brave wi
 
 ```
 cargo run
+
 player name: ゆうてい
 summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0, experience: 0 }
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
@@ -177,7 +258,16 @@ Generates the "Fukkatsu no Jumon" from the parameters of the hero.
 
 ```
 cargo run -- -n だい -m save
+
 ぢばげぞでぶいまももれぎざぞでぶいよごぜ
+```
+
+After giving the options explained above and changing the parameters, the Fufutsu no Jumon can be generated.
+
+```
+cargo run -- -n だい -e 7000 -m save
+
+きがよわげずぢなののみやりわげずてだいか
 ```
 
 **■ Load Mode**

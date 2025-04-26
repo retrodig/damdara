@@ -46,6 +46,7 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             println!("player name: {}", player.name);
             println!("summary: {:?}", player.summary());
             println!("strength_status: {:?}", player.strength_status());
+            println!("item: {:?}", player.item_list());
         }
         Mode::Save => {
             println!("password: {}", player.to_password_string()?);

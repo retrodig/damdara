@@ -20,7 +20,7 @@ pub struct Cli {
     pub armor: u8,
     #[clap(short, long, default_value_t = 0)]
     pub shield: u8,
-    #[clap(short, long)]
+    #[clap(short, long, value_delimiter = ',')]
     pub item: Vec<u8>,
     #[clap(short = 'y', long, default_value_t = 0)]
     pub herbs: u8,
