@@ -274,6 +274,8 @@ cargo run -- -n だい -e 7000 -m save
 
 Generates a brave man from the "Fukkatsu no Jumon" of fortune.
 
+<img width="450" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/fukkatsu_no_jumon.png">
+
 **example**
 
 ```
@@ -315,6 +317,11 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 ```
 cargo run -- -o <input>
 ```
+
+If max is specified, the parameter and story state will be the strongest
+
+<img width="450" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
+
 
 **example**
 
