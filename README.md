@@ -254,6 +254,8 @@ strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15,
 
 Generates the "Fukkatsu no Jumon" from the parameters of the hero.
 
+<img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/fukkatsu_no_jumon.png">
+
 **example**
 
 ```
@@ -273,8 +275,6 @@ cargo run -- -n だい -e 7000 -m save
 **■ Load Mode**
 
 Generates a brave man from the "Fukkatsu no Jumon" of fortune.
-
-<img width="450" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/fukkatsu_no_jumon.png">
 
 **example**
 
@@ -320,8 +320,7 @@ cargo run -- -o <input>
 
 If max is specified, the parameter and story state will be the strongest
 
-<img width="450" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
-
+<img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
 
 **example**
 
