@@ -37,8 +37,8 @@ the player's name, item equipping, and battle processing.
 - [x] Generate resurrection "Fukkatsu no Jumon" from parameters （Parameters to Password）
 - [x] Parameters generated from resurrection "Fukkatsu no Jumon" (Password to Parameters)
 - [x] Calculate parameters enhanced by name
-- [ ] See list of monsters
-- [ ] Refer to any monster information
+- [x] See list of monsters
+- [x] Refer to any monster information
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item

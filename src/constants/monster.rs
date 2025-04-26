@@ -5,6 +5,7 @@ pub struct Monster {
     pub behavior: MonsterBehavior,
 }
 
+#[derive(Debug, Clone)]
 pub struct MonsterStats {
     pub name: &'static str,
     pub hp: u8,
@@ -341,7 +342,7 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 0,
     },
     MonsterStats {
-        name: "りゅうおう（竜型）",
+        name: "りゅうおう",
         hp: 130,
         attack: 140,
         defense: 200,

@@ -1,4 +1,3 @@
-use crate::constants::item_weapon::Equipment;
 use crate::constants::status::Flags;
 use crate::constants::text::DEFAULT_NAME;
 use crate::player::PlayerArgs;
@@ -103,5 +102,6 @@ impl FromStr for Mode {
     }
 }
 
-pub const DISPLAY_CATEGORY_LIST: [&str; 6] =
-    ["item", "weapon", "armor", "shield", "status", "spell"];
+pub const DISPLAY_CATEGORY_LIST: [&str; 7] = [
+    "item", "weapon", "armor", "shield", "status", "spell", "monster",
+];

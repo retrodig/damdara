@@ -1,13 +1,14 @@
-mod constants;
-mod growth_type;
-mod load;
-mod player;
-mod save;
-mod utility;
+pub mod constants;
+pub mod growth_type;
+pub mod load;
+pub mod player;
+pub mod save;
+pub mod utility;
 
 pub use constants::config::Cli;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
+use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
 use player::Player;
@@ -71,6 +72,7 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             Some("shield") => print_list_or_index(&SHIELD_MASTER, is_list_mode, index),
             Some("status") => print_list_or_index(&STATUS_TABLE, is_list_mode, index),
             Some("spell") => print_list_or_index(&SPELL_INFO_LIST, is_list_mode, index),
+            Some("monster") => print_list_or_index(&MONSTER_MASTER, is_list_mode, index),
             None => println!("Category not specified"),
             _ => {}
         },
