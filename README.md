@@ -139,6 +139,40 @@ cargo run -- --mode <input>
 cargo run -- -m <input>
 ```
 
+ Mode Name | Description                                                                   
+-----------|-------------------------------------------------------------------------------|
+ start     | Calculate enhanced parameters from name only                                  |                  
+ save      | Generate "Fukkatsu no Jumon" from arbitrary parameters (e.g. exp, gold, etc.) |                  
+ load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
+ display   | Supports list and individual display of master data                           |
+
+**start mode**
+
+Generate parameters from the names of brave men
+
+**example**
+
+```
+player name: た゛い
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
+```
+
+The default setting of the mode is here, so if you omit it, the default brave will be generated
+
+**example**
+
+```
+cargo run
+player name: ゆうてい
+summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
+```
+
+**save mode**
+
+Generates the "Fukkatsu no Jumon" from the parameters of the hero.
+
 **example**
 
 ```
@@ -146,12 +180,20 @@ cargo run -- -n だい -m save
 ぢばげぞでぶいまももれぎざぞでぶいよごぜ
 ```
 
- Mode Name | Description                                                                   
------------|-------------------------------------------------------------------------------|
- start     | Calculate enhanced parameters from name only                                  |                  
- save      | Generate "Fukkatsu no Jumon" from arbitrary parameters (e.g. exp, gold, etc.) |                  
- load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
- display   | Supports list and individual display of master data                           |
+**load mode**
+
+Generates a brave man from the "Fukkatsu no Jumon" of fortune.
+
+**example**
+
+```
+cargo run -- -m load -p ぢばげぞでぶいまももれぎざぞでぶいよごぜ
+
+new_player from Password
+player name: た゛い
+summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
+```
 
 **display mode**
 
