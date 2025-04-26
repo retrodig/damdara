@@ -1,9 +1,9 @@
-use clap::Parser;
-use std::str::FromStr;
-
+use crate::constants::item_weapon::Equipment;
 use crate::constants::status::Flags;
 use crate::constants::text::DEFAULT_NAME;
 use crate::player::PlayerArgs;
+use clap::Parser;
+use std::str::FromStr;
 pub const DEFAULT_MODE: &str = "start";
 pub const DEFAULT_MAX_PARAMETER_PASSWORD: &str = "へへみぞあうぞてえきいおくらちきこぜくゆ";
 
@@ -102,3 +102,6 @@ impl FromStr for Mode {
         }
     }
 }
+
+pub const DISPLAY_CATEGORY_LIST: [&str; 6] =
+    ["item", "weapon", "armor", "shield", "status", "spell"];

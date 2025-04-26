@@ -6,8 +6,9 @@ mod save;
 mod utility;
 
 pub use constants::config::Cli;
-use constants::config::Mode;
+use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
+use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
 use player::Player;
 use std::collections::HashSet;
@@ -28,7 +29,7 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
 
     let category = views
         .iter()
-        .find(|s| ["item", "weapon", "armor", "shield", "status"].contains(&s.as_str()))
+        .find(|s| DISPLAY_CATEGORY_LIST.contains(&s.as_str()))
         .map(|s| s.as_str());
     let is_list_mode = views.contains("list");
     let index = args
@@ -69,6 +70,7 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             Some("armor") => print_list_or_index(&ARMOR_MASTER, is_list_mode, index),
             Some("shield") => print_list_or_index(&SHIELD_MASTER, is_list_mode, index),
             Some("status") => print_list_or_index(&STATUS_TABLE, is_list_mode, index),
+            Some("spell") => print_list_or_index(&SPELL_INFO_LIST, is_list_mode, index),
             None => println!("Category not specified"),
             _ => {}
         },

@@ -24,10 +24,6 @@ the player's name, item equipping, and battle processing.
     - [Brew](#brew)
 - [Usage](#usage)
     - [Mode](#mode)
-        - [Start Mode](#start-mode)
-        - [Save Mode](#■-save-mode)
-        - [Load Mode](#■-load-mode)
-        - [Display Mode](#■-display-mode)
     - [Status Option](#status-option)
     - [Format Option](#format-option)
 - [Additional Resources](#additional-resources)
@@ -38,8 +34,8 @@ the player's name, item equipping, and battle processing.
 
 ## Features
 
-- [x] Generate resurrection spells from parameters （Parameters to Password）
-- [x] Parameters generated from resurrection spells (Password to Parameters)
+- [x] Generate resurrection "Fukkatsu no Jumon" from parameters （Parameters to Password）
+- [x] Parameters generated from resurrection "Fukkatsu no Jumon" (Password to Parameters)
 - [x] Calculate parameters enhanced by name
 - [ ] See list of monsters
 - [ ] Refer to any monster information

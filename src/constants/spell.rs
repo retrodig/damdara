@@ -6,7 +6,7 @@ pub struct SpellInfo {
     pub description: &'static str,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Spell {
     Hoimi,
     Gira,
