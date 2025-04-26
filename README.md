@@ -24,7 +24,7 @@ the player's name, item equipping, and battle processing.
     - [Brew](#brew)
 - [Usage](#usage)
     - [Mode](#mode)
-        - [Start Mode](#■-start-mode)
+        - [Start Mode](#start-mode)
         - [Save Mode](#■-save-mode)
         - [Load Mode](#■-load-mode)
         - [Display Mode](#■-display-mode)
