@@ -1,8 +1,23 @@
 use crate::constants::spell::{Spell, SpellResistance};
 
+#[derive(Debug, Clone)]
 pub struct Monster {
     pub stats: MonsterStats,
     pub behavior: MonsterBehavior,
+}
+
+impl Monster {
+    pub fn new(index: usize) -> Self {
+        let stats = MONSTER_MASTER.get(index).unwrap_or(&MONSTER_MASTER[0]);
+        let behavior = MONSTER_BEHAVIORS
+            .get(index)
+            .unwrap_or(&MONSTER_BEHAVIORS[0]);
+
+        Self {
+            stats: stats.clone(),
+            behavior: behavior.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -15,17 +30,25 @@ pub struct MonsterStats {
     pub gold: u8,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ActionType {
+    Spell(Spell),
+    Special(&'static str),
+}
+
+#[derive(Debug, Clone)]
 pub struct MonsterAction {
-    pub spell: Spell,
+    pub ab_type: &'static str,
+    pub action: ActionType,
     pub rate: u8, // 発動率（0, 25, 50, 75%）
 }
 
+#[derive(Debug, Clone)]
 pub struct MonsterBehavior {
-    pub name: &'static str,
+    pub index: usize,
     pub resist: SpellResistance,
     pub evade_rate: f32,
-    pub action_a: Option<MonsterAction>,
-    pub action_b: Option<MonsterAction>,
+    pub actions: &'static [MonsterAction],
 }
 
 pub const MONSTER_MASTER: [MonsterStats; 40] = [
@@ -348,5 +371,556 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         defense: 200,
         exp: 0,
         gold: 0,
+    },
+];
+
+pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
+    MonsterBehavior {
+        index: 0,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 1,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 2,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 3,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 6.2,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 4,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 0,
+        },
+        evade_rate: 1.6,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Spell(Spell::Gira),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 5,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 0,
+        },
+        evade_rate: 1.6,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Spell(Spell::Gira),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 6,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 7,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 6.2,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 8,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 9,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 0,
+        },
+        evade_rate: 9.4,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Spell(Spell::Gira),
+            rate: 75,
+        }],
+    },
+    MonsterBehavior {
+        index: 10,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 88,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 11,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 12,
+            mahoton: 0,
+        },
+        evade_rate: 9.4,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Hoimi),
+                rate: 25,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Gira),
+                rate: 50,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 12,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 19,
+            mahoton: 6,
+        },
+        evade_rate: 3.1,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Rarirho),
+                rate: 25,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Gira),
+                rate: 50,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 13,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 14,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 6,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 15,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 44,
+            mahoton: 0,
+        },
+        evade_rate: 6.2,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Hoimi),
+            rate: 25,
+        }],
+    },
+    MonsterBehavior {
+        index: 16,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 25,
+            mahoton: 44,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Mahoton),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 17,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 25,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 18,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 81,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 19,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 19,
+            mahoton: 6,
+        },
+        evade_rate: 6.2,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Rarirho),
+                rate: 25,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Gira),
+                rate: 75,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 20,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 94,
+            mahoton: 0,
+        },
+        evade_rate: 6.2,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Hoimi),
+                rate: 75,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Gira),
+                rate: 25,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 21,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 12,
+            mahoton: 12,
+        },
+        evade_rate: 1.6,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Mahoton),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 22,
+        resist: SpellResistance {
+            gira: 19,
+            rariho: 31,
+            mahoton: 0,
+        },
+        evade_rate: 6.2,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Hoimi),
+            rate: 75,
+        }],
+    },
+    MonsterBehavior {
+        index: 23,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 44,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 24,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 38,
+            mahoton: 44,
+        },
+        evade_rate: 1.6,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Mahoton),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 25,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 94,
+        },
+        evade_rate: 23.4,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 26,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 12,
+            mahoton: 0,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Rarirho),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 27,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Spell(Spell::Gira),
+            rate: 75,
+        }],
+    },
+    MonsterBehavior {
+        index: 28,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 44,
+            mahoton: 94,
+        },
+        evade_rate: 10.9,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 29,
+        resist: SpellResistance {
+            gira: 6,
+            rariho: 50,
+            mahoton: 0,
+        },
+        evade_rate: 3.1,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Behoimi),
+                rate: 75,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Special("ほのお(弱)"),
+                rate: 25,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 30,
+        resist: SpellResistance {
+            gira: 12,
+            rariho: 44,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Special("ほのお(弱)"),
+            rate: 25,
+        }],
+    },
+    MonsterBehavior {
+        index: 31,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 44,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Spell(Spell::Begirama),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 32,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 94,
+        },
+        evade_rate: 0.0,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 33,
+        resist: SpellResistance {
+            gira: 6,
+            rariho: 94,
+            mahoton: 19,
+        },
+        evade_rate: 1.6,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Rarirho),
+            rate: 25,
+        }],
+    },
+    MonsterBehavior {
+        index: 34,
+        resist: SpellResistance {
+            gira: 44,
+            rariho: 94,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Special("ほのお(弱)"),
+            rate: 25,
+        }],
+    },
+    MonsterBehavior {
+        index: 35,
+        resist: SpellResistance {
+            gira: 44,
+            rariho: 12,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 36,
+        resist: SpellResistance {
+            gira: 6,
+            rariho: 94,
+            mahoton: 44,
+        },
+        evade_rate: 3.1,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Behoimi),
+                rate: 75,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Begirama),
+                rate: 25,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 37,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 44,
+        },
+        evade_rate: 3.1,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Rarirho),
+                rate: 25,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Special("ほのお(弱)"),
+                rate: 25,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 38,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 94,
+        },
+        evade_rate: 0.0,
+        actions: &[
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Mahoton),
+                rate: 25,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Begirama),
+                rate: 75,
+            },
+        ],
+    },
+    MonsterBehavior {
+        index: 39,
+        resist: SpellResistance {
+            gira: 94,
+            rariho: 94,
+            mahoton: 94,
+        },
+        evade_rate: 0.0,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Special("ほのお(強)"),
+            rate: 50,
+        }],
     },
 ];

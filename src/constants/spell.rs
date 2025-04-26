@@ -6,7 +6,7 @@ pub struct SpellInfo {
     pub description: &'static str,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Spell {
     Hoimi,
     Gira,
@@ -57,6 +57,7 @@ impl std::str::FromStr for Spell {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SpellResistance {
     pub gira: u8,
     pub rariho: u8,
