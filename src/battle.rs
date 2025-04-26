@@ -1,11 +1,21 @@
-use crate::constants::monster::MonsterAction;
+use crate::constants::monster::{ActionType, MonsterAction};
+use crate::constants::spell::Spell;
 use crate::monster::Monster;
 use crate::player::Player;
+use crate::utility::monster_utils::choose_action;
 use rand::Rng;
 
 pub struct Battle {
     pub player: Player,
     pub monster: Monster,
+    pub player_state: BattleState,
+    pub monster_state: BattleState,
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct BattleState {
+    pub sleep: bool,
+    pub seal: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,7 +27,12 @@ pub enum EnemyAction {
 
 impl Battle {
     pub fn new(player: Player, monster: Monster) -> Self {
-        Self { player, monster }
+        Self {
+            player,
+            monster,
+            player_state: BattleState::default(),
+            monster_state: BattleState::default(),
+        }
     }
 
     pub fn start(&mut self) {
@@ -65,7 +80,49 @@ impl Battle {
             }
         }
         // それ以外 → 通常攻撃 or 特技選択
-        // self.decide_attack_or_special()
+        self.decide_monster_support_magic_action()
+    }
+
+    pub fn decide_monster_support_magic_action(&self) -> EnemyAction {
+        if self.monster.has_support_magic() {
+            let candidates = self.monster.support_spells_actions();
+
+            if let Some(monster_action) = choose_action(&candidates) {
+                match monster_action.action {
+                    ActionType::Spell(Spell::Hoimi) | ActionType::Spell(Spell::Behoimi)
+                        if self.monster.is_low_hp() =>
+                    {
+                        return EnemyAction::Special(monster_action.clone());
+                    }
+                    ActionType::Spell(Spell::Rarirho) if !self.player_state.sleep => {
+                        return EnemyAction::Special(monster_action.clone());
+                    }
+                    ActionType::Spell(Spell::Mahoton) if !self.player_state.seal => {
+                        return EnemyAction::Special(monster_action.clone());
+                    }
+                    _ => {}
+                }
+            }
+        }
+        self.decide_monster_attack_magic_action()
+    }
+
+    pub fn decide_monster_attack_magic_action(&self) -> EnemyAction {
+        if self.monster.has_attack_skill() {
+            let candidates = self.monster.attack_spells_actions();
+
+            if let Some(monster_action) = choose_action(&candidates) {
+                match &monster_action.action {
+                    ActionType::Spell(Spell::Gira)
+                    | ActionType::Spell(Spell::Begirama)
+                    | ActionType::Special("ほのお(弱)")
+                    | ActionType::Special("ほのお(強)") => {
+                        return EnemyAction::Special(monster_action.clone());
+                    }
+                    _ => {}
+                }
+            }
+        }
         EnemyAction::Attack
     }
 

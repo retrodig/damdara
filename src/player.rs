@@ -267,9 +267,15 @@ impl Player {
 
     pub fn battle_attack(&self, monster: &Monster) -> u8 {
         let mut rng = rand::rng();
+
+        let evade_check: f32 = rng.random_range(0.0..100.0);
+        if evade_check < monster.behavior.evade_rate {
+            return 0;
+        }
+
         let is_critical = rng.random_ratio(1, 32);
 
-        if is_critical {
+        if is_critical && !monster.is_final_boss() {
             self.critical_damage()
         } else {
             self.normal_damage(monster)

@@ -1,5 +1,6 @@
-use crate::constants::monster::MONSTER_MASTER;
+use crate::constants::monster::{MONSTER_MASTER, MonsterAction};
 use crate::monster::Monster;
+use rand::Rng;
 use std::collections::HashMap;
 
 pub fn create_all_monsters() -> Vec<Monster> {
@@ -24,9 +25,18 @@ pub fn list_monster_names() -> Vec<&'static str> {
     MONSTER_MASTER.iter().map(|m| m.name).collect()
 }
 
+pub fn choose_action<'a>(candidates: &'a [MonsterAction]) -> Option<&'a MonsterAction> {
+    let mut rng = rand::rng();
+    candidates
+        .iter()
+        .find(|action| rng.random_bool(action.rate as f64 / 100.0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::monster::ActionType;
+    use crate::constants::spell::Spell;
 
     #[test]
     fn test_monster_new_valid_index() {
@@ -75,5 +85,46 @@ mod tests {
     fn test_list_monster_names_contains_slime() {
         let names = list_monster_names();
         assert!(names.contains(&"スライム"));
+    }
+
+    #[test]
+    fn test_choose_action_always_selects_high_rate() {
+        let candidates = vec![
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Hoimi),
+                rate: 100,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Mahoton),
+                rate: 0,
+            },
+        ];
+        for _ in 0..10 {
+            let result = choose_action(&candidates);
+            assert!(result.is_some());
+            assert_eq!(result.unwrap().ab_type, "A");
+        }
+    }
+
+    #[test]
+    fn test_choose_action_none_when_all_zero() {
+        let candidates = vec![
+            MonsterAction {
+                ab_type: "A",
+                action: ActionType::Spell(Spell::Hoimi),
+                rate: 0,
+            },
+            MonsterAction {
+                ab_type: "B",
+                action: ActionType::Spell(Spell::Mahoton),
+                rate: 0,
+            },
+        ];
+        for _ in 0..10 {
+            let result = choose_action(&candidates);
+            assert!(result.is_none());
+        }
     }
 }
