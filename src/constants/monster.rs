@@ -1,26 +1,6 @@
 use crate::constants::spell::{Spell, SpellResistance};
 
 #[derive(Debug, Clone)]
-pub struct Monster {
-    pub stats: MonsterStats,
-    pub behavior: MonsterBehavior,
-}
-
-impl Monster {
-    pub fn new(index: usize) -> Self {
-        let stats = MONSTER_MASTER.get(index).unwrap_or(&MONSTER_MASTER[0]);
-        let behavior = MONSTER_BEHAVIORS
-            .get(index)
-            .unwrap_or(&MONSTER_BEHAVIORS[0]);
-
-        Self {
-            stats: stats.clone(),
-            behavior: behavior.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct MonsterStats {
     pub name: &'static str,
     pub hp: u8,
@@ -36,7 +16,7 @@ pub enum ActionType {
     Special(&'static str),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MonsterAction {
     pub ab_type: &'static str,
     pub action: ActionType,

@@ -1,4 +1,5 @@
-use crate::constants::monster::{MONSTER_MASTER, Monster};
+use crate::constants::monster::MONSTER_MASTER;
+use crate::monster::Monster;
 use std::collections::HashMap;
 
 pub fn create_all_monsters() -> Vec<Monster> {

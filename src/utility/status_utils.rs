@@ -18,21 +18,21 @@ impl Status {
     pub fn apply_abc_modifiers(&self, abc: &GrowthModifiers) -> Status {
         Status {
             level: self.level,
-            strength: apply_modifier(self.strength, abc.c == 1, abc.a),
-            agility: apply_modifier(self.agility, abc.b == 1, abc.a),
-            max_hp: apply_modifier(self.max_hp, abc.b == 0, abc.a),
-            max_mp: apply_modifier(self.max_mp, abc.c == 0, abc.a),
+            strength: apply_modifier(self.strength, abc.c == 1, abc.a as u8),
+            agility: apply_modifier(self.agility, abc.b == 1, abc.a as u8),
+            max_hp: apply_modifier(self.max_hp, abc.b == 0, abc.a as u8),
+            max_mp: apply_modifier(self.max_mp, abc.c == 0, abc.a as u8),
             required_exp: self.required_exp,
             spell: self.spell,
         }
     }
 }
 
-fn apply_modifier(base: u16, keep_base: bool, a: u16) -> u16 {
+fn apply_modifier(base: u8, keep_base: bool, a: u8) -> u8 {
     if keep_base {
         base
     } else {
-        ((base as f32 * 0.9).floor() as u16) + a
+        ((base as f32 * 0.9).floor() as u8) + a
     }
 }
 

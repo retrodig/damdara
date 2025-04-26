@@ -3,8 +3,8 @@ pub struct Equipment {
     pub name: &'static str,
     pub price: u16,
     pub sell: u16,
-    pub attack: u16,
-    pub defense: u16,
+    pub attack: u8,
+    pub defense: u8,
 }
 
 pub const WEAPON_MASTER: [Equipment; 8] = [

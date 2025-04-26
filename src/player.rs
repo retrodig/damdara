@@ -6,14 +6,17 @@ use crate::growth_type::{
     GrowthModifiers, calculate_abc, calculate_name_total, get_adjusted_status_by_name_lv,
 };
 use crate::load::decode_from_password_string;
+use crate::monster::Monster;
+use crate::utility::random_utils::random_value;
 use crate::utility::status_utils::{get_level_by_exp, get_status_by_level, resolve_experience};
 use crate::utility::string_utils::name_normalize;
+use rand::Rng;
 
 #[derive(Debug)]
 pub struct Player {
     pub name: String,
-    pub hp: u16,
-    pub mp: u16,
+    pub hp: u8,
+    pub mp: u8,
     pub exp: u16,
     pub gold: u16,
     pub weapon: u8,
@@ -113,12 +116,12 @@ impl Player {
         calculate_name_total(&self.name)
     }
 
-    pub fn strength(&self) -> Option<u16> {
-        self.status().map(|s| s.strength)
+    pub fn strength(&self) -> u8 {
+        self.status().map(|s| s.strength).unwrap_or(0)
     }
 
-    pub fn agility(&self) -> Option<u16> {
-        self.status().map(|s| s.agility)
+    pub fn agility(&self) -> u8 {
+        self.status().map(|s| s.agility).unwrap_or(0)
     }
 
     pub fn abc(&self) -> GrowthModifiers {
@@ -134,7 +137,7 @@ impl Player {
             .map(|base| base.apply_abc_modifiers(&self.abc()))
     }
 
-    pub fn attack_power(&self) -> u16 {
+    pub fn attack_power(&self) -> u8 {
         let weapon = WEAPON_MASTER
             .get(self.weapon as usize)
             .unwrap_or(&WEAPON_MASTER[0]);
@@ -145,7 +148,7 @@ impl Player {
             .unwrap_or(weapon.attack + ring_bonus)
     }
 
-    pub fn defense_power(&self) -> u16 {
+    pub fn defense_power(&self) -> u8 {
         let armor = ARMOR_MASTER
             .get(self.armor as usize)
             .unwrap_or(&ARMOR_MASTER[0]);
@@ -242,6 +245,39 @@ impl Player {
             armor: armor.name.to_string(),
             shield: shield.name.to_string(),
         }
+    }
+
+    pub fn normal_damage(&self, monster: &Monster) -> u8 {
+        let attack = self.attack_power();
+        let defense = monster.stats.defense;
+        let effective_defense = defense / 2;
+        let base = attack.saturating_sub(effective_defense);
+        let base_plus = base.saturating_add(1);
+        let rand_val = random_value(255) as u32;
+        let damage = ((rand_val * base_plus as u32) / 256 + base as u32) / 4;
+        damage.min(255) as u8
+    }
+
+    pub fn critical_damage(&self) -> u8 {
+        let attack = self.attack_power();
+        let rand_val = random_value(255) as u32;
+        let damage = attack as u32 - (attack as u32 / 2 * rand_val) / 256;
+        damage.min(255) as u8
+    }
+
+    pub fn battle_attack(&self, monster: &Monster) -> u8 {
+        let mut rng = rand::rng();
+        let is_critical = rng.random_ratio(1, 32);
+
+        if is_critical {
+            self.critical_damage()
+        } else {
+            self.normal_damage(monster)
+        }
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.hp > 0
     }
 }
 

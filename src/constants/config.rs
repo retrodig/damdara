@@ -6,6 +6,8 @@ use std::str::FromStr;
 pub const DEFAULT_MODE: &str = "start";
 pub const DEFAULT_MAX_PARAMETER_PASSWORD: &str = "へへみぞあうぞてえきいおくらちきこぜくゆ";
 
+pub const BIT_8_MAX: u8 = 255;
+
 #[derive(Parser, Debug)]
 pub struct Cli {
     #[clap(short, long, default_value_t = String::from(DEFAULT_NAME))]
