@@ -34,6 +34,10 @@ impl Monster {
         }
     }
 
+    pub fn name(&self) -> &str {
+        self.stats.name
+    }
+
     pub fn max_hp(&self) -> u8 {
         self.stats.hp
     }

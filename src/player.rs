@@ -126,6 +126,10 @@ impl Player {
     }
 
     pub fn max_hp(&self) -> u8 {
+        self.status().map(|s| s.max_hp).unwrap_or(0)
+    }
+
+    pub fn max_mp(&self) -> u8 {
         self.status().map(|s| s.max_mp).unwrap_or(0)
     }
 
@@ -210,6 +214,14 @@ impl Player {
         save.to_password_string()
     }
 
+    pub fn hp_maximize(&mut self) {
+        self.hp = self.max_hp()
+    }
+
+    pub fn mp_maximize(&mut self) {
+        self.mp = self.max_mp()
+    }
+
     pub fn maximize(&mut self) {
         self.exp = 65535;
         self.gold = 65535;
@@ -226,6 +238,9 @@ impl Player {
             defeated_dragon: true,
             defeated_golem: true,
         };
+
+        self.hp_maximize();
+        self.mp_maximize();
     }
 
     pub fn summary(&self) -> PlayerSummary {
@@ -306,6 +321,28 @@ impl Player {
 
     pub fn is_max_armor(&self) -> bool {
         self.armor == 7
+    }
+
+    pub fn is_magic_armor(&self) -> bool {
+        self.armor == 6
+    }
+
+    /// Spell Damage Correction
+    pub fn reduce_spell_damage(&self, base_damage: u8) -> u8 {
+        if self.is_magic_armor() || self.is_max_armor() {
+            ((base_damage as f32) * (2.0 / 3.0)).floor() as u8
+        } else {
+            base_damage
+        }
+    }
+
+    /// Fire Damage Compensation
+    pub fn reduce_fire_damage(&self, base_damage: u8) -> u8 {
+        if self.is_max_armor() {
+            ((base_damage as f32) * (2.0 / 3.0)).floor() as u8
+        } else {
+            base_damage
+        }
     }
 }
 

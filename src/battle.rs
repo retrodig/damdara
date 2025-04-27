@@ -53,7 +53,7 @@ impl Battle {
         println!("{}があらわれた！", self.monster.stats.name);
         self.display_status();
 
-        while self.player.is_alive() && self.monster.is_alive() {
+        while self.is_battle_continue() {
             self.player_turn();
             if self.monster.is_alive() {
                 self.monster_turn();
@@ -61,19 +61,39 @@ impl Battle {
             self.display_status();
         }
 
-        if self.player.is_alive() {
-            println!(
-                "{} は {} を倒した！",
-                self.player.name, self.monster.stats.name
-            );
-        } else {
-            println!("{} は やられてしまった...", self.player.name);
+        if !self.monster_state.escaped {
+            if self.player.is_alive() {
+                let gold = self.monster.get_gold();
+                println!("{} をたおした！", self.monster.name());
+                println!("けいけんち {}ポイントかくとく", self.monster.stats.exp);
+                println!("{}ゴールドを てにいれた！", gold);
+            } else {
+                println!("あなたは しにました");
+            }
         }
     }
 
     pub fn display_status(&self) {
+        println!();
         println!("{} HP: {:?}", self.player.name, self.player.hp);
         println!("{} HP: {:?}", self.monster.stats.name, self.monster.hp);
+    }
+
+    pub fn display_enemy_special_skill_message(&self, name: &str, damage: u8) {
+        print!(" {}は ", self.monster.stats.name);
+        if name.contains("ほのお") {
+            print!(" ほのおをはいた!");
+        } else {
+            print!(" {}を使った！", name);
+        }
+        println!();
+        println!(" {}は {}ポイントの", self.player.name, damage);
+        println!(" ダメージを うけた");
+    }
+
+    pub fn is_battle_continue(&self) -> bool {
+        (self.player.is_alive() && !self.player_state.escaped)
+            && (self.monster.is_alive() && !self.monster_state.escaped)
     }
 
     pub fn player_goes_first(&self) -> bool {
@@ -169,7 +189,7 @@ impl Battle {
                 }
             },
             EnemyAction::Escape => {
-                println!("{} は逃げ出した！", self.monster.stats.name);
+                println!("{} は にげだした！", self.monster.name());
                 self.monster_state.escaped = true;
             }
         }
@@ -177,11 +197,17 @@ impl Battle {
 
     fn handle_enemy_normal_attack(&mut self) {
         let damage = self.monster.normal_damage(&self.player) as i16;
-        println!("{} のこうげき！", self.monster.stats.name);
-        println!("{} は {}ポイントの", self.player.name, damage);
-        println!("ダメージを うけた！",);
 
-        self.player.adjust_hp(-damage);
+        if damage > 0 {
+            println!(" {} のこうげき！", self.monster.stats.name);
+            println!(" {} は {}ポイントの", self.player.name, damage);
+            println!(" ダメージを うけた！",);
+
+            self.player.adjust_hp(-damage);
+        } else {
+            println!(" {} のこうげき！", self.monster.stats.name);
+            println!(" ミス");
+        }
     }
 
     fn handle_enemy_heal_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
@@ -236,11 +262,15 @@ impl Battle {
     }
 
     fn handle_enemy_special_skill(&mut self, name: &str, monster_action: &MonsterAction) {
-        let damage = monster_action_effect(&monster_action.action);
-        println!(
-            "{} は {} を使った！{} に {}ダメージ！",
-            self.monster.stats.name, name, self.player.name, damage
-        );
+        let mut damage = monster_action_effect(&monster_action.action);
+
+        if name.contains("ほのお") {
+            damage = self.player.reduce_fire_damage(damage);
+        } else {
+            damage = self.player.reduce_spell_damage(damage);
+        }
+
+        self.display_enemy_special_skill_message(name, damage);
         self.player.adjust_hp(-(damage as i16));
     }
 
@@ -258,7 +288,7 @@ impl Battle {
         // 選んだアクションで分岐
         match action {
             PlayerAction::Attack => {
-                println!("{} の攻撃！", self.player.name);
+                println!("{} のこうげき！", self.player.name);
                 // TODO: 攻撃処理
             }
             PlayerAction::Spell => {

@@ -82,7 +82,7 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             _ => {}
         },
         Mode::Battle => {
-            let mut battle = Battle::new(player, Monster::new(0));
+            let mut battle = Battle::new(player, Monster::new(index.unwrap_or(0)));
             battle.start();
         }
     }
