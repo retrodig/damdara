@@ -7,7 +7,7 @@ use crate::utility::random_utils::{
     check_escape_success, get_escape_rand_max_by_monster_index, random_success_by_percent,
     random_success_by_ratio,
 };
-use crate::utility::spell_utils::monster_action_effect;
+use crate::utility::spell_utils::{monster_action_effect, player_spell_effect};
 use rand::Rng;
 use std::io::{self, Write};
 
@@ -83,7 +83,10 @@ impl Battle {
 
     pub fn display_status(&self) {
         println!();
-        println!("{} HP: {:?}", self.player.name, self.player.hp);
+        println!(
+            "{} HP: {:?} MP: {:?}",
+            self.player.name, self.player.hp, self.player.mp
+        );
         println!("{} HP: {:?}", self.monster.stats.name, self.monster.hp);
         println!();
     }
@@ -98,6 +101,27 @@ impl Battle {
         println!();
         println!(" {}は {}ポイントの", self.player.name, damage);
         println!(" ダメージを うけた");
+    }
+
+    pub fn display_use_spell(&self, spell: &Spell) {
+        println!("{}は {}の", self.player.name, spell.as_str());
+        println!("じゅもんを となえた！");
+    }
+
+    pub fn display_monster_damage(&self, damage: u8) {
+        println!("{}に {}ポイントの", self.monster.name(), damage);
+        println!("ダメージを あたえた！");
+    }
+
+    pub fn display_monster_spell(&self, spell: &Spell) {
+        println!(" {}は {}の", self.monster.name(), spell.as_str());
+        println!(" じゅもんを となえた！");
+    }
+
+    pub fn display_monster_not_spell(&self) {
+        println!("しかし じゅもんは");
+        println!("ふうじこまれている！");
+        return;
     }
 
     pub fn is_battle_continue(&self) -> bool {
@@ -177,6 +201,17 @@ impl Battle {
     }
 
     pub fn monster_turn(&mut self) {
+        if self.monster_state.sleep {
+            let is_wakeup = random_success_by_percent(33.33);
+            if is_wakeup {
+                println!("{}は めをさました！", self.monster.name());
+                self.monster_state.sleep = false;
+            } else {
+                println!("{}は ねむっている⋯⋯⋯", self.monster.name());
+                return;
+            }
+        }
+
         let action = self.decide_enemy_action();
 
         match action {
@@ -209,7 +244,7 @@ impl Battle {
 
         if damage > 0 {
             println!(" {} のこうげき！", self.monster.stats.name);
-            println!(" {} は {}ポイントの", self.player.name, damage);
+            println!(" {}は {}ポイントの", self.player.name, damage);
             println!(" ダメージを うけた！",);
 
             self.player.adjust_hp(-damage);
@@ -222,8 +257,11 @@ impl Battle {
     /// 敵: ホイミ、ベホイミ
     fn handle_enemy_heal_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let heal = monster_action_effect(&monster_action.action);
-        println!(" {}は {}の", self.monster.name(), spell.as_str());
-        println!(" じゅもんを となえた！");
+        self.display_monster_spell(spell);
+
+        if self.monster_state.seal {
+            return self.display_monster_not_spell();
+        }
         println!(" {}は きずが", self.monster.name(),);
         println!(" かいふくした！");
         self.monster.adjust_hp(heal as i16);
@@ -232,8 +270,11 @@ impl Battle {
     /// 敵: ギラ、ベギラマ
     fn handle_enemy_attack_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let damage = monster_action_effect(&monster_action.action);
-        println!(" {}は {}の", self.monster.name(), spell.as_str());
-        println!(" じゅもんを となえた！");
+        self.display_monster_spell(spell);
+
+        if self.monster_state.seal {
+            return self.display_monster_not_spell();
+        }
         println!(" {}は {}ポイントの", self.player.name, damage);
         println!(" ダメージを うけた！",);
         self.player.adjust_hp(-(damage as i16));
@@ -241,22 +282,26 @@ impl Battle {
 
     /// 敵: ラリホー（100%）
     fn handle_enemy_sleep_spell(&mut self, spell: &Spell) {
-        println!(" {}は {}の", self.monster.name(), spell.as_str(),);
-        println!(" じゅもんを となえた！");
+        self.display_monster_spell(spell);
+
+        if self.monster_state.seal {
+            return self.display_monster_not_spell();
+        }
         println!("{}は ねむってしまった！", self.player.name);
         self.player_state.sleep = true;
     }
 
     /// 敵: マホトーン（50%）
     fn handle_enemy_seal_spell(&mut self, spell: &Spell) {
+        self.display_monster_spell(spell);
+        if self.monster_state.seal {
+            return self.display_monster_not_spell();
+        }
+
         let success = random_success_by_percent(50.0);
         if success && !self.player.is_max_armor() {
-            println!(
-                "{} は {} を唱えた！{} は呪文を封じられた！",
-                self.monster.stats.name,
-                spell.as_str(),
-                self.player.name
-            );
+            println!("{}は じゅもんを", self.player.name);
+            println!("ふうじこめられた！");
             self.player_state.seal = true;
         } else {
             println!("しかし じゅもんは きかなかった！");
@@ -297,45 +342,12 @@ impl Battle {
                 return;
             }
         }
-
         self.display_command();
-
         // Receive input
-        let action = self.get_player_action();
-        match action {
-            PlayerAction::Attack => {
-                println!("{} のこうげき！", self.player.name);
-                let damage = self.player_battle_attack();
-                if damage == 0 {
-                    println!("ミス");
-                } else {
-                    println!("{}に {}ポイントの", self.monster.name(), damage);
-                    println!("ダメージを あたえた！");
-                    self.monster.adjust_hp(-(damage as i16));
-                }
-            }
-            PlayerAction::Spell => {
-                println!("{} は呪文を唱えようとした！", self.player.name);
-                // TODO: 呪文処理
-            }
-            PlayerAction::Item => {
-                println!("{} は道具を使おうとした！", self.player.name);
-                // TODO: アイテム処理
-            }
-            PlayerAction::Escape => {
-                println!("{}は にげだした！", self.player.name);
-
-                let is_escape = self.is_escape();
-                if is_escape {
-                    self.player_state.escaped = true;
-                } else {
-                    println!("しかし まわりこまれてしまった！ \n");
-                }
-            }
-        }
+        self.commands();
     }
 
-    pub fn player_battle_attack(&self) -> u8 {
+    pub fn player_battle_attack_damage(&self) -> u8 {
         // 回避
         let is_evade = random_success_by_percent(self.monster.behavior.evade_rate as f64);
         if is_evade {
@@ -351,7 +363,165 @@ impl Battle {
         }
     }
 
-    pub fn player_escape() {}
+    // プレイヤー: こうげき
+    pub fn player_action_attack(&mut self) {
+        println!("{} のこうげき！", self.player.name);
+        let damage = self.player_battle_attack_damage();
+        if damage == 0 {
+            println!("ミス");
+        } else {
+            self.display_monster_damage(damage);
+            self.monster.adjust_hp(-(damage as i16));
+        }
+    }
+
+    // プレイヤー: じゅもん
+    pub fn player_action_spell(&mut self) {
+        if self.player.is_empty_spell_list() {
+            println!("{}は まだ じゅもんを", self.player.name);
+            println!("つかえない。");
+            return self.commands_cancel();
+        }
+
+        let spell_list = self.player.spell_list();
+        let spell_len = spell_list.len();
+
+        println!("--- じゅもん ---");
+        println!("0: もどる");
+        for (i, spell_info) in spell_list.into_iter().enumerate() {
+            println!("{}: {}", i + 1, spell_info.spell.as_str());
+        }
+
+        let spell_index = self.get_player_input(spell_len + 1);
+        if spell_index == 0 {
+            return self.commands_cancel();
+        }
+        let selected_spell = self.player.select_spell(spell_index - 1);
+        if self.player.mp < selected_spell.mp_cost {
+            println!("MP が たりません。");
+            return self.commands_cancel();
+        }
+
+        self.player.consume_mp(selected_spell);
+        self.display_use_spell(&selected_spell.spell);
+        if self.player_state.seal {
+            println!("しかし じゅもんは ふうじこまれている！");
+            return;
+        }
+
+        match selected_spell.spell {
+            Spell::Hoimi | Spell::Behoimi => {
+                let heal = player_spell_effect(selected_spell.spell);
+                self.player.adjust_hp(heal as i16);
+            }
+            Spell::Gira | Spell::Begirama => {
+                let spell_invalid =
+                    random_success_by_percent(self.monster.behavior.resist.gira as f64);
+
+                if spell_invalid {
+                    println!("しかし じゅもんは きかなかった！\n");
+                } else {
+                    let damage = player_spell_effect(selected_spell.spell);
+                    self.display_monster_damage(damage);
+                    self.monster.adjust_hp(-(damage as i16));
+                }
+            }
+            Spell::Rarirho => {
+                let spell_invalid =
+                    random_success_by_percent(self.monster.behavior.resist.rariho as f64);
+
+                if spell_invalid {
+                    println!("しかし じゅもんは きかなかった！\n");
+                } else {
+                    println!("{}を ねむらせた!", self.monster.name());
+                    self.monster_state.sleep = true;
+                }
+            }
+            Spell::Mahoton => {
+                let spell_invalid =
+                    random_success_by_percent(self.monster.behavior.resist.mahoton as f64);
+
+                if spell_invalid {
+                    println!("しかし じゅもんは きかなかった！\n");
+                } else {
+                    println!("{}の じゅもんを", self.monster.name());
+                    println!("ふうじこめた！");
+                    self.monster_state.seal = true;
+                }
+            }
+            _ => {
+                println!("それは たたかいに つかえない！");
+                self.commands_cancel()
+            }
+        }
+    }
+
+    // プレイヤー: どうぐ
+    pub fn player_action_item(&mut self) {
+        println!("{} は道具を使おうとした！", self.player.name);
+
+        // let items = self.player.items();
+        // if items.is_empty() {
+        //     println!("持っている道具がない！");
+        //     return;
+        // }
+        //
+        // println!("持っている道具一覧:");
+        // for (i, item) in items.iter().enumerate() {
+        //     println!("{}: {}", i, item.to_string());
+        // }
+        //
+        // let item_index = get_player_input(items.len());
+        // let chosen_item = items[item_index];
+        //
+        // // TODO: アイテムごとの効果処理
+        // println!("{} を使った！", chosen_item.to_string());
+        // 例: HP回復とか
+    }
+
+    // プレイヤー: にげる
+    pub fn player_action_escape(&mut self) {
+        println!("{}は にげだした！", self.player.name);
+        let is_escape = self.is_escape();
+        if is_escape {
+            self.player_state.escaped = true;
+        } else {
+            println!("しかし まわりこまれてしまった！ \n");
+        }
+    }
+
+    pub fn get_player_input(&mut self, max: usize) -> usize {
+        loop {
+            print!("番号を選んでください (0-{}): ", max);
+            io::stdout().flush().unwrap();
+
+            let mut input = String::new();
+            if let Ok(_) = io::stdin().read_line(&mut input) {
+                if let Ok(num) = input.trim().parse::<usize>() {
+                    if num <= max {
+                        return num;
+                    }
+                }
+            }
+            println!("無効な入力です。もう一度入力してください。");
+        }
+    }
+
+    pub fn commands(&mut self) {
+        let action = self.get_player_action();
+        match action {
+            PlayerAction::Attack => self.player_action_attack(),
+            PlayerAction::Spell => self.player_action_spell(),
+            PlayerAction::Item => self.player_action_item(),
+            PlayerAction::Escape => self.player_action_escape(),
+        }
+    }
+
+    pub fn commands_cancel(&mut self) {
+        self.display_command();
+        self.commands();
+        return;
+    }
 
     fn get_player_action(&self) -> PlayerAction {
         let mut input = String::new();

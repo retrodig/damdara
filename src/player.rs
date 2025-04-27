@@ -9,6 +9,7 @@ use crate::growth_type::{
 use crate::load::decode_from_password_string;
 use crate::monster::Monster;
 use crate::utility::random_utils::random_value;
+use crate::utility::spell_utils::spells_learned_by_level;
 use crate::utility::status_utils::{get_level_by_exp, get_status_by_level, resolve_experience};
 use crate::utility::string_utils::name_normalize;
 
@@ -193,6 +194,22 @@ impl Player {
                     .unwrap_or("なし")
             })
             .collect()
+    }
+
+    pub fn spell_list(&self) -> Vec<&'static SpellInfo> {
+        spells_learned_by_level(self.level())
+    }
+
+    pub fn select_spell(&self, index: usize) -> &'static SpellInfo {
+        self.spell_list()[index]
+    }
+
+    pub fn is_empty_spell_list(&self) -> bool {
+        self.spell_list().is_empty()
+    }
+
+    pub fn consume_mp(&mut self, spell_info: &SpellInfo) {
+        self.mp = self.mp - spell_info.mp_cost;
     }
 
     pub fn to_password_string(&self) -> Result<String, String> {

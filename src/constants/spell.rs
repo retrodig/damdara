@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct SpellInfo {
     pub spell: Spell,
     pub learn_level: u8,
