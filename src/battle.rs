@@ -4,7 +4,8 @@ use crate::monster::Monster;
 use crate::player::Player;
 use crate::utility::monster_utils::choose_action;
 use crate::utility::random_utils::{
-    check_escape_success, check_success_by_percent, get_escape_rand_max_by_monster_index,
+    check_escape_success, get_escape_rand_max_by_monster_index, random_success_by_percent,
+    random_success_by_ratio,
 };
 use crate::utility::spell_utils::monster_action_effect;
 use rand::Rng;
@@ -55,16 +56,23 @@ impl Battle {
 
         while self.is_battle_continue() {
             self.player_turn();
-            if self.monster.is_alive() {
-                self.monster_turn();
+
+            if !self.player_state.escaped {
+                if self.monster.is_alive() {
+                    self.monster_turn();
+                }
+                self.display_status();
             }
-            self.display_status();
         }
 
-        if !self.monster_state.escaped {
+        if self.player_state.escaped {
+            println!();
+        } else if !self.monster_state.escaped {
             if self.player.is_alive() {
                 let gold = self.monster.get_gold();
                 println!("{} をたおした！", self.monster.name());
+
+                println!();
                 println!("けいけんち {}ポイントかくとく", self.monster.stats.exp);
                 println!("{}ゴールドを てにいれた！", gold);
             } else {
@@ -211,6 +219,7 @@ impl Battle {
         }
     }
 
+    /// 敵: ホイミ、ベホイミ
     fn handle_enemy_heal_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let heal = monster_action_effect(&monster_action.action);
         println!(" {}は {}の", self.monster.name(), spell.as_str());
@@ -220,6 +229,7 @@ impl Battle {
         self.monster.adjust_hp(heal as i16);
     }
 
+    /// 敵: ギラ、ベギラマ
     fn handle_enemy_attack_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let damage = monster_action_effect(&monster_action.action);
         println!(" {}は {}の", self.monster.name(), spell.as_str());
@@ -229,16 +239,17 @@ impl Battle {
         self.player.adjust_hp(-(damage as i16));
     }
 
+    /// 敵: ラリホー（100%）
     fn handle_enemy_sleep_spell(&mut self, spell: &Spell) {
         println!(" {}は {}の", self.monster.name(), spell.as_str(),);
         println!(" じゅもんを となえた！");
         println!("{}は ねむってしまった！", self.player.name);
-
         self.player_state.sleep = true;
     }
 
+    /// 敵: マホトーン（50%）
     fn handle_enemy_seal_spell(&mut self, spell: &Spell) {
-        let success = check_success_by_percent(50);
+        let success = random_success_by_percent(50.0);
         if success && !self.player.is_max_armor() {
             println!(
                 "{} は {} を唱えた！{} は呪文を封じられた！",
@@ -248,14 +259,11 @@ impl Battle {
             );
             self.player_state.seal = true;
         } else {
-            println!(
-                "{} の {} は失敗した！",
-                self.monster.stats.name,
-                spell.as_str(),
-            );
+            println!("しかし じゅもんは きかなかった！");
         }
     }
 
+    /// 敵: ほのお(弱)、ほのお(強)
     fn handle_enemy_special_skill(&mut self, name: &str, monster_action: &MonsterAction) {
         let mut damage = monster_action_effect(&monster_action.action);
 
@@ -271,7 +279,7 @@ impl Battle {
 
     pub fn player_turn(&mut self) {
         if self.player_state.sleep {
-            let is_wakeup = check_success_by_percent(33);
+            let is_wakeup = random_success_by_percent(33.33);
             if is_wakeup {
                 println!("{}は めをさました！", self.player.name);
                 self.player_state.sleep = false;
@@ -293,7 +301,14 @@ impl Battle {
         match action {
             PlayerAction::Attack => {
                 println!("{} のこうげき！", self.player.name);
-                // TODO: 攻撃処理
+                let damage = self.player_battle_attack();
+                if damage == 0 {
+                    println!("ミス");
+                } else {
+                    println!("{}に {}ポイントの", self.monster.name(), damage);
+                    println!("ダメージを あたえた！");
+                    self.monster.adjust_hp(-(damage as i16));
+                }
             }
             PlayerAction::Spell => {
                 println!("{} は呪文を唱えようとした！", self.player.name);
@@ -304,11 +319,35 @@ impl Battle {
                 // TODO: アイテム処理
             }
             PlayerAction::Escape => {
-                println!("{} は逃げようとした！", self.player.name);
-                // TODO: にげる処理
+                println!("{}は にげだした！", self.player.name);
+
+                let is_escape = self.is_escape();
+                if is_escape {
+                    self.player_state.escaped = true;
+                } else {
+                    println!("しかし まわりこまれてしまった！ \n");
+                }
             }
         }
     }
+
+    pub fn player_battle_attack(&self) -> u8 {
+        // 回避
+        let is_evade = random_success_by_percent(self.monster.behavior.evade_rate as f64);
+        if is_evade {
+            return 0;
+        }
+        // かいしんのいちげき
+        let is_critical = random_success_by_ratio(32);
+        if is_critical && !self.monster.is_final_boss() {
+            println!("かいしんの いちげき！！");
+            self.player.critical_damage()
+        } else {
+            self.player.normal_damage(&self.monster)
+        }
+    }
+
+    pub fn player_escape() {}
 
     fn get_player_action(&self) -> PlayerAction {
         let mut input = String::new();

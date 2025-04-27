@@ -147,7 +147,7 @@ impl Monster {
     // }
 
     pub fn is_alive(&self) -> bool {
-        self.stats.hp > 0
+        self.hp > 0
     }
 
     pub fn is_final_boss(&self) -> bool {

@@ -18,16 +18,25 @@ pub fn generate_in_range(min: u8, max: u8) -> u8 {
     value as u8
 }
 
-pub fn check_success_by_percent(percent: u8) -> bool {
-    if percent == 0 {
+/// 1 / denominator の確率で true を返す (256bit乱数版)
+pub fn random_success_by_ratio(denominator: u16) -> bool {
+    if denominator == 0 {
+        return true; // 0分の1は必ず成功とする
+    }
+    let rand_val: u16 = random_value(BIT_8_MAX) as u16;
+    rand_val < (256 / denominator)
+}
+
+pub fn random_success_by_percent(percent: f64) -> bool {
+    if percent <= 0.0 {
         return false;
     }
-    if percent >= 100 {
+    if percent >= 100.0 {
         return true;
     }
-    let rand = random_value(255) as u16;
-    let threshold = (percent as u16 * 256) / 100;
-    rand < threshold
+    let rand_val: u16 = random_value(BIT_8_MAX) as u16;
+    let threshold = (percent * 256.0 / 100.0).round() as u16;
+    rand_val < threshold
 }
 
 pub fn get_escape_rand_max_by_monster_index(index: usize) -> u8 {
@@ -55,12 +64,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_check_success_by_percent_50() {
+    fn test_random_success_by_percent_50() {
         let trials = 10_000;
         let mut success_count = 0;
 
         for _ in 0..trials {
-            if check_success_by_percent(50) {
+            if random_success_by_percent(50.0) {
                 success_count += 1;
             }
         }

@@ -11,7 +11,6 @@ use crate::monster::Monster;
 use crate::utility::random_utils::random_value;
 use crate::utility::status_utils::{get_level_by_exp, get_status_by_level, resolve_experience};
 use crate::utility::string_utils::name_normalize;
-use rand::Rng;
 
 #[derive(Debug)]
 pub struct Player {
@@ -296,23 +295,6 @@ impl Player {
         let rand_val = random_value(255) as u32;
         let damage = attack as u32 - (attack as u32 / 2 * rand_val) / 256;
         damage.min(255) as u8
-    }
-
-    pub fn battle_attack(&self, monster: &Monster) -> u8 {
-        let mut rng = rand::rng();
-
-        let evade_check: f32 = rng.random_range(0.0..100.0);
-        if evade_check < monster.behavior.evade_rate {
-            return 0;
-        }
-
-        let is_critical = rng.random_ratio(1, 32);
-
-        if is_critical && !monster.is_final_boss() {
-            self.critical_damage()
-        } else {
-            self.normal_damage(monster)
-        }
     }
 
     pub fn is_alive(&self) -> bool {
