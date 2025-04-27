@@ -33,8 +33,17 @@ impl Monster {
         }
     }
 
+    pub fn max_hp(&self) -> u8 {
+        self.stats.hp
+    }
+
     pub fn is_low_hp(&self) -> bool {
         (self.hp as f32) <= (self.stats.hp as f32 / 4.0)
+    }
+
+    pub fn adjust_hp(&mut self, amount: i16) {
+        let new_hp = (self.hp as i16 + amount).clamp(0, self.max_hp() as i16);
+        self.hp = new_hp as u8;
     }
 
     pub fn has_support_magic(&self) -> bool {

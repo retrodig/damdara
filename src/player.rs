@@ -1,5 +1,6 @@
 use crate::constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
 use crate::constants::save_data::{SaveData, SaveDataArgs};
+use crate::constants::spell::SpellInfo;
 use crate::constants::status::{Flags, PlayerSummary, Status, StrengthStatus};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{
@@ -124,6 +125,14 @@ impl Player {
         self.status().map(|s| s.agility).unwrap_or(0)
     }
 
+    pub fn max_hp(&self) -> u8 {
+        self.status().map(|s| s.max_mp).unwrap_or(0)
+    }
+
+    pub fn is_mp_cast(&self, spell_info: &SpellInfo) -> bool {
+        self.mp >= spell_info.mp_cost
+    }
+
     pub fn abc(&self) -> GrowthModifiers {
         calculate_abc(self.name_total())
     }
@@ -160,6 +169,11 @@ impl Player {
         self.status()
             .map(|s| s.agility / 2 + armor.defense + shield.defense + scale_bonus)
             .unwrap_or(armor.defense + shield.defense + scale_bonus)
+    }
+
+    pub fn adjust_hp(&mut self, amount: i16) {
+        let new_hp = (self.hp as i16 + amount).clamp(0, self.max_hp() as i16);
+        self.hp = new_hp as u8;
     }
 
     pub fn item_list(&self) -> Vec<&'static str> {
@@ -284,6 +298,10 @@ impl Player {
 
     pub fn is_alive(&self) -> bool {
         self.hp > 0
+    }
+
+    pub fn is_max_armor(&self) -> bool {
+        self.armor == 7
     }
 }
 

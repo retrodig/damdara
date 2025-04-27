@@ -3,6 +3,10 @@ use crate::constants::spell::Spell;
 use crate::monster::Monster;
 use crate::player::Player;
 use crate::utility::monster_utils::choose_action;
+use crate::utility::random_utils::{
+    check_escape_success, check_success_by_percent, get_escape_rand_max_by_monster_index,
+};
+use crate::utility::spell_utils::monster_action_effect;
 use rand::Rng;
 
 pub struct Battle {
@@ -16,6 +20,7 @@ pub struct Battle {
 pub struct BattleState {
     pub sleep: bool,
     pub seal: bool,
+    pub escaped: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,14 +64,17 @@ impl Battle {
     }
 
     pub fn player_goes_first(&self) -> bool {
-        let player_agility = self.player.agility() as u32;
-        let monster_defense = self.monster.stats.defense as u32;
+        let player_agility = self.player.agility() as u16;
+        let monster_defense = self.monster.stats.defense as u16;
+        check_escape_success(player_agility, monster_defense, 63)
+    }
 
-        let mut rng = rand::rng();
-        let player_value = player_agility * rng.random_range(0..=255);
-        let monster_value = monster_defense * rng.random_range(0..=63);
-
-        player_value >= monster_value
+    pub fn is_escape(&self) -> bool {
+        let player_agility = self.player.agility() as u16;
+        let monster_defense = self.monster.stats.defense as u16;
+        let index = self.monster.behavior.index;
+        let rand_max = get_escape_rand_max_by_monster_index(index);
+        check_escape_success(player_agility, monster_defense, rand_max)
     }
 
     pub fn decide_enemy_action(&self) -> EnemyAction {
@@ -133,11 +141,101 @@ impl Battle {
         // self.monster.take_damage(damage);
     }
 
-    fn monster_turn(&mut self) {
-        // println!("{} の攻撃！", self.monster.stats.name);
-        // let damage = self.monster.attack_damage();
-        // println!("{} に {}ダメージ！", self.player.name, damage);
-        // self.player.take_damage(damage);
+    pub fn monster_turn(&mut self) {
+        let action = self.decide_enemy_action();
+
+        match action {
+            EnemyAction::Attack => self.handle_enemy_normal_attack(),
+            EnemyAction::Special(monster_action) => match &monster_action.action {
+                ActionType::Spell(spell) => match spell {
+                    Spell::Hoimi | Spell::Behoimi => {
+                        self.handle_enemy_heal_spell(spell, &monster_action)
+                    }
+                    Spell::Gira | Spell::Begirama => {
+                        self.handle_enemy_attack_spell(spell, &monster_action)
+                    }
+                    Spell::Rarirho => self.handle_enemy_sleep_spell(spell),
+                    Spell::Mahoton => self.handle_enemy_seal_spell(spell),
+                    _ => {}
+                },
+                ActionType::Special(name) => {
+                    self.handle_enemy_special_skill(name, &monster_action);
+                }
+            },
+            EnemyAction::Escape => {
+                println!("{} は逃げ出した！", self.monster.stats.name);
+                self.monster_state.escaped = true;
+            }
+        }
+    }
+
+    fn handle_enemy_normal_attack(&mut self) {
+        let damage = self.monster.normal_damage(&self.player) as i16;
+        println!(
+            "{} の攻撃！{} に {}ダメージ！",
+            self.monster.stats.name, self.player.name, damage
+        );
+        self.player.adjust_hp(-damage);
+    }
+
+    fn handle_enemy_heal_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
+        let heal = monster_action_effect(&monster_action.action);
+        println!(
+            "{} は {} を唱えた！自分のHPが {} 回復！",
+            self.monster.stats.name,
+            spell.as_str(),
+            heal
+        );
+        self.monster.adjust_hp(heal as i16);
+    }
+
+    fn handle_enemy_attack_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
+        let damage = monster_action_effect(&monster_action.action);
+        println!(
+            "{} は {} を唱えた！{} に {}ダメージ！",
+            self.monster.stats.name,
+            spell.as_str(),
+            self.player.name,
+            damage
+        );
+        self.player.adjust_hp(-(damage as i16));
+    }
+
+    fn handle_enemy_sleep_spell(&mut self, spell: &Spell) {
+        println!(
+            "{} は {} を唱えた！",
+            self.monster.stats.name,
+            spell.as_str(),
+        );
+        self.player_state.sleep = true;
+    }
+
+    fn handle_enemy_seal_spell(&mut self, spell: &Spell) {
+        let success = check_success_by_percent(50);
+        if success && !self.player.is_max_armor() {
+            println!(
+                "{} は {} を唱えた！{} は呪文を封じられた！",
+                self.monster.stats.name,
+                spell.as_str(),
+                self.player.name
+            );
+            self.player_state.seal = true;
+        } else {
+            println!(
+                "{} の {} は失敗した！",
+                self.monster.stats.name,
+                spell.as_str(),
+            );
+        }
+    }
+
+    fn handle_enemy_special_skill(&mut self, name: &str, monster_action: &MonsterAction) {
+        let damage = monster_action_effect(&monster_action.action);
+        println!(
+            "{} は {} を使った！{} に {}ダメージ！",
+            self.monster.stats.name, name, self.player.name, damage
+        );
+        self.player.adjust_hp(-(damage as i16));
     }
 }
 
@@ -162,8 +260,24 @@ mod tests {
                 player_first += 1;
             }
         }
-
-        println!("プレイヤー先制率: {}%", player_first / 10);
+        // println!("Player Preemption Rate: {}%", player_first / 10);
         assert!(player_first > 700);
+    }
+
+    #[test]
+    fn test_decide_enemy_action_for_all_monsters() {
+        for index in 0..40 {
+            let monster = Monster::new(index);
+            let player = Player::new("ゆうてい");
+            let battle = Battle::new(player, monster);
+
+            let action = battle.decide_enemy_action();
+            // Test that EnemyAction always returns
+            match action {
+                EnemyAction::Attack | EnemyAction::Escape | EnemyAction::Special(_) => {
+                    // OK
+                }
+            }
+        }
     }
 }
