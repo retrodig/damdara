@@ -7,12 +7,14 @@ pub mod player;
 pub mod save;
 pub mod utility;
 
+use battle::Battle;
 pub use constants::config::Cli;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
 use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
+use monster::Monster;
 use player::Player;
 use std::collections::HashSet;
 use utility::status_utils::{get_status_by_level, get_status_list};
@@ -79,6 +81,10 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             None => println!("Category not specified"),
             _ => {}
         },
+        Mode::Battle => {
+            let mut battle = Battle::new(player, Monster::new(0));
+            battle.start();
+        }
     }
     Ok(())
 }

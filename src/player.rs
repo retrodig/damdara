@@ -172,8 +172,12 @@ impl Player {
     }
 
     pub fn adjust_hp(&mut self, amount: i16) {
-        let new_hp = (self.hp as i16 + amount).clamp(0, self.max_hp() as i16);
-        self.hp = new_hp as u8;
+        if amount >= 0 {
+            self.hp = (self.hp as i16 + amount).min(self.max_hp() as i16) as u8;
+        } else {
+            let damage = (-amount) as u8;
+            self.hp = self.hp.saturating_sub(damage);
+        }
     }
 
     pub fn item_list(&self) -> Vec<&'static str> {

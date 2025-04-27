@@ -8,6 +8,7 @@ use crate::utility::random_utils::{
 };
 use crate::utility::spell_utils::monster_action_effect;
 use rand::Rng;
+use std::io::{self, Write};
 
 pub struct Battle {
     pub player: Player,
@@ -21,6 +22,14 @@ pub struct BattleState {
     pub sleep: bool,
     pub seal: bool,
     pub escaped: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PlayerAction {
+    Attack,
+    Spell,
+    Item,
+    Escape,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,16 +50,15 @@ impl Battle {
     }
 
     pub fn start(&mut self) {
-        println!(
-            "バトル開始！ {} vs {}",
-            self.player.name, self.monster.stats.name
-        );
+        println!("{}があらわれた！", self.monster.stats.name);
+        self.display_status();
 
         while self.player.is_alive() && self.monster.is_alive() {
             self.player_turn();
             if self.monster.is_alive() {
                 self.monster_turn();
             }
+            self.display_status();
         }
 
         if self.player.is_alive() {
@@ -61,6 +69,11 @@ impl Battle {
         } else {
             println!("{} は やられてしまった...", self.player.name);
         }
+    }
+
+    pub fn display_status(&self) {
+        println!("{} HP: {:?}", self.player.name, self.player.hp);
+        println!("{} HP: {:?}", self.monster.stats.name, self.monster.hp);
     }
 
     pub fn player_goes_first(&self) -> bool {
@@ -134,13 +147,6 @@ impl Battle {
         EnemyAction::Attack
     }
 
-    fn player_turn(&mut self) {
-        // println!("{} の攻撃！", self.player.name);
-        // let damage = self.player.attack_damage();
-        // println!("{} に {}ダメージ！", self.monster.stats.name, damage);
-        // self.monster.take_damage(damage);
-    }
-
     pub fn monster_turn(&mut self) {
         let action = self.decide_enemy_action();
 
@@ -171,10 +177,10 @@ impl Battle {
 
     fn handle_enemy_normal_attack(&mut self) {
         let damage = self.monster.normal_damage(&self.player) as i16;
-        println!(
-            "{} の攻撃！{} に {}ダメージ！",
-            self.monster.stats.name, self.player.name, damage
-        );
+        println!("{} のこうげき！", self.monster.stats.name);
+        println!("{} は {}ポイントの", self.player.name, damage);
+        println!("ダメージを うけた！",);
+
         self.player.adjust_hp(-damage);
     }
 
@@ -237,6 +243,56 @@ impl Battle {
         );
         self.player.adjust_hp(-(damage as i16));
     }
+
+    pub fn player_turn(&mut self) {
+        println!("\n--- {}のターン ---", self.player.name);
+        println!("コマンド？");
+        println!("1: たたかう");
+        println!("2: じゅもん");
+        println!("3: どうぐ");
+        println!("4: にげる");
+
+        // 入力を受け取る
+        let action = self.get_player_action();
+
+        // 選んだアクションで分岐
+        match action {
+            PlayerAction::Attack => {
+                println!("{} の攻撃！", self.player.name);
+                // TODO: 攻撃処理
+            }
+            PlayerAction::Spell => {
+                println!("{} は呪文を唱えようとした！", self.player.name);
+                // TODO: 呪文処理
+            }
+            PlayerAction::Item => {
+                println!("{} は道具を使おうとした！", self.player.name);
+                // TODO: アイテム処理
+            }
+            PlayerAction::Escape => {
+                println!("{} は逃げようとした！", self.player.name);
+                // TODO: にげる処理
+            }
+        }
+    }
+
+    fn get_player_action(&self) -> PlayerAction {
+        let mut input = String::new();
+        print!("> ");
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut input).unwrap();
+
+        match input.trim() {
+            "1" => PlayerAction::Attack,
+            "2" => PlayerAction::Spell,
+            "3" => PlayerAction::Item,
+            "4" => PlayerAction::Escape,
+            _ => {
+                println!("無効な入力です。もう一度選んでください。");
+                self.get_player_action() // 再帰的にリトライ
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -280,4 +336,20 @@ mod tests {
             }
         }
     }
+
+    // fn setup_battle_for_action(enemy_action: EnemyAction) -> Battle {
+    //     let player = Player::new("ゆうてい");
+    //     let monster = Monster::new(0);
+    //     let mut battle = Battle::new(player, monster);
+    //     battle.monster_state.escaped = false;
+    //     battle
+    // }
+
+    // #[test]
+    // fn test_monster_turn_escape() {
+    //     let mut battle = setup_battle_for_action(EnemyAction::Escape);
+    //     battle.monster_state.escaped = true;
+    //     battle.monster_turn();
+    //     // assert!(battle.monster_state.escaped, "Monster should have escaped");
+    // }
 }

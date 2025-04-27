@@ -4,6 +4,7 @@ use crate::constants::monster::{
 };
 use crate::constants::spell::Spell;
 use crate::player::Player;
+use crate::utility::random_utils::generate_in_range;
 use crate::utility::random_utils::random_value;
 use rand::Rng;
 
@@ -42,8 +43,12 @@ impl Monster {
     }
 
     pub fn adjust_hp(&mut self, amount: i16) {
-        let new_hp = (self.hp as i16 + amount).clamp(0, self.max_hp() as i16);
-        self.hp = new_hp as u8;
+        if amount >= 0 {
+            self.hp = (self.hp as i16 + amount).min(self.max_hp() as i16) as u8;
+        } else {
+            let damage = (-amount) as u8;
+            self.hp = self.hp.saturating_sub(damage);
+        }
     }
 
     pub fn has_support_magic(&self) -> bool {
@@ -181,6 +186,15 @@ impl Monster {
         } else {
             self.correction_damage(player)
         }
+    }
+
+    pub fn get_gold(&self) -> u8 {
+        let max_gold = self.stats.gold;
+        let min_gold = (max_gold as f32 * 0.75).floor() as u8;
+        if max_gold == min_gold {
+            return max_gold;
+        }
+        generate_in_range(min_gold, max_gold)
     }
 }
 
