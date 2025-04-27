@@ -310,6 +310,77 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - town
 - message
 
+**■ Battle Mode**
+
+Now, if you have given birth to a brave man, let's head into battle.
+
+Enter commands and defeat the slime!
+
+```
+cargo run -- -m battle
+
+スライムがあらわれた！
+
+ゆうてい HP: 15
+スライム HP: 3
+
+--- ゆうていのターン ---
+コマンド？
+1: たたかう
+2: じゅもん
+3: どうぐ
+4: にげる
+```
+
+If you've been hit, then take on the challenge with the best equipment!
+
+```
+cargo run -- -n だい -o max -m battle
+
+スライムがあらわれた！
+
+た゛い　 HP: 190
+スライム HP: 3
+
+--- た゛い　のターン ---
+コマンド？
+1: たたかう
+2: じゅもん
+3: どうぐ
+4: にげる
+```
+
+You can fight any monster by specifying the id of the enemy in the `--view` option.
+
+You can fight the last boss right away.
+
+```
+cargo run -- -n だい -o max -m battle --view 39
+
+りゅうおうがあらわれた！
+
+た゛い　 HP: 190
+りゅうおう HP: 129
+
+--- た゛い　のターン ---
+コマンド？
+1: たたかう
+2: じゅもん
+3: どうぐ
+4: にげる
+```
+
+Beware of strong flames.
+
+```
+ りゅうおうは  ほのおをはいた!
+ た゛い　は 44ポイントの
+ ダメージを うけた
+
+た゛い　 HP: 146
+りゅうおう HP: 129
+```
+
 ### Status Option
 
 `--option` or the shortcut `-o` can be used to specify status options
