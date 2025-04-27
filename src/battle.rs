@@ -77,6 +77,7 @@ impl Battle {
         println!();
         println!("{} HP: {:?}", self.player.name, self.player.hp);
         println!("{} HP: {:?}", self.monster.stats.name, self.monster.hp);
+        println!();
     }
 
     pub fn display_enemy_special_skill_message(&self, name: &str, damage: u8) {
@@ -212,33 +213,27 @@ impl Battle {
 
     fn handle_enemy_heal_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let heal = monster_action_effect(&monster_action.action);
-        println!(
-            "{} は {} を唱えた！自分のHPが {} 回復！",
-            self.monster.stats.name,
-            spell.as_str(),
-            heal
-        );
+        println!(" {}は {}の", self.monster.name(), spell.as_str());
+        println!(" じゅもんを となえた！");
+        println!(" {}は きずが", self.monster.name(),);
+        println!(" かいふくした！");
         self.monster.adjust_hp(heal as i16);
     }
 
     fn handle_enemy_attack_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let damage = monster_action_effect(&monster_action.action);
-        println!(
-            "{} は {} を唱えた！{} に {}ダメージ！",
-            self.monster.stats.name,
-            spell.as_str(),
-            self.player.name,
-            damage
-        );
+        println!(" {}は {}の", self.monster.name(), spell.as_str());
+        println!(" じゅもんを となえた！");
+        println!(" {}は {}ポイントの", self.player.name, damage);
+        println!(" ダメージを うけた！",);
         self.player.adjust_hp(-(damage as i16));
     }
 
     fn handle_enemy_sleep_spell(&mut self, spell: &Spell) {
-        println!(
-            "{} は {} を唱えた！",
-            self.monster.stats.name,
-            spell.as_str(),
-        );
+        println!(" {}は {}の", self.monster.name(), spell.as_str(),);
+        println!(" じゅもんを となえた！");
+        println!("{}は ねむってしまった！", self.player.name);
+
         self.player_state.sleep = true;
     }
 
@@ -275,6 +270,17 @@ impl Battle {
     }
 
     pub fn player_turn(&mut self) {
+        if self.player_state.sleep {
+            let is_wakeup = check_success_by_percent(33);
+            if is_wakeup {
+                println!("{}は めをさました！", self.player.name);
+                self.player_state.sleep = false;
+            } else {
+                println!("{}は ねむっている⋯⋯⋯", self.player.name);
+                return;
+            }
+        }
+
         println!("\n--- {}のターン ---", self.player.name);
         println!("コマンド？");
         println!("1: たたかう");
@@ -282,10 +288,8 @@ impl Battle {
         println!("3: どうぐ");
         println!("4: にげる");
 
-        // 入力を受け取る
+        // Receive input
         let action = self.get_player_action();
-
-        // 選んだアクションで分岐
         match action {
             PlayerAction::Attack => {
                 println!("{} のこうげき！", self.player.name);
