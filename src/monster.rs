@@ -4,9 +4,7 @@ use crate::constants::monster::{
 };
 use crate::constants::spell::Spell;
 use crate::player::Player;
-use crate::utility::random_utils::generate_in_range;
-use crate::utility::random_utils::random_value;
-use rand::Rng;
+use crate::utility::random_utils::{generate_in_range, get_random_bonus, random_value};
 
 #[derive(Debug, Clone)]
 pub struct Monster {
@@ -21,10 +19,8 @@ impl Monster {
         let behavior = MONSTER_BEHAVIORS
             .get(index)
             .unwrap_or(&MONSTER_BEHAVIORS[0]);
-
-        let mut rng = rand::rng();
-        let random_value: u16 = rng.random_range(0..=BIT_8_MAX as u16);
-        let reduction = (stats.hp as u16 * random_value) / 1024;
+        let rand_val = random_value(BIT_8_MAX) as u16;
+        let reduction = (stats.hp as u16 * rand_val) / 1024;
         let initial_hp = stats.hp.saturating_sub(reduction as u8);
 
         Self {
@@ -133,19 +129,6 @@ impl Monster {
         })
     }
 
-    // pub fn attack_skills(&self) -> Vec<ActionType> {
-    //     self.behavior.actions.iter()
-    //         .filter(|action| match action.action {
-    //             ActionType::Spell(Spell::Gira)
-    //             | ActionType::Spell(Spell::Begirama)
-    //             | ActionType::Special("ほのお(弱)")
-    //             | ActionType::Special("ほのお(強)") => true,
-    //             _ => false,
-    //         })
-    //         .cloned() // ActionTypeをコピー
-    //         .collect()
-    // }
-
     pub fn is_alive(&self) -> bool {
         self.hp > 0
     }
@@ -157,17 +140,13 @@ impl Monster {
     pub fn correction_damage(&self, player: &Player) -> u8 {
         let monster_strength = self.stats.attack as i32;
         let player_defense = player.defense_power() as i32;
-
         let base_damage = (monster_strength - (player_defense / 2) + 2).max(0) / 4;
-
-        let mut rng = rand::rng();
-        let random_bonus = rng.random_range(0..=(monster_strength / 4).max(0));
+        let random_bonus = get_random_bonus(monster_strength);
 
         let mut damage = base_damage + random_bonus;
         if damage <= 0 {
             damage = 0;
         }
-
         damage.min(255) as u8
     }
 

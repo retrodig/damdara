@@ -59,6 +59,11 @@ pub fn check_escape_success(
     player_random >= monster_random
 }
 
+pub fn get_random_bonus(monster_strength: i32) -> i32 {
+    let mut rng = rand::rng();
+    rng.random_range(0..=(monster_strength / 4).max(0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

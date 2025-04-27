@@ -277,6 +277,15 @@ impl Battle {
         self.player.adjust_hp(-(damage as i16));
     }
 
+    pub fn display_command(&self) {
+        println!("\n--- {}のターン ---", self.player.name);
+        println!("コマンド？");
+        println!("1: たたかう");
+        println!("2: じゅもん");
+        println!("3: どうぐ");
+        println!("4: にげる");
+    }
+
     pub fn player_turn(&mut self) {
         if self.player_state.sleep {
             let is_wakeup = random_success_by_percent(33.33);
@@ -289,12 +298,7 @@ impl Battle {
             }
         }
 
-        println!("\n--- {}のターン ---", self.player.name);
-        println!("コマンド？");
-        println!("1: たたかう");
-        println!("2: じゅもん");
-        println!("3: どうぐ");
-        println!("4: にげる");
+        self.display_command();
 
         // Receive input
         let action = self.get_player_action();
@@ -362,6 +366,7 @@ impl Battle {
             "4" => PlayerAction::Escape,
             _ => {
                 println!("無効な入力です。もう一度選んでください。");
+                self.display_command();
                 self.get_player_action() // 再帰的にリトライ
             }
         }
