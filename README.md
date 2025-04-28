@@ -57,7 +57,18 @@ the player's name, item equipping, and battle processing.
 - [ ] Explore the field
 - [ ] Explore the Town
 
-Bit configuration mapping table for password generation.
+This diagram shows the 120-bit structure of the “Fufutsu no Jumon”.
+
+The name, experience value, gold, items, equipment, key items, flag information, etc. are packed and stored strictly in
+bits.
+
+<p align="center">
+  <img width="700" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/base_binary.png">
+</p>
+
+From this structure, the structure rearranged to generate the “Fufutsu no Jumon” is as follows.
+
+**Bit configuration mapping table for password generation.**
 
  Byte Index | Field Description                               | Bits (from MSB to LSB) 
 ------------|-------------------------------------------------|------------------------
@@ -76,6 +87,10 @@ Bit configuration mapping table for password generation.
  12         | Experience (upper 8 bits)                       | [7:0]                  
  13         | DragonScale (1) + Name[1] (6) + WarriorRing (1) | [7], [6:1], [0]        
  14         | Item[1] + Item[0]                               | [7:4], [3:0]           
+
+<p align="center">
+  <img width="700" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/relocation.png">
+</p>
 
 ## Installation
 
