@@ -8,6 +8,7 @@ use crate::utility::random_utils::{generate_in_range, get_random_bonus, random_v
 
 #[derive(Debug, Clone)]
 pub struct Monster {
+    pub id: u8,
     pub hp: u8,
     pub stats: MonsterStats,
     pub behavior: MonsterBehavior,
@@ -24,6 +25,7 @@ impl Monster {
         let initial_hp = stats.hp.saturating_sub(reduction as u8);
 
         Self {
+            id: index as u8,
             hp: initial_hp,
             stats: stats.clone(),
             behavior: behavior.clone(),

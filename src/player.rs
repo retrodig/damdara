@@ -8,7 +8,7 @@ use crate::growth_type::{
 };
 use crate::load::decode_from_password_string;
 use crate::monster::Monster;
-use crate::utility::random_utils::random_value;
+use crate::utility::random_utils::{generate_in_range, random_value};
 use crate::utility::spell_utils::spells_learned_by_level;
 use crate::utility::status_utils::{get_level_by_exp, get_status_by_level, resolve_experience};
 use crate::utility::string_utils::name_normalize;
@@ -26,6 +26,8 @@ pub struct Player {
     pub items: [u8; 8],
     pub herbs: u8,
     pub keys: u8,
+    pub is_curse_belt: bool,
+    pub is_curse_necklace: bool,
     pub flags: Flags,
 }
 
@@ -69,6 +71,21 @@ impl PlayerArgs {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnifiedItem {
+    pub id: u8,
+    pub name: &'static str,
+    pub count: u8,
+    pub kind: ItemKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemKind {
+    Herb,
+    Key,
+    Equipment,
+}
+
 impl Player {
     pub fn new(name: &str) -> Self {
         Self::new_with(PlayerArgs {
@@ -96,6 +113,8 @@ impl Player {
             items: args.items.unwrap_or([0; 8]),
             herbs: args.herbs.unwrap_or(0),
             keys: args.keys.unwrap_or(0),
+            is_curse_belt: false,
+            is_curse_necklace: false,
             flags: args.flags.unwrap_or_default(),
         }
     }
@@ -194,6 +213,44 @@ impl Player {
                     .unwrap_or("なし")
             })
             .collect()
+    }
+
+    pub fn unified_item_list(&self) -> Vec<UnifiedItem> {
+        let mut result = Vec::new();
+
+        if self.herbs > 0 {
+            result.push(UnifiedItem {
+                id: 101,
+                name: "やくそう",
+                count: self.herbs,
+                kind: ItemKind::Herb,
+            });
+        }
+        if self.keys > 0 {
+            result.push(UnifiedItem {
+                id: 102,
+                name: "かぎ",
+                count: self.keys,
+                kind: ItemKind::Key,
+            });
+        }
+        for &item_id in &self.items {
+            if let Some(item) = ITEM_MASTER.get(item_id as usize) {
+                if item.name != "なし" {
+                    result.push(UnifiedItem {
+                        id: item_id,
+                        name: item.name,
+                        count: 1,
+                        kind: ItemKind::Equipment,
+                    });
+                }
+            }
+        }
+        result
+    }
+
+    pub fn is_unified_item_list(&self) -> bool {
+        !self.unified_item_list().is_empty()
     }
 
     pub fn spell_list(&self) -> Vec<&'static SpellInfo> {
@@ -342,6 +399,12 @@ impl Player {
         } else {
             base_damage
         }
+    }
+
+    pub fn use_herbs(&mut self) {
+        let heal = generate_in_range(23, 30);
+        self.adjust_hp(heal as i16);
+        self.herbs -= 1;
     }
 }
 

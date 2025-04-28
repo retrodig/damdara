@@ -1,7 +1,7 @@
 use crate::constants::monster::{ActionType, MonsterAction};
 use crate::constants::spell::Spell;
 use crate::monster::Monster;
-use crate::player::Player;
+use crate::player::{ItemKind, Player, UnifiedItem};
 use crate::utility::monster_utils::choose_action;
 use crate::utility::random_utils::{
     check_escape_success, get_escape_rand_max_by_monster_index, random_success_by_percent,
@@ -392,7 +392,7 @@ impl Battle {
             println!("{}: {}", i + 1, spell_info.spell.as_str());
         }
 
-        let spell_index = self.get_player_input(spell_len + 1);
+        let spell_index = self.get_player_input(spell_len);
         if spell_index == 0 {
             return self.commands_cancel();
         }
@@ -458,25 +458,112 @@ impl Battle {
 
     // プレイヤー: どうぐ
     pub fn player_action_item(&mut self) {
-        println!("{} は道具を使おうとした！", self.player.name);
+        if !self.player.is_unified_item_list() {
+            println!("つかえるものを まだ");
+            println!("もっていない。");
+            self.commands_cancel();
+            return;
+        }
 
-        // let items = self.player.items();
-        // if items.is_empty() {
-        //     println!("持っている道具がない！");
-        //     return;
-        // }
-        //
-        // println!("持っている道具一覧:");
-        // for (i, item) in items.iter().enumerate() {
-        //     println!("{}: {}", i, item.to_string());
-        // }
-        //
-        // let item_index = get_player_input(items.len());
-        // let chosen_item = items[item_index];
-        //
-        // // TODO: アイテムごとの効果処理
-        // println!("{} を使った！", chosen_item.to_string());
-        // 例: HP回復とか
+        println!("--- どうぐ ---");
+        println!("0: もどる");
+        let unified_item_list = self.player.unified_item_list();
+        for (i, item) in unified_item_list.iter().enumerate() {
+            if item.kind == ItemKind::Herb || item.kind == ItemKind::Key {
+                println!("{}: {} （{}）", i + 1, item.name, item.count);
+            } else {
+                println!("{}: {}", i + 1, item.name);
+            }
+        }
+
+        let item_index = self.get_player_input(unified_item_list.len());
+        if item_index == 0 {
+            return self.commands_cancel();
+        }
+        self.use_item(unified_item_list[item_index - 1].clone());
+    }
+
+    pub fn use_item(&mut self, item: UnifiedItem) {
+        match item.kind {
+            ItemKind::Herb => {
+                println!("{}は やくそうを つかった！", self.player.name);
+                self.player.use_herbs();
+            }
+            ItemKind::Key => {
+                println!("それは たたかいに つかえない！");
+                self.commands_cancel();
+                return;
+            }
+            ItemKind::Equipment => match item.id {
+                4 => {
+                    if self.player.flags.has_dragon_scale {
+                        println!("りゅうのうろこは すでに");
+                        println!("みにつけています。");
+                    } else {
+                        println!("{}は りゅうのうろこを", self.player.name);
+                        println!("みにつけた。");
+                        self.player.flags.has_dragon_scale = true;
+                    }
+                }
+                5 => {
+                    println!("{}は ふえをふいた。", self.player.name);
+                    if self.monster.id == 32 {
+                        println!("{}は しずかに めをとじる⋯", self.monster.name());
+                        println!("ねむってしまった！");
+                        self.monster_state.sleep = true;
+                    } else {
+                        println!("しかし なにも おきなかった。");
+                    }
+                }
+                6 => {
+                    println!("{}は せんしのゆびわを", self.player.name);
+                    if self.player.flags.has_warrior_ring {
+                        println!("はめなおした。");
+                    } else {
+                        println!("はめた。");
+                    }
+                }
+                9 => {
+                    if self.player.is_curse_belt {
+                        println!("のろいのベルトが あなたの");
+                        println!("からだを しめつけている。");
+                    } else {
+                        println!("{}は のろいのベルトを", self.player.name);
+                        println!("みにつけた。");
+
+                        println!("のろいのベルトが あなたの");
+                        println!("からだを しめつける。");
+                        println!("あなたは のろわれてしまった。");
+
+                        self.player.is_curse_belt = true;
+                    }
+                }
+                10 => {
+                    println!("{}は たてごとを かなでた。", self.player.name);
+                    println!("{}は うれしそうだ!", self.monster.name());
+                }
+                11 => {
+                    if self.player.is_curse_necklace {
+                        println!("しのくびかざりが あなたの");
+                        println!("からだを しめつけている。");
+                    } else {
+                        println!("{}は しのくびかざりを", self.player.name);
+                        println!("みにつけた。");
+
+                        println!("しのくびかざりが あなたの");
+                        println!("からだを しめつける。");
+                        println!("あなたは のろわれてしまった。");
+
+                        self.player.is_curse_necklace = true;
+                    }
+                }
+                _ => {
+                    println!("それは たたかいに つかえない！");
+                    self.commands_cancel();
+                    return;
+                }
+            },
+        }
     }
 
     // プレイヤー: にげる
