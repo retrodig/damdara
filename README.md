@@ -49,7 +49,7 @@ the player's name, item equipping, and battle processing.
 - [x] Refer to any Armor information
 - [x] See list of Shield
 - [x] Refer to any Shield information
-- [ ] Reproduction of battle scenes
+- [x] Reproduction of battle scenes
 - [ ] See list of Town
 - [ ] Refer to any Town information
 - [ ] Refer to any World information
