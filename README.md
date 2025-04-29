@@ -410,6 +410,8 @@ If max is specified, the parameter and story state will be the strongest
 
 <img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
 
+<img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters_2.png">
+
 **example**
 
 ```
