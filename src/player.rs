@@ -1,7 +1,9 @@
-use crate::constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
+use crate::constants::item_weapon::{
+    ARMOR_MASTER, Equipment, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER,
+};
 use crate::constants::save_data::{SaveData, SaveDataArgs};
 use crate::constants::spell::SpellInfo;
-use crate::constants::status::{Flags, PlayerSummary, Status, StrengthStatus};
+use crate::constants::status::{DEFAULT_STATUS, Flags, PlayerSummary, Status, StrengthStatus};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{
     GrowthModifiers, calculate_abc, calculate_growth_name_total, get_adjusted_status_by_name_lv,
@@ -168,26 +170,35 @@ impl Player {
         Some(get_adjusted_status_by_name_lv(&self.name, self.level()))
     }
 
-    pub fn attack_power(&self) -> u8 {
-        let weapon = WEAPON_MASTER
+    pub fn get_weapon(&self) -> &Equipment {
+        WEAPON_MASTER
             .get(self.weapon as usize)
-            .unwrap_or(&WEAPON_MASTER[0]);
-        let ring_bonus = if self.flags.has_warrior_ring { 2 } else { 0 };
+            .unwrap_or(&WEAPON_MASTER[0])
+    }
 
+    pub fn get_armor(&self) -> &Equipment {
+        ARMOR_MASTER
+            .get(self.armor as usize)
+            .unwrap_or(&ARMOR_MASTER[0])
+    }
+
+    pub fn get_shield(&self) -> &Equipment {
+        SHIELD_MASTER
+            .get(self.shield as usize)
+            .unwrap_or(&SHIELD_MASTER[0])
+    }
+
+    pub fn attack_power(&self) -> u8 {
+        let ring_bonus = if self.flags.has_warrior_ring { 2 } else { 0 };
         self.status()
-            .map(|s| s.strength + weapon.attack + ring_bonus)
-            .unwrap_or(weapon.attack + ring_bonus)
+            .map(|s| s.strength + self.get_weapon().attack + ring_bonus)
+            .unwrap_or(self.get_weapon().attack + ring_bonus)
     }
 
     pub fn defense_power(&self) -> u8 {
-        let armor = ARMOR_MASTER
-            .get(self.armor as usize)
-            .unwrap_or(&ARMOR_MASTER[0]);
-        let shield = SHIELD_MASTER
-            .get(self.shield as usize)
-            .unwrap_or(&SHIELD_MASTER[0]);
+        let armor = self.get_armor();
+        let shield = self.get_shield();
         let scale_bonus = if self.flags.has_dragon_scale { 2 } else { 0 };
-
         self.status()
             .map(|s| s.agility / 2 + armor.defense + shield.defense + scale_bonus)
             .unwrap_or(armor.defense + shield.defense + scale_bonus)
@@ -327,17 +338,10 @@ impl Player {
     }
 
     pub fn strength_status(&self) -> StrengthStatus {
-        let status = self.status().unwrap();
-
-        let weapon = WEAPON_MASTER
-            .get(self.weapon as usize)
-            .unwrap_or(&WEAPON_MASTER[0]);
-        let armor = ARMOR_MASTER
-            .get(self.armor as usize)
-            .unwrap_or(&ARMOR_MASTER[0]);
-        let shield = SHIELD_MASTER
-            .get(self.shield as usize)
-            .unwrap_or(&SHIELD_MASTER[0]);
+        let status = self.status().unwrap_or(DEFAULT_STATUS.clone());
+        let weapon = self.get_weapon();
+        let armor = self.get_armor();
+        let shield = self.get_shield();
 
         StrengthStatus {
             level: self.level(),
@@ -411,6 +415,7 @@ impl Player {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::status::DEFAULT_STATUS;
 
     #[test]
     fn test_player_default_level() {
@@ -471,5 +476,38 @@ mod tests {
         player.maximize();
         let password = player.to_password_string().unwrap();
         assert_eq!(password, "へへみぞあうぞてえきいおくらちきこぜくゆ");
+    }
+
+    #[test]
+    fn test_player_status_parameter() {
+        let mut player_1 = Player::new("だい");
+        let player_1_status = player_1.status().unwrap_or(DEFAULT_STATUS.clone());
+        assert_eq!(player_1_status.strength, 4);
+        assert_eq!(player_1_status.agility, 4);
+        assert_eq!(player_1_status.max_hp, 14);
+        assert_eq!(player_1_status.max_mp, 0);
+
+        // maximize
+        player_1.maximize();
+        let player_1_max_status = player_1.status().unwrap_or(DEFAULT_STATUS.clone());
+        assert_eq!(player_1_max_status.strength, 127);
+        assert_eq!(player_1_max_status.agility, 130);
+        assert_eq!(player_1_max_status.max_hp, 190);
+        assert_eq!(player_1_max_status.max_mp, 200);
+
+        let mut player_2 = Player::new("ゆうてい");
+        let player_2_status = player_2.status().unwrap_or(DEFAULT_STATUS.clone());
+        assert_eq!(player_2_status.strength, 4);
+        assert_eq!(player_2_status.agility, 3);
+        assert_eq!(player_2_status.max_hp, 15);
+        assert_eq!(player_2_status.max_mp, 0);
+
+        // maximize
+        player_2.maximize();
+        let player_2_max_status = player_2.status().unwrap_or(DEFAULT_STATUS.clone());
+        assert_eq!(player_2_max_status.strength, 140);
+        assert_eq!(player_2_max_status.agility, 117);
+        assert_eq!(player_2_max_status.max_hp, 210);
+        assert_eq!(player_2_max_status.max_mp, 180);
     }
 }
