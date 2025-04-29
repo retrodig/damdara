@@ -33,28 +33,28 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 
 ## Features
 
-- [x] Generate resurrection "Fukkatsu no Jumon" from parameters （Parameters to Password）
-- [x] Parameters generated from resurrection "Fukkatsu no Jumon" (Password to Parameters)
-- [x] Calculate parameters enhanced by name
-- [x] See list of monsters
-- [x] Refer to any monster information
-- [x] See parameter list
-- [x] Refer to any parameter
-- [x] See list of Item
-- [x] Refer to any Item information
-- [x] See list of Weapon
-- [x] Refer to any Weapon information
-- [x] See list of Armor
-- [x] Refer to any Armor information
-- [x] See list of Shield
-- [x] Refer to any Shield information
-- [x] Reproduction of battle scenes
-- [ ] See list of Town
-- [ ] Refer to any Town information
-- [ ] Refer to any World information
-- [ ] See list of Message
-- [ ] Explore the field
-- [ ] Explore the Town
+- [x] パラメータから「ふっかつのじゅもん」を生成する（パラメータからパスワード）。
+- [x] 「ふっかつのじゅもん」から生成されるパラメータ（パスワードからパラメータ）
+- [x] 名前で強化されたパラメータを計算
+- [x] モンスター一覧を見る
+- [x] モンスターの情報を参照する
+- [x] 成長パラメータ一覧参照
+- [x] 任意のパラメータを参照
+- [x] アイテム一覧を見る
+- [x] アイテム項目情報を参照
+- [x] ぶき一覧を見る
+- [x] ぶきの情報を参照する
+- [x] よろい一覧を見る
+- [x] よろいの情報を参照する
+- [x] たて一覧を見る
+- [x] たての情報を参照する
+- [x] 戦闘シーンの再現
+- [ ] 城、街一覧を見る
+- [ ] 城、街情報を参照する
+- [ ] 世界のあらゆる情報を参照する
+- [ ] メッセージ一覧を見る
+- [ ] フィールドを探索する
+- [ ] 城、街を探索する
 
 この図は「ふっかつのじゅもん」の120bit構造を表しています。
 
@@ -176,7 +176,7 @@ strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14,
 item: ["せいすい", "キメラのつばさ", "りゅうのうろこ", "なし", "なし", "なし", "なし", "なし"]
 ```
 
-The equipment is also given an ID after specifying each option.
+各オプションを指定した後、ID付与で任意の装備をつけることも可能です。
 
 ```
 cargo run -- -n だい -w 3 -a 5 -s 3
@@ -186,9 +186,9 @@ strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14,
 item: ["なし", "なし", "なし", "なし", "なし", "なし", "なし", "なし"]
 ```
 
-`flags` are a group of flags that indicate whether a player has equipped a particular item or defeated a boss monster.
+`flags`は、プレイヤーが特定のアイテムを装備したか、ボスモンスターを倒したかなどを示すフラグのグループです。
 
-They can be specified collectively as a 5-digit bit string with the command line argument `--flags`.
+これらはコマンドライン引数 `--flags` で5桁のビット列としてまとめて指定できます。
 
 ```
 cargo run -- -n だい --flags 01010
@@ -196,52 +196,53 @@ cargo run -- -n だい --flags 01010
 
 ### List of CLI options
 
-| option             | type                     | default value                 | Description                                    |
-|:-------------------|:-------------------------|:------------------------------|:-----------------------------------------------|
-| `-n`, `--name`     | String                   | `"ゆうてい"`                      | Main character's name                          |
-| `-e`, `--exp`      | u16                      | `0`                           | XP                                             |
-| `-g`, `--gold`     | u16                      | `0`                           | Gold in possession                             |
-| `-w`, `--weapon`   | u8                       | `0`                           | The number of the weapon you are equipped with |
-| `-a`, `--armor`    | u8                       | `0`                           | The number of the armor you are equipped with  |
-| `-s`, `--shield`   | u8                       | `0`                           | The number of the shield you are equipped with |
-| `-i`, `--item`     | Vec<u8>(comma delimited) | not in possession             | List of item numbers                           |
-| `-y`, `--herbs`    | u8                       | `0`                           | Number of herbs held                           |
-| `-k`, `--keys`     | u8                       | `0`                           | Number of keys held                            |
-| `--flags`          | Flags structure          | All false                     | status flag                                    |
-| `-p`, `--password` | String                   | Maximum Strengthened Password | Fukkatsu no Jumon                              |
+| オプション              | 型                        | デフォルト値    | 説明           |
+|:-------------------|:-------------------------|:----------|:-------------|
+| `-n`, `--name`     | String                   | `"ゆうてい"`  | 主人公の名前       |
+| `-e`, `--exp`      | u16                      | `0`       | 経験値          |
+| `-g`, `--gold`     | u16                      | `0`       | ゴールド         |
+| `-w`, `--weapon`   | u8                       | `0`       | 装備しているぶきのID  |
+| `-a`, `--armor`    | u8                       | `0`       | 装備しているよろいのID |
+| `-s`, `--shield`   | u8                       | `0`       | 装備しているたてのID  |
+| `-i`, `--item`     | Vec<u8>(comma delimited) | なし        | どうぐID一覧      |
+| `-y`, `--herbs`    | u8                       | `0`       | やくそうの個数      |
+| `-k`, `--keys`     | u8                       | `0`       | かぎの個数        |
+| `--flags`          | Flags structure          | All false | ストーリーフラグ     |
+| `-p`, `--password` | String                   | 最強強化パスワード | ふっかつのじゅもん    |
 
 ### Flags option details（--flags）
 
-| digit position | bit | Field Name          | Description                             |
-|:--------------:|:---:|:--------------------|:----------------------------------------|
-|   1st digit    | 0/1 | has_dragon_scale    | Equipped with the scales of a dragon?   |
-|   2st digit    | 0/1 | has_warrior_ring    | Are you equipped with a warrior's ring? |
-|   3st digit    | 0/1 | has_cursed_necklace | Did you get the beak necklace?          |
-|   4st digit    | 0/1 | defeated_dragon     | You slayed the dragon.                  |
-|   5st digit    | 0/1 | defeated_golem      | You beat the golem.                     |
+| digit position | bit | Field Name          | Description    |
+|:--------------:|:---:|:--------------------|:---------------|
+|      1桁目       | 0/1 | has_dragon_scale    | りゅうのうろこを装備したか？ |
+|      2桁目       | 0/1 | has_warrior_ring    | せんしのゆびわを装備したか? |
+|      3桁目       | 0/1 | has_cursed_necklace | しのくびかざりを入手したか? |
+|      4桁目       | 0/1 | defeated_dragon     | ドラゴンを倒したか?     |
+|      5桁目       | 0/1 | defeated_golem      | ゴーレムを倒したか?     |
 
-- Specify with **5 digits 0/1** like `--flags 01000`.
-- If not specified, default `“00000”` (all false)
+- `--flags 01000`のように5桁の0/1で指定します。
+- 指定がない場合、デフォルトは `00000`となります。 (すべてfalse)
 
 ### Mode
 
-You can specify the mode by giving `--mode` or the shortcut `-m`.
+モードは `--mode` またはショートカット `-m` で指定できます。
 
 ```
 cargo run -- --mode <input>
 cargo run -- -m <input>
 ```
 
- Mode Name | Description                                                                   
------------|-------------------------------------------------------------------------------|
- start     | Calculate enhanced parameters from name only                                  |                  
- save      | Generate "Fukkatsu no Jumon" from arbitrary parameters (e.g. exp, gold, etc.) |                  
- load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
- display   | Supports list and individual display of master data                           |
+ モード名    | 説明                                      
+---------|-----------------------------------------|
+ start   | 名前のみから強化パラメーターを計算                       |                  
+ save    | 任意のパラメータ（Expやゴールドなど）から「ふっかつのじゅもん」を生成する。 |                  
+ load    | 「ふっかつのじゅもん」から、名前／パラメータなどを復元             |
+ display | マスターデータの一覧表示と個別表示                       |
+ battle  | 任意のモンスターと戦闘を行える                         |
 
 **■ Start Mode**
 
-Generate parameters from the names of brave men
+勇者の名前からパラメータを生成します。（LV.1）
 
 **example**
 
@@ -251,7 +252,7 @@ summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gol
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-The default setting of the mode is here, so if you omit it, the default brave will be generated
+start モードは省略可能で、省略するとデフォルトの名前が付与された勇者が生成されます。
 
 **example**
 
@@ -265,7 +266,7 @@ strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15,
 
 **■ Save Mode**
 
-Generates the "Fukkatsu no Jumon" from the parameters of the hero.
+主人公のパラメータに基づいた「ふっかつのじゅもん」を生成します。
 
 <img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/fukkatsu_no_jumon.png">
 
@@ -277,7 +278,7 @@ cargo run -- -n だい -m save
 ぢばげぞでぶいまももれぎざぞでぶいよごぜ
 ```
 
-上記で説明したオプションを与え、パラメータを変更したうえで、「ふっかつのじゅもん」を生成することができます。
+上記で説明したオプションを与え、パラメータを変更したうえで、「ふっかつのじゅもん」を生成できます。
 
 ```
 cargo run -- -n だい -e 7000 -m save
@@ -383,7 +384,7 @@ cargo run -- -n だい -o max -m battle --view 39
 4: にげる
 ```
 
-Beware of strong flames.
+強い炎に注意。
 
 ```
  りゅうおうは  ほのおをはいた!
@@ -396,13 +397,13 @@ Beware of strong flames.
 
 ### Status Option
 
-`--option` or the shortcut `-o` can be used to specify status options
+ステータスのオプションを指定するには `--option` またはショートカット `-o` を使用します。
 
 ```
 cargo run -- -o <input>
 ```
 
-If max is specified, the parameter and story state will be the strongest
+maxが指定された場合、パラメータとストーリーの状態は最強となります。
 
 <img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
 
@@ -417,16 +418,16 @@ strength_status: StrengthStatus { level: 30, strength: 140, agility: 120, max_hp
 
 ### Format Option
 
-The output format can be changed by giving the `--format`.
+出力形式は `--format` を与えることで変更できます。
 
 ```
 cargo run -- --format <input>
 ```
 
- Format Name | Description                                                       
--------------|-------------------------------------------------------------------|
- print       | It will be a print statement output. This is the default setting. |                  
- json        | Output in JSON format                                             |          
+ フォーマット | 説明                         
+--------|----------------------------|
+ print  | プリント文が出力される。これはデフォルトの設定です。 |                  
+ json   | JSON形式での出力                 |          
 
 ### Example
 

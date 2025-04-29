@@ -179,7 +179,7 @@ strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14,
 item: ["せいすい", "キメラのつばさ", "りゅうのうろこ", "なし", "なし", "なし", "なし", "なし"]
 ```
 
-The equipment is also given an ID after specifying each option.
+It is also possible to put on any equipment by specifying ID.
 
 ```
 cargo run -- -n だい -w 3 -a 5 -s 3
@@ -241,6 +241,7 @@ cargo run -- -m <input>
  save      | Generate "Fukkatsu no Jumon" from arbitrary parameters (e.g. exp, gold, etc.) |                  
  load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
  display   | Supports list and individual display of master data                           |
+ battle    | Can battle any monster.                                                       |
 
 **■ Start Mode**
 
