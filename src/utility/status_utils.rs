@@ -21,7 +21,11 @@ impl Status {
             strength: apply_modifier(self.strength, abc.c == 1, abc.a as u8),
             agility: apply_modifier(self.agility, abc.b == 1, abc.a as u8),
             max_hp: apply_modifier(self.max_hp, abc.b == 0, abc.a as u8),
-            max_mp: apply_modifier(self.max_mp, abc.c == 0, abc.a as u8),
+            max_mp: if self.level <= 2 {
+                self.max_mp
+            } else {
+                apply_modifier(self.max_mp, abc.c == 0, abc.a as u8)
+            },
             required_exp: self.required_exp,
             spell: self.spell,
         }
@@ -36,9 +40,9 @@ fn apply_modifier(base: u8, keep_base: bool, a: u8) -> u8 {
     }
 }
 
-pub fn get_status_by_level(level: u8) -> Option<&'static Status> {
+pub fn get_status_by_level(level: u8) -> Option<Status> {
     if (1..=30).contains(&level) {
-        Some(&STATUS_TABLE[(level - 1) as usize])
+        Some(STATUS_TABLE[(level - 1) as usize].clone())
     } else {
         None
     }
@@ -60,7 +64,7 @@ pub fn get_level_by_exp(exp: u16) -> u8 {
 /// レベルに基づいた required_exp と、与えられた exp を比較し、高い方を返す
 pub fn resolve_experience(level: u8, exp: Option<u16>) -> u16 {
     let base_required_exp = get_status_by_level(level)
-        .unwrap_or(&DEFAULT_STATUS)
+        .unwrap_or(DEFAULT_STATUS.clone())
         .required_exp;
 
     exp.map(|e| e.max(base_required_exp))

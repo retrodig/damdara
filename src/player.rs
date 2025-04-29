@@ -4,7 +4,7 @@ use crate::constants::spell::SpellInfo;
 use crate::constants::status::{Flags, PlayerSummary, Status, StrengthStatus};
 use crate::constants::text::DEFAULT_NAME;
 use crate::growth_type::{
-    GrowthModifiers, calculate_abc, calculate_name_total, get_adjusted_status_by_name_lv,
+    GrowthModifiers, calculate_abc, calculate_growth_name_total, get_adjusted_status_by_name_lv,
 };
 use crate::load::decode_from_password_string;
 use crate::monster::Monster;
@@ -132,8 +132,8 @@ impl Player {
         get_level_by_exp(self.exp)
     }
 
-    pub fn name_total(&self) -> u16 {
-        calculate_name_total(&self.name)
+    pub fn growth_name_total(&self) -> u16 {
+        calculate_growth_name_total(&self.name)
     }
 
     pub fn strength(&self) -> u8 {
@@ -157,16 +157,15 @@ impl Player {
     }
 
     pub fn abc(&self) -> GrowthModifiers {
-        calculate_abc(self.name_total())
+        calculate_abc(self.growth_name_total())
     }
 
-    pub fn base_status(&self) -> Option<&Status> {
+    pub fn base_status(&self) -> Option<Status> {
         get_status_by_level(self.level())
     }
 
     pub fn status(&self) -> Option<Status> {
-        self.base_status()
-            .map(|base| base.apply_abc_modifiers(&self.abc()))
+        Some(get_adjusted_status_by_name_lv(&self.name, self.level()))
     }
 
     pub fn attack_power(&self) -> u8 {
@@ -329,6 +328,7 @@ impl Player {
 
     pub fn strength_status(&self) -> StrengthStatus {
         let status = self.status().unwrap();
+
         let weapon = WEAPON_MASTER
             .get(self.weapon as usize)
             .unwrap_or(&WEAPON_MASTER[0]);

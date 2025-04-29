@@ -45,7 +45,7 @@ impl Display for Flags {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Status {
     pub level: u8,
     pub strength: u8,

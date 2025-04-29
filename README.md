@@ -132,8 +132,9 @@ If input is not present, the default brave value is returned.
 cargo run
 
 player name: ゆうてい
-summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0, experience: 0 }
-strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
+summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 3, max_hp: 15, max_mp: 0, attack_power: 4, defense_power: 1, weapon: "なし", armor: "なし", shield: "なし" }
+item: ["なし", "なし", "なし", "なし", "なし", "なし", "なし", "なし"]
 ```
 
 The name can be specified by giving -n
@@ -263,8 +264,9 @@ The default setting of the mode is here, so if you omit it, the default brave wi
 cargo run
 
 player name: ゆうてい
-summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0, experience: 0 }
-strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
+summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 0, gold: 0, experience: 0 }
+strength_status: StrengthStatus { level: 1, strength: 4, agility: 3, max_hp: 15, max_mp: 0, attack_power: 4, defense_power: 1, weapon: "なし", armor: "なし", shield: "なし" }
+item: ["なし", "なし", "なし", "なし", "なし", "なし", "なし", "なし"]
 ```
 
 **■ Save Mode**
@@ -413,8 +415,9 @@ If max is specified, the parameter and story state will be the strongest
 ```
 cargo run -- -o max
 player name: ゆうてい
-summary: PlayerSummary { name: "ゆうてい", level: 30, hp: 15, mp: 3, gold: 65535, experience: 65535 }
-strength_status: StrengthStatus { level: 30, strength: 140, agility: 120, max_hp: 210, max_mp: 183, attack_power: 182, defense_power: 110, weapon: "ロトのつるぎ", armor: "ロトのよろい", shield: "みかがみのたて" }
+summary: PlayerSummary { name: "ゆうてい", level: 30, hp: 210, mp: 180, gold: 65535, experience: 65535 }
+strength_status: StrengthStatus { level: 30, strength: 140, agility: 117, max_hp: 210, max_mp: 180, attack_power: 182, defense_power: 108, weapon: "ロトのつるぎ", armor: "ロトのよろい", shield: "みかがみのたて" }
+item: ["りゅうのうろこ", "せんしのゆびわ", "ロトのしるし", "おうじょのあい", "ぎんのたてごと", "たいようのいし", "あまぐものつえ", "にじのしずく"]
 ```
 
 <img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
