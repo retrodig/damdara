@@ -407,6 +407,8 @@ maxが指定された場合、パラメータとストーリーの状態は最�
 
 <img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters.png">
 
+<img width="400" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/strongest_parameters_2.png">
+
 **example**
 
 ```
