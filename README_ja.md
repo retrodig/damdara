@@ -1,4 +1,4 @@
-# 🏰 Damdara 🦀
+# 🏰 Damdara （ドムドーラ） 🦀
 
 ![Rust](https://img.shields.io/badge/made%20with-Rust-red)
 ![crate](https://img.shields.io/crates/v/damdara.svg)
@@ -11,11 +11,9 @@
   <img width="450" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/main_logo_cmp.png">
 </p>
 
-Damdara is a core logic crate for retro-fantasy that can be built in Rust,
+Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト』の「ふっかつのじゅもん」システムを完全再現しつつ、
 
-fully recreating the “Fukkatsu no Jumon” system from the NES version of Dragon Quest,
-
-while also having the ability to generate status by player name, equip items, and handle combat.
+プレイヤーの名前によるステータス生成、アイテム装備、戦闘処理などの機能を持つ、Rustで構築可能にしたレトロファンタジー向けコアロジッククレートです。
 
 ## Table of Contents
 
@@ -58,36 +56,35 @@ while also having the ability to generate status by player name, equip items, an
 - [ ] Explore the field
 - [ ] Explore the Town
 
-This diagram shows the 120-bit structure of the “Fufutsu no Jumon”.
+この図は「ふっかつのじゅもん」の120bit構造を表しています。
 
-The name, experience value, gold, items, equipment, key items, flag information, etc. are packed and stored strictly in
-bits.
+名前・経験値・ゴールド・アイテム・装備・キーアイテム・フラグ情報などを、厳密にビット単位でパッキングして格納しています。
 
 <p align="center">
   <img width="700" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/base_binary.png">
 </p>
 
-From this structure, the structure rearranged to generate the “Fufutsu no Jumon” is as follows.
+こちらの構造より、「ふっかつのじゅもん」を生成するために再配置した構造は以下の通りです。
 
-**Bit configuration mapping table for password generation.**
+**ふっかつのじゅもん生成のためのビット構成マッピングテーブル**
 
- Byte Index | Field Description                               | Bits (from MSB to LSB) 
-------------|-------------------------------------------------|------------------------
- 0          | Checksum (CRC-8)                                | [7:0]                  
- 1          | Experience (lower 8 bits)                       | [7:0]                  
- 2          | Pattern[2] (1) + Necklace (1) + Name[2] (6)     | [7], [6], [5:0]        
- 3          | Item[3] + Item[2]                               | [7:4], [3:0]           
- 4          | Gold (lower 8 bits)                             | [7:0]                  
- 5          | Name[0] (6) + Golem (1) + Pattern[1] (1)        | [7:2], [1], [0]        
- 6          | Item[7] + Item[6]                               | [7:4], [3:0]           
- 7          | Pattern[0] + Dragon (1) + Name[3] (6)           | [7], [6], [5:0]        
- 8          | Weapon (3) + Armor (3) + Shield (2)             | [7:5], [4:2], [1:0]    
- 9          | Gold (upper 8 bits)                             | [7:0]                  
- 10         | Keys + Herbs                                    | [7:4], [3:0]           
- 11         | Item[5] + Item[4]                               | [7:4], [3:0]           
- 12         | Experience (upper 8 bits)                       | [7:0]                  
- 13         | DragonScale (1) + Name[1] (6) + WarriorRing (1) | [7], [6:1], [0]        
- 14         | Item[1] + Item[0]                               | [7:4], [3:0]           
+ Byte Index | フィールド概要                                       | ビット数             
+------------|-----------------------------------------------|------------------
+ 0          | チェックサム (CRC-8)                                | 8ビット             
+ 1          | 経験値 (下位8ビット)                                  | 8ビット             
+ 2          | パターン 3ビット目 + しのくびかざり入手フラグ + 名前の3文字目           | 1ビット, 1ビット, 6ビット 
+ 3          | アイテム 4つ目 + アイテム 3つ目                           | 4ビット, 4ビット       
+ 4          | ゴールド (下位8ビット)                                 | 8ビット             
+ 5          | 名前の1文字目 + ゴーレムを倒したかフラグ + パターン 2ビット目           | 6ビット, 1ビット, 1ビット 
+ 6          | アイテム 8つ目 + アイテム 7つ目                           | 4ビット, 4ビット       
+ 7          | パターン 1ビット目 + ドラゴンを倒したかフラグ + 名前の4文字目           | 1ビット, 1ビット, 6ビット 
+ 8          | ぶき + よろい + たて                                 | 3ビット, 3ビット, 2ビット 
+ 9          | ゴールド (上位8ビット)                                 | 8ビット             
+ 10         | かぎの数 + やくそうの数                                 | 4ビット, 4ビット       
+ 11         | アイテム 6つ目 + アイテム 5つ目                           | 4ビット, 4ビット       
+ 12         | 経験値 (上位8ビット)                                  | 8ビット             
+ 13         | りゅうのうろこを装備したかフラグ + 名前の2文字目 + せんしのゆびわを装備したかフラグ | 1ビット, 6ビット, 1ビット 
+ 14         | アイテム 2つ目 + アイテム 1つ目                           | 4ビット, 4ビット       
 
 <p align="center">
   <img width="700" src="https://raw.githubusercontent.com/retrodig/damdara/main/assets/images/relocation.png">
@@ -126,7 +123,7 @@ or
 damdara <input>
 ```
 
-If input is not present, the default brave value is returned.
+入力指定がない場合は、デフォルトの勇者が生成されパラメータが表示します。
 
 ```
 cargo run
@@ -136,7 +133,7 @@ summary: PlayerSummary { name: "ゆうてい", level: 1, hp: 15, mp: 3, gold: 0,
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 6, max_hp: 15, max_mp: 3, attack_power: 4, defense_power: 3, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-The name can be specified by giving -n
+名前を指定するには -n オプションを指定。
 
 ```
 cargo run -- -n だい
@@ -146,9 +143,9 @@ summary: PlayerSummary { name: "た゛い\u{3000}", level: 1, hp: 14, mp: 0, gol
 strength_status: StrengthStatus { level: 1, strength: 4, agility: 4, max_hp: 14, max_mp: 0, attack_power: 4, defense_power: 2, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-By granting options, you can change parameters, possess items, change equipment, and do many other things.
+オプションを付与することで、パラメータの変更、アイテムの所持、装備の変更など、様々なパラメータが指定可能です。
 
-If you want to give 200 experience. The level is automatically reflected.
+経験値を200与えた場合、レベルは自動的に反映されます。
 
 ```
 cargo run -- -n だい -e 200
@@ -158,7 +155,7 @@ summary: PlayerSummary { name: "た゛い\u{3000}", level: 5, hp: 32, mp: 20, go
 strength_status: StrengthStatus { level: 5, strength: 11, agility: 10, max_hp: 32, max_mp: 20, attack_power: 11, defense_power: 5, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-Furthermore, if you wish to grant 300 Gold.
+さらに、300ゴールドを与えたい場合は -g オプションを付与。
 
 ```
 cargo run -- -n だい -e 200 -g 300
@@ -168,7 +165,7 @@ summary: PlayerSummary { name: "た゛い\u{3000}", level: 5, hp: 32, mp: 20, go
 strength_status: StrengthStatus { level: 5, strength: 11, agility: 10, max_hp: 32, max_mp: 20, attack_power: 11, defense_power: 5, weapon: "なし", armor: "なし", shield: "なし" }
 ```
 
-If you want to change the item possession, pass the corresponding item IDs separated by commas.
+アイテムの所持を変更したい場合は、対応するアイテムIDをカンマ区切りで渡します。
 
 ```
 cargo run -- -n だい -i 2,3,4
@@ -280,7 +277,7 @@ cargo run -- -n だい -m save
 ぢばげぞでぶいまももれぎざぞでぶいよごぜ
 ```
 
-After giving the options explained above and changing the parameters, the Fufutsu no Jumon can be generated.
+上記で説明したオプションを与え、パラメータを変更したうえで、「ふっかつのじゅもん」を生成することができます。
 
 ```
 cargo run -- -n だい -e 7000 -m save
@@ -290,7 +287,7 @@ cargo run -- -n だい -e 7000 -m save
 
 **■ Load Mode**
 
-Generates a brave man from the "Fukkatsu no Jumon" of fortune.
+`-m load` オプションを付与することによって、ふっかつのじゅもんを元に勇者を生成することも可能です。
 
 **example**
 
@@ -328,9 +325,9 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 
 **■ Battle Mode**
 
-Now, if you have given birth to a brave man, let's head into battle.
+さあ、勇者を誕生させたのなら、戦いに向かおう。
 
-Enter commands and defeat the slime!
+コマンドを入力し、スライムを倒せ！
 
 ```
 cargo run -- -m battle
@@ -348,7 +345,7 @@ cargo run -- -m battle
 4: にげる
 ```
 
-If you've been hit, then take on the challenge with the best equipment!
+もしやられてしまったのならば、最強装備で再び挑戦しましょう！
 
 ```
 cargo run -- -n だい -o max -m battle
@@ -366,9 +363,9 @@ cargo run -- -n だい -o max -m battle
 4: にげる
 ```
 
-You can fight any monster by specifying the id of the enemy in the `--view` option.
+`--view`オプション付与し、敵のidを指定することで、どんなモンスターとも戦うことができます。
 
-You can fight the last boss right away.
+最後のボス「りゅうおう」ともすぐに戦えます。
 
 ```
 cargo run -- -n だい -o max -m battle --view 39
@@ -449,9 +446,9 @@ Alternatively, consult
 the [GitHub documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests) on how to create a
 pull request.
 
-## Other Languages
+## 他の言語
 
-- [日本語版はこちら (Japanese)](./README_ja.md)
+- [English version is here](./README.md)
 
 ## References
 
