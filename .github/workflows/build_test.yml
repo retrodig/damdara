@@ -1,4 +1,4 @@
-name: Test & Build
+name: Build Test
 
 on:
   workflow_dispatch:
@@ -8,8 +8,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
-        artifact: [ damdara-linux, damdara-macos ]
+        include:
+          - os: ubuntu-latest
+            artifact: damdara-linux
+          - os: macos-latest
+            artifact: damdara-macos
 
     steps:
       - name: Checkout
