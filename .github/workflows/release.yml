@@ -67,6 +67,7 @@ jobs:
           else
             tar -czf "$dirname.tar.gz" "$dirname"
             echo "ASSET=$dirname.tar.gz" >> $GITHUB_ENV
+            shasum -a 256 "$dirname.tar.gz"
           fi
 
       - name: Release
