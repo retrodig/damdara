@@ -1,0 +1,41 @@
+name: Create Tag from Cargo.toml
+
+on:
+  workflow_run:
+    workflows: [ "Rust Test" ]
+    types: [ completed ]
+
+permissions:
+  contents: write
+
+jobs:
+  create_tag:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from Cargo.toml
+        id: get_version
+        run: |
+          version=$(grep '^version' Cargo.toml | head -n 1 | sed -E 's/version = "(.*)"/\1/')
+          echo "cargoVersion=$version" >> $GITHUB_ENV
+
+      - name: Create and push tag (skip if exists)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          TAG_NAME="v${cargoVersion}"
+
+          if [ -n "$(git ls-remote --tags origin ${TAG_NAME})" ]; then
+            echo "Tag ${TAG_NAME} already exists. Skipping..."
+            exit 0
+          fi
+
+          echo "Creating and pushing tag ${TAG_NAME}..."
+          git tag "${TAG_NAME}"
+          git push origin "${TAG_NAME}"
+        env:
+          cargoVersion: ${{ env.cargoVersion }}

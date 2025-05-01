@@ -1,0 +1,38 @@
+name: Create Pull Request
+
+on:
+  workflow_run:
+    workflows: [ "Rust Test" ]
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pull-request:
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Create Pull Request
+        run: |
+          gh pr create \
+            --title "Auto PR: release → master" \
+            --body "This PR was automatically created after tests passed." \
+            --base master \
+            --head release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
