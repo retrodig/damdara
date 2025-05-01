@@ -35,14 +35,14 @@ jobs:
             echo "This workflow only runs from the '$CURRENT_BRANCH' branch. Skipping."
             exit 0
           fi
-                
-          if gh pr view "$CURRENT_BRANCH" --base master > /dev/null 2>&1; then
-            echo "A pull request from '$CURRENT_BRANCH' to 'master' already exists."
+          
+          if gh pr view "$CURRENT_BRANCH" --base main > /dev/null 2>&1; then
+            echo "A pull request from '$CURRENT_BRANCH' to 'main' already exists."
           else
             echo "Creating a new pull request from '$CURRENT_BRANCH' to 'master'..."
             gh pr create --title "Auto PR from $CURRENT_BRANCH" \
                          --body "This PR was automatically created by GitHub Actions." \
-                         --base master \
+                         --base main \
                          --head "$CURRENT_BRANCH"
           fi
         env:
