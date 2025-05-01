@@ -27,23 +27,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
+      - name: Fetch branches
+        run: git fetch --all
+
+      - name: Switch to the release branch
+        run: git checkout release
+
       - name: Create Pull Request
         run: |
-          CURRENT_BRANCH="release"
-          
-          if [ "$GITHUB_REF_NAME" != "$CURRENT_BRANCH" ]; then
-            echo "This workflow only runs from the '$CURRENT_BRANCH' branch. Skipping."
-            exit 0
-          fi
-                
-          if gh pr view "$CURRENT_BRANCH" --base master > /dev/null 2>&1; then
-            echo "A pull request from '$CURRENT_BRANCH' to 'master' already exists."
+          if gh pr view release --base main > /dev/null 2>&1; then
+            echo "A pull request from 'release' to 'main' already exists."
           else
-            echo "Creating a new pull request from '$CURRENT_BRANCH' to 'master'..."
-            gh pr create --title "Auto PR from $CURRENT_BRANCH" \
+            echo "Creating a new pull request from '$CURRENT_BRANCH' to 'main'..."
+            gh pr create --title "Auto PR from release" \
                          --body "This PR was automatically created by GitHub Actions." \
-                         --base master \
-                         --head "$CURRENT_BRANCH"
+                         --base main \
+                         --head release
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
