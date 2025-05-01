@@ -35,10 +35,10 @@ jobs:
 
       - name: Create Pull Request
         run: |
-          if gh pr view release --base main > /dev/null 2>&1; then
+          if gh pr list --head release --base main --state open | grep -q .; then
             echo "A pull request from 'release' to 'main' already exists."
           else
-            echo "Creating a new pull request from '$CURRENT_BRANCH' to 'main'..."
+            echo "Creating a new pull request from 'release' to 'main'..."
             gh pr create --title "Auto PR from release" \
                          --body "This PR was automatically created by GitHub Actions." \
                          --base main \
