@@ -5,6 +5,7 @@ on:
     workflows: [ "Rust Test" ]
     types:
       - completed
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,8 +14,10 @@ permissions:
 jobs:
   create-pull-request:
     if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'release'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'release')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
