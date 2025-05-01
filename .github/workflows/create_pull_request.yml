@@ -27,6 +27,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
+      - name: Fetch branches
+        run: git fetch --all
+
+      - name: Switch to the feature/assets branch
+        run: git checkout release
+
       - name: Create Pull Request
         run: |
           CURRENT_BRANCH="release"
