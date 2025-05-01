@@ -34,8 +34,18 @@ jobs:
             target: x86_64-pc-windows-msvc
 
     steps:
-      - name: Checkout
+      - name: Checkout tag (for manual run)
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag_name }}
+
+      - name: Checkout tag (for tag push)
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Get the release version from the tag
         shell: bash
