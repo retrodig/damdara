@@ -39,7 +39,15 @@ jobs:
 
       - name: Get the release version from the tag
         shell: bash
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            echo "VERSION=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "No tag provided."
+            exit 1
+          fi
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
