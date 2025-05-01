@@ -30,8 +30,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Set current branch name
-        run: echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+      - name: Switch to the release branch
+        run: git checkout release
+
+      - name: Set CURRENT_BRANCH
+        run: echo "CURRENT_BRANCH=release" >> $GITHUB_ENV
 
       - name: Authenticate GH CLI
         run: |
