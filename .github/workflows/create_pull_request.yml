@@ -36,11 +36,9 @@ jobs:
       - name: Set current branch name
         run: echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
 
-      - name: Configure GitHub CLI
+      - name: Authenticate GH CLI
         run: |
-          gh auth status
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
 
       - name: Create Pull Request
         run: |
@@ -63,4 +61,4 @@ jobs:
                          --head "$CURRENT_BRANCH"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
