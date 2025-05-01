@@ -29,10 +29,21 @@ jobs:
 
       - name: Create Pull Request
         run: |
-          gh pr create \
-            --title "Auto PR: release → master" \
-            --body "This PR was automatically created after tests passed." \
-            --base master \
-            --head release
+          CURRENT_BRANCH="release"
+          
+          if [ "$GITHUB_REF_NAME" != "$CURRENT_BRANCH" ]; then
+            echo "This workflow only runs from the '$CURRENT_BRANCH' branch. Skipping."
+            exit 0
+          fi
+                
+          if gh pr view "$CURRENT_BRANCH" --base master > /dev/null 2>&1; then
+            echo "A pull request from '$CURRENT_BRANCH' to 'master' already exists."
+          else
+            echo "Creating a new pull request from '$CURRENT_BRANCH' to 'master'..."
+            gh pr create --title "Auto PR from $CURRENT_BRANCH" \
+                         --body "This PR was automatically created by GitHub Actions." \
+                         --base master \
+                         --head "$CURRENT_BRANCH"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
