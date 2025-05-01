@@ -1,5 +1,6 @@
 use crate::constants::monster::{ActionType, MonsterAction};
 use crate::constants::spell::Spell;
+use crate::message::BattleMessages;
 use crate::monster::Monster;
 use crate::player::{ItemKind, Player, UnifiedItem};
 use crate::utility::monster_utils::choose_action;
@@ -16,6 +17,7 @@ pub struct Battle {
     pub monster: Monster,
     pub player_state: BattleState,
     pub monster_state: BattleState,
+    pub messages: BattleMessages,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -42,86 +44,80 @@ pub enum EnemyAction {
 
 impl Battle {
     pub fn new(player: Player, monster: Monster) -> Self {
+        let player_name = player.name.clone();
+        let monster_name = monster.stats.name.clone().to_string();
         Self {
             player,
             monster,
             player_state: BattleState::default(),
             monster_state: BattleState::default(),
+            messages: BattleMessages::new(player_name, monster_name),
         }
     }
 
     pub fn start(&mut self) {
-        println!("{}があらわれた！", self.monster.stats.name);
-        self.display_status();
-
+        self.messages.add_monster_appears();
+        self.update_status();
+        self.messages.display();
+        self.messages.clear();
+        
         while self.is_battle_continue() {
             self.player_turn();
-
+            
             if !self.player_state.escaped {
                 if self.monster.is_alive() {
                     self.monster_turn();
                 }
-                self.display_status();
+                self.update_status();
             }
+            
+            self.messages.display();
+            self.messages.clear();
         }
-
+        
         if self.player_state.escaped {
-            println!();
+            self.messages.add_empty_line();
+            self.messages.display();
         } else if !self.monster_state.escaped {
             if self.player.is_alive() {
                 let gold = self.monster.get_gold();
-                println!("{} をたおした！", self.monster.name());
-
-                println!();
-                println!("けいけんち {}ポイントかくとく", self.monster.stats.exp);
-                println!("{}ゴールドを てにいれた！", gold);
+                self.messages.add_defeat_monster(self.monster.stats.exp.into(), gold.into());
             } else {
-                println!("あなたは しにました");
+                self.messages.add_player_death();
             }
+            self.messages.display();
         }
     }
 
-    pub fn display_status(&self) {
-        println!();
-        println!(
-            "{} HP: {:?} MP: {:?}",
-            self.player.name, self.player.hp, self.player.mp
-        );
-        println!("{} HP: {:?}", self.monster.stats.name, self.monster.hp);
-        println!();
+    pub fn update_status(&mut self) {
+        self.messages.add_status(self.player.hp, self.player.mp, self.monster.hp);
     }
 
-    pub fn display_enemy_special_skill_message(&self, name: &str, damage: u8) {
-        print!(" {}は ", self.monster.stats.name);
+    pub fn add_enemy_special_skill_message(&mut self, name: &str, damage: u8) {
+        self.messages.push(format!(" {}は ", self.monster.stats.name));
         if name.contains("ほのお") {
-            print!(" ほのおをはいた!");
+            self.messages.push(" ほのおをはいた!".to_string());
         } else {
-            print!(" {}を使った！", name);
+            self.messages.push(format!(" {}を使った！", name));
         }
-        println!();
-        println!(" {}は {}ポイントの", self.player.name, damage);
-        println!(" ダメージを うけた");
+        self.messages.add_empty_line();
+        self.messages.add_player_damage(damage);
     }
 
-    pub fn display_use_spell(&self, spell: &Spell) {
-        println!("{}は {}の", self.player.name, spell.as_str());
-        println!("じゅもんを となえた！");
+    pub fn add_use_spell(&mut self, spell: &Spell) {
+        self.messages.add_use_spell(spell.as_str());
     }
 
-    pub fn display_monster_damage(&self, damage: u8) {
-        println!("{}に {}ポイントの", self.monster.name(), damage);
-        println!("ダメージを あたえた！");
+    pub fn add_monster_damage(&mut self, damage: u8) {
+        self.messages.add_monster_damage(damage);
     }
 
-    pub fn display_monster_spell(&self, spell: &Spell) {
-        println!(" {}は {}の", self.monster.name(), spell.as_str());
-        println!(" じゅもんを となえた！");
+    pub fn add_monster_spell(&mut self, spell: &Spell) {
+        self.messages.add_monster_spell(spell.as_str());
     }
 
-    pub fn display_monster_not_spell(&self) {
-        println!("しかし じゅもんは");
-        println!("ふうじこまれている！");
-        return;
+    pub fn add_monster_spell_sealed(&mut self) {
+        self.messages.add_spell_sealed();
     }
 
     pub fn is_battle_continue(&self) -> bool {
@@ -204,16 +200,16 @@ impl Battle {
         if self.monster_state.sleep {
             let is_wakeup = random_success_by_percent(33.33);
             if is_wakeup {
-                println!("{}は めをさました！", self.monster.name());
+                self.messages.push(format!("{}は めをさました！", self.monster.name()));
                 self.monster_state.sleep = false;
             } else {
-                println!("{}は ねむっている⋯⋯⋯", self.monster.name());
+                self.messages.push(format!("{}は ねむっている⋯⋯⋯", self.monster.name()));
                 return;
             }
         }
-
+        
         let action = self.decide_enemy_action();
-
+        
         match action {
             EnemyAction::Attack => self.handle_enemy_normal_attack(),
             EnemyAction::Special(monster_action) => match &monster_action.action {
@@ -233,7 +229,7 @@ impl Battle {
                 }
             },
             EnemyAction::Escape => {
-                println!("{} は にげだした！", self.monster.name());
+                self.messages.push(format!("{} は にげだした！", self.monster.name()));
                 self.monster_state.escaped = true;
             }
         }
@@ -241,70 +237,68 @@ impl Battle {
 
     fn handle_enemy_normal_attack(&mut self) {
         let damage = self.monster.normal_damage(&self.player) as i16;
-
+        
         if damage > 0 {
-            println!(" {} のこうげき！", self.monster.stats.name);
-            println!(" {}は {}ポイントの", self.player.name, damage);
-            println!(" ダメージを うけた！",);
-
+            self.messages.add_monster_attack();
+            self.messages.add_player_damage(damage as u8);
+            
             self.player.adjust_hp(-damage);
         } else {
-            println!(" {} のこうげき！", self.monster.stats.name);
-            println!(" ミス");
+            self.messages.add_monster_attack();
+            self.messages.add_miss();
         }
     }
 
     /// 敵: ホイミ、ベホイミ
     fn handle_enemy_heal_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let heal = monster_action_effect(&monster_action.action);
-        self.display_monster_spell(spell);
+        self.add_monster_spell(spell);
 
         if self.monster_state.seal {
-            return self.display_monster_not_spell();
+            return self.add_monster_spell_sealed();
         }
-        println!(" {}は きずが", self.monster.name(),);
-        println!(" かいふくした！");
+        self.messages.push(format!(" {}は きずが", self.monster.name()));
+        self.messages.push(" かいふくした！".to_string());
         self.monster.adjust_hp(heal as i16);
     }
 
     /// 敵: ギラ、ベギラマ
     fn handle_enemy_attack_spell(&mut self, spell: &Spell, monster_action: &MonsterAction) {
         let damage = monster_action_effect(&monster_action.action);
-        self.display_monster_spell(spell);
+        self.add_monster_spell(spell);
 
         if self.monster_state.seal {
-            return self.display_monster_not_spell();
+            return self.add_monster_spell_sealed();
         }
-        println!(" {}は {}ポイントの", self.player.name, damage);
-        println!(" ダメージを うけた！",);
+        self.messages.add_player_damage(damage);
         self.player.adjust_hp(-(damage as i16));
     }
 
     /// 敵: ラリホー（100%）
     fn handle_enemy_sleep_spell(&mut self, spell: &Spell) {
-        self.display_monster_spell(spell);
+        self.add_monster_spell(spell);
 
         if self.monster_state.seal {
-            return self.display_monster_not_spell();
+            return self.add_monster_spell_sealed();
         }
-        println!("{}は ねむってしまった！", self.player.name);
+        self.messages.push(format!("{}は ねむってしまった！", self.player.name));
         self.player_state.sleep = true;
     }
 
     /// 敵: マホトーン（50%）
     fn handle_enemy_seal_spell(&mut self, spell: &Spell) {
-        self.display_monster_spell(spell);
+        self.add_monster_spell(spell);
         if self.monster_state.seal {
-            return self.display_monster_not_spell();
+            return self.add_monster_spell_sealed();
         }
 
         let success = random_success_by_percent(50.0);
         if success && !self.player.is_max_armor() {
-            println!("{}は じゅもんを", self.player.name);
-            println!("ふうじこめられた！");
+            self.messages.push(format!("{}は じゅもんを", self.player.name));
+            self.messages.push("ふうじこめられた！".to_string());
             self.player_state.seal = true;
         } else {
-            println!("しかし じゅもんは きかなかった！");
+            self.messages.push("しかし じゅもんは きかなかった！".to_string());
         }
     }
 
@@ -318,27 +312,29 @@ impl Battle {
             damage = self.player.reduce_spell_damage(damage);
         }
 
-        self.display_enemy_special_skill_message(name, damage);
+        self.add_enemy_special_skill_message(name, damage);
         self.player.adjust_hp(-(damage as i16));
     }
 
-    pub fn display_command(&self) {
-        println!("\n--- {}のターン ---", self.player.name);
-        println!("コマンド？");
-        println!("1: たたかう");
-        println!("2: じゅもん");
-        println!("3: どうぐ");
-        println!("4: にげる");
+    pub fn display_command(&mut self) {
+        self.messages.push(format!("\n--- {}のターン ---", self.player.name));
+        self.messages.push("コマンド？".to_string());
+        self.messages.push("1: たたかう".to_string());
+        self.messages.push("2: じゅもん".to_string());
+        self.messages.push("3: どうぐ".to_string());
+        self.messages.push("4: にげる".to_string());
+        self.messages.display();
     }
 
     pub fn player_turn(&mut self) {
         if self.player_state.sleep {
             let is_wakeup = random_success_by_percent(33.33);
             if is_wakeup {
-                println!("{}は めをさました！", self.player.name);
+                self.messages.push(format!("{}は めをさました！", self.player.name));
                 self.player_state.sleep = false;
             } else {
-                println!("{}は ねむっている⋯⋯⋯", self.player.name);
+                self.messages.push(format!("{}は ねむっている⋯⋯⋯", self.player.name));
+                self.messages.display();
                 return;
             }
         }
@@ -347,7 +343,7 @@ impl Battle {
         self.commands();
     }
 
-    pub fn player_battle_attack_damage(&self) -> u8 {
+    pub fn player_battle_attack_damage(&mut self) -> u8 {
         // 回避
         let is_evade = random_success_by_percent(self.monster.behavior.evade_rate as f64);
         if is_evade {
@@ -356,7 +352,7 @@ impl Battle {
         // かいしんのいちげき
         let is_critical = random_success_by_ratio(32);
         if is_critical && !self.monster.is_final_boss() {
-            println!("かいしんの いちげき！！");
+            self.messages.push("かいしんの いちげき！！".to_string());
             self.player.critical_damage()
         } else {
             self.player.normal_damage(&self.monster)
@@ -365,12 +361,12 @@ impl Battle {
 
     // プレイヤー: こうげき
     pub fn player_action_attack(&mut self) {
-        println!("{} のこうげき！", self.player.name);
+        self.messages.add_player_attack(&self.player.name);
         let damage = self.player_battle_attack_damage();
         if damage == 0 {
-            println!("ミス");
+            self.messages.add_miss();
         } else {
-            self.display_monster_damage(damage);
+            self.add_monster_damage(damage);
             self.monster.adjust_hp(-(damage as i16));
         }
     }
@@ -378,19 +374,22 @@ impl Battle {
     // プレイヤー: じゅもん
     pub fn player_action_spell(&mut self) {
         if self.player.is_empty_spell_list() {
-            println!("{}は まだ じゅもんを", self.player.name);
-            println!("つかえない。");
+            self.messages.push(format!("{}は まだ じゅもんを", self.player.name));
+            self.messages.push("つかえない。".to_string());
+            self.messages.display();
             return self.commands_cancel();
         }
 
         let spell_list = self.player.spell_list();
         let spell_len = spell_list.len();
 
-        println!("--- じゅもん ---");
-        println!("0: もどる");
+        self.messages.push("--- じゅもん ---".to_string());
+        self.messages.push("0: もどる".to_string());
         for (i, spell_info) in spell_list.into_iter().enumerate() {
-            println!("{}: {}", i + 1, spell_info.spell.as_str());
+            self.messages.push(format!("{}: {}", i + 1, spell_info.spell.as_str()));
         }
+        self.messages.display();
+        self.messages.clear();
 
         let spell_index = self.get_player_input(spell_len);
         if spell_index == 0 {
@@ -398,14 +397,17 @@ impl Battle {
         }
         let selected_spell = self.player.select_spell(spell_index - 1);
         if self.player.mp < selected_spell.mp_cost {
-            println!("MP が たりません。");
+            self.messages.push("MP が たりません。".to_string());
+            self.messages.display();
+            self.messages.clear();
             return self.commands_cancel();
         }
 
         self.player.consume_mp(selected_spell);
-        self.display_use_spell(&selected_spell.spell);
+        self.add_use_spell(&selected_spell.spell);
         if self.player_state.seal {
-            println!("しかし じゅもんは ふうじこまれている！");
+            self.messages.push("しかし じゅもんは ふうじこまれている！".to_string());
+            self.messages.display();
             return;
         }
 
@@ -419,10 +421,10 @@ impl Battle {
                     random_success_by_percent(self.monster.behavior.resist.gira as f64);
 
                 if spell_invalid {
-                    println!("しかし じゅもんは きかなかった！\n");
+                    self.messages.push("しかし じゅもんは きかなかった！\n".to_string());
                 } else {
                     let damage = player_spell_effect(selected_spell.spell);
-                    self.display_monster_damage(damage);
+                    self.add_monster_damage(damage);
                     self.monster.adjust_hp(-(damage as i16));
                 }
             }
@@ -431,9 +433,9 @@ impl Battle {
                     random_success_by_percent(self.monster.behavior.resist.rariho as f64);
 
                 if spell_invalid {
-                    println!("しかし じゅもんは きかなかった！\n");
+                    self.messages.push("しかし じゅもんは きかなかった！\n".to_string());
                 } else {
-                    println!("{}を ねむらせた!", self.monster.name());
+                    self.messages.push(format!("{}を ねむらせた!", self.monster.name()));
                     self.monster_state.sleep = true;
                 }
             }
@@ -442,15 +444,17 @@ impl Battle {
                     random_success_by_percent(self.monster.behavior.resist.mahoton as f64);
 
                 if spell_invalid {
-                    println!("しかし じゅもんは きかなかった！\n");
+                    self.messages.push("しかし じゅもんは きかなかった！\n".to_string());
                 } else {
-                    println!("{}の じゅもんを", self.monster.name());
-                    println!("ふうじこめた！");
+                    self.messages.push(format!("{}の じゅもんを", self.monster.name()));
+                    self.messages.push("ふうじこめた！".to_string());
                     self.monster_state.seal = true;
                 }
             }
             _ => {
-                println!("それは たたかいに つかえない！");
+                self.messages.push("それは たたかいに つかえない！".to_string());
+                self.messages.display();
+                self.messages.clear();
                 self.commands_cancel()
             }
         }
@@ -459,22 +463,26 @@ impl Battle {
     // プレイヤー: どうぐ
     pub fn player_action_item(&mut self) {
         if !self.player.is_unified_item_list() {
-            println!("つかえるものを まだ");
-            println!("もっていない。");
+            self.messages.push("つかえるものを まだ".to_string());
+            self.messages.push("もっていない。".to_string());
+            self.messages.display();
+            self.messages.clear();
             self.commands_cancel();
             return;
         }
 
-        println!("--- どうぐ ---");
-        println!("0: もどる");
+        self.messages.push("--- どうぐ ---".to_string());
+        self.messages.push("0: もどる".to_string());
         let unified_item_list = self.player.unified_item_list();
         for (i, item) in unified_item_list.iter().enumerate() {
             if item.kind == ItemKind::Herb || item.kind == ItemKind::Key {
-                println!("{}: {} （{}）", i + 1, item.name, item.count);
+                self.messages.push(format!("{}: {} （{}）", i + 1, item.name, item.count));
             } else {
-                println!("{}: {}", i + 1, item.name);
+                self.messages.push(format!("{}: {}", i + 1, item.name));
             }
         }
+        self.messages.display();
+        self.messages.clear();
 
         let item_index = self.get_player_input(unified_item_list.len());
         if item_index == 0 {
@@ -486,79 +494,83 @@ impl Battle {
     pub fn use_item(&mut self, item: UnifiedItem) {
         match item.kind {
             ItemKind::Herb => {
-                println!("{}は やくそうを つかった！", self.player.name);
+                self.messages.push(format!("{}は やくそうを つかった！", self.player.name));
                 self.player.use_herbs();
             }
             ItemKind::Key => {
-                println!("それは たたかいに つかえない！");
+                self.messages.push("それは たたかいに つかえない！".to_string());
+                self.messages.display();
+                self.messages.clear();
                 self.commands_cancel();
                 return;
             }
             ItemKind::Equipment => match item.id {
                 4 => {
                     if self.player.flags.has_dragon_scale {
-                        println!("りゅうのうろこは すでに");
-                        println!("みにつけています。");
+                        self.messages.push("りゅうのうろこは すでに".to_string());
+                        self.messages.push("みにつけています。".to_string());
                     } else {
-                        println!("{}は りゅうのうろこを", self.player.name);
-                        println!("みにつけた。");
+                        self.messages.push(format!("{}は りゅうのうろこを", self.player.name));
+                        self.messages.push("みにつけた。".to_string());
                         self.player.flags.has_dragon_scale = true;
                     }
                 }
                 5 => {
-                    println!("{}は ふえをふいた。", self.player.name);
+                    self.messages.push(format!("{}は ふえをふいた。", self.player.name));
                     if self.monster.id == 32 {
-                        println!("{}は しずかに めをとじる⋯", self.monster.name());
-                        println!("ねむってしまった！");
+                        self.messages.push(format!("{}は しずかに めをとじる⋯", self.monster.name()));
+                        self.messages.push("ねむってしまった！".to_string());
                         self.monster_state.sleep = true;
                     } else {
-                        println!("しかし なにも おきなかった。");
+                        self.messages.push("しかし なにも おきなかった。".to_string());
                     }
                 }
                 6 => {
-                    println!("{}は せんしのゆびわを", self.player.name);
+                    self.messages.push(format!("{}は せんしのゆびわを", self.player.name));
                     if self.player.flags.has_warrior_ring {
-                        println!("はめなおした。");
+                        self.messages.push("はめなおした。".to_string());
                     } else {
-                        println!("はめた。");
+                        self.messages.push("はめた。".to_string());
                     }
                 }
                 9 => {
                     if self.player.is_curse_belt {
-                        println!("のろいのベルトが あなたの");
-                        println!("からだを しめつけている。");
+                        self.messages.push("のろいのベルトが あなたの".to_string());
+                        self.messages.push("からだを しめつけている。".to_string());
                     } else {
-                        println!("{}は のろいのベルトを", self.player.name);
-                        println!("みにつけた。");
+                        self.messages.push(format!("{}は のろいのベルトを", self.player.name));
+                        self.messages.push("みにつけた。".to_string());
 
-                        println!("のろいのベルトが あなたの");
-                        println!("からだを しめつける。");
-                        println!("あなたは のろわれてしまった。");
+                        self.messages.push("のろいのベルトが あなたの".to_string());
+                        self.messages.push("からだを しめつける。".to_string());
+                        self.messages.push("あなたは のろわれてしまった。".to_string());
 
                         self.player.is_curse_belt = true;
                     }
                 }
                 10 => {
-                    println!("{}は たてごとを かなでた。", self.player.name);
-                    println!("{}は うれしそうだ!", self.monster.name());
+                    self.messages.push(format!("{}は たてごとを かなでた。", self.player.name));
+                    self.messages.push(format!("{}は うれしそうだ!", self.monster.name()));
                 }
                 11 => {
                     if self.player.is_curse_necklace {
-                        println!("しのくびかざりが あなたの");
-                        println!("からだを しめつけている。");
+                        self.messages.push("しのくびかざりが あなたの".to_string());
+                        self.messages.push("からだを しめつけている。".to_string());
                     } else {
-                        println!("{}は しのくびかざりを", self.player.name);
-                        println!("みにつけた。");
+                        self.messages.push(format!("{}は しのくびかざりを", self.player.name));
+                        self.messages.push("みにつけた。".to_string());
 
-                        println!("しのくびかざりが あなたの");
-                        println!("からだを しめつける。");
-                        println!("あなたは のろわれてしまった。");
+                        self.messages.push("しのくびかざりが あなたの".to_string());
+                        self.messages.push("からだを しめつける。".to_string());
+                        self.messages.push("あなたは のろわれてしまった。".to_string());
 
                         self.player.is_curse_necklace = true;
                     }
                 }
                 _ => {
-                    println!("それは たたかいに つかえない！");
+                    self.messages.push("それは たたかいに つかえない！".to_string());
+                    self.messages.display();
+                    self.messages.clear();
                     self.commands_cancel();
                     return;
                 }
@@ -568,12 +580,12 @@ impl Battle {
 
     // プレイヤー: にげる
     pub fn player_action_escape(&mut self) {
-        println!("{}は にげだした！", self.player.name);
+        self.messages.push(format!("{}は にげだした！", self.player.name));
         let is_escape = self.is_escape();
         if is_escape {
             self.player_state.escaped = true;
         } else {
-            println!("しかし まわりこまれてしまった！ \n");
+            self.messages.push("しかし まわりこまれてしまった！ \n".to_string());
         }
     }
 
@@ -610,7 +622,7 @@ impl Battle {
         return;
     }
 
-    fn get_player_action(&self) -> PlayerAction {
+    fn get_player_action(&mut self) -> PlayerAction {
         let mut input = String::new();
         print!("> ");
         io::stdout().flush().unwrap();
