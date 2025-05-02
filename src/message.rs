@@ -44,7 +44,7 @@ impl BattleMessages {
     pub fn all(&self) -> &[String] {
         &self.messages
     }
-    
+
     pub fn display(&self) {
         for message in &self.messages {
             println!("{}", message);
@@ -57,7 +57,10 @@ impl BattleMessages {
 
     pub fn add_status(&mut self, player_hp: u8, player_mp: u8, monster_hp: u8) {
         self.push("".to_string());
-        self.push(format!("{} HP: {:?} MP: {:?}", self.player_name, player_hp, player_mp));
+        self.push(format!(
+            "{} HP: {:?} MP: {:?}",
+            self.player_name, player_hp, player_mp
+        ));
         self.push(format!("{} HP: {:?}", self.monster_name, monster_hp));
         self.push("".to_string());
     }
@@ -112,6 +115,38 @@ impl BattleMessages {
 
     pub fn add_player_death(&mut self) {
         self.push("あなたは しにました".to_string());
+    }
+
+    pub fn display_command(&mut self) {
+        self.push(format!("\n--- {}のターン ---", self.player_name));
+        self.push("コマンド？".to_string());
+        self.push("1: たたかう".to_string());
+        self.push("2: じゅもん".to_string());
+        self.push("3: どうぐ".to_string());
+        self.push("4: にげる".to_string());
+    }
+
+    pub fn spells_sealed(&mut self) {
+        self.push(format!("{}は じゅもんを", self.player_name));
+        self.push("ふうじこめられた！".to_string());
+    }
+
+    pub fn can_not_use_spell(&mut self) {
+        self.push(format!("{}は まだ じゅもんを", self.player_name));
+        self.push("つかえない。".to_string());
+    }
+
+    pub fn can_not_use_by_battle(&mut self) {
+        self.push("それは たたかいに つかえない！".to_string());
+    }
+
+    pub fn critical_damage(&mut self) {
+        self.push("かいしんの いちげき！！".to_string());
+    }
+
+    pub fn monster_heal(&mut self) {
+        self.push(format!(" {}は きずが", self.monster_name));
+        self.push(" かいふくした！".to_string());
     }
 }
 
