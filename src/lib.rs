@@ -2,6 +2,7 @@ pub mod battle;
 pub mod constants;
 pub mod growth_type;
 pub mod load;
+pub mod message;
 pub mod monster;
 pub mod player;
 pub mod save;
