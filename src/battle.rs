@@ -45,7 +45,7 @@ pub enum EnemyAction {
 impl Battle {
     pub fn new(player: Player, monster: Monster) -> Self {
         let player_name = player.name.clone();
-        let monster_name = monster.stats.name.clone().to_string();
+        let monster_name = monster.stats.name.to_string();
         Self {
             player,
             monster,
