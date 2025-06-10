@@ -1,5 +1,9 @@
 name: Create Tag from Cargo.toml
 
+# This workflow creates a tag based on the version in Cargo.toml
+# Uses a Personal Access Token (PAT) to push the tag so it can trigger the release workflow
+# Default GITHUB_TOKEN doesn't trigger other workflows when pushing tags (GitHub security feature)
+
 on:
   workflow_run:
     workflows: [ "Rust Test" ]
@@ -36,6 +40,7 @@ jobs:
 
           echo "Creating and pushing tag ${TAG_NAME}..."
           git tag "${TAG_NAME}"
-          git push origin "${TAG_NAME}"
+          # Use PAT instead of GITHUB_TOKEN to trigger workflows
+          git push https://${{ secrets.WORKFLOW_PAT }}@github.com/${GITHUB_REPOSITORY}.git "${TAG_NAME}"
         env:
           cargoVersion: ${{ env.cargoVersion }}
