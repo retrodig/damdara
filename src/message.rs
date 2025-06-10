@@ -1,3 +1,5 @@
+use crate::traits::message_output::MessageOutput;
+
 #[derive(Debug, Default)]
 pub struct Messages {
     messages: Vec<String>,
@@ -17,19 +19,24 @@ impl Messages {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct BattleMessages {
+pub struct BattleMessages<'a> {
     pub player_name: String,
     pub monster_name: String,
     pub messages: Vec<String>,
+    pub output: &'a mut dyn MessageOutput,
 }
 
-impl BattleMessages {
-    pub fn new(player_name: String, monster_name: String) -> Self {
+impl<'a> BattleMessages<'a> {
+    pub fn new(
+        player_name: String,
+        monster_name: String,
+        output: &'a mut dyn MessageOutput,
+    ) -> Self {
         Self {
             player_name,
             monster_name,
             messages: Vec::new(),
+            output,
         }
     }
 
@@ -45,9 +52,9 @@ impl BattleMessages {
         &self.messages
     }
 
-    pub fn display(&self) {
+    pub fn display(&mut self) {
         for message in &self.messages {
-            println!("{}", message);
+            self.output.output(message);
         }
     }
 
@@ -147,14 +154,5 @@ impl BattleMessages {
     pub fn monster_heal(&mut self) {
         self.push(format!(" {}は きずが", self.monster_name));
         self.push(" かいふくした！".to_string());
-    }
-}
-
-impl std::fmt::Display for BattleMessages {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for message in &self.messages {
-            writeln!(f, "{}", message)?;
-        }
-        Ok(())
     }
 }
