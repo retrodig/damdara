@@ -3,6 +3,7 @@ use crate::constants::spell::Spell;
 use crate::message::BattleMessages;
 use crate::monster::Monster;
 use crate::player::{ItemKind, Player, UnifiedItem};
+use crate::traits::message_output::MessageOutput;
 use crate::utility::monster_utils::choose_action;
 use crate::utility::random_utils::{
     check_escape_success, get_escape_rand_max_by_monster_index, random_success_by_percent,
@@ -12,12 +13,12 @@ use crate::utility::spell_utils::{monster_action_effect, player_spell_effect};
 use rand::Rng;
 use std::io::{self, Write};
 
-pub struct Battle {
+pub struct Battle<'a> {
     pub player: Player,
     pub monster: Monster,
     pub player_state: BattleState,
     pub monster_state: BattleState,
-    pub messages: BattleMessages,
+    pub messages: BattleMessages<'a>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -42,8 +43,8 @@ pub enum EnemyAction {
     Special(MonsterAction),
 }
 
-impl Battle {
-    pub fn new(player: Player, monster: Monster) -> Self {
+impl<'a> Battle<'a> {
+    pub fn new(player: Player, monster: Monster, output: &'a mut dyn MessageOutput) -> Self {
         let player_name = player.name.clone();
         let monster_name = monster.stats.name.to_string();
         Self {
@@ -51,7 +52,7 @@ impl Battle {
             monster,
             player_state: BattleState::default(),
             monster_state: BattleState::default(),
-            messages: BattleMessages::new(player_name, monster_name),
+            messages: BattleMessages::new(player_name, monster_name, output),
         }
     }
 

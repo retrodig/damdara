@@ -4,8 +4,10 @@ pub mod growth_type;
 pub mod load;
 pub mod message;
 pub mod monster;
+pub mod output;
 pub mod player;
 pub mod save;
+pub mod traits;
 pub mod utility;
 
 use battle::Battle;
@@ -16,6 +18,7 @@ use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
 use monster::Monster;
+use output::cli_output::CliOutput;
 use player::Player;
 use std::collections::HashSet;
 use utility::status_utils::{get_status_by_level, get_status_list};
@@ -83,7 +86,8 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             _ => {}
         },
         Mode::Battle => {
-            let mut battle = Battle::new(player, Monster::new(index.unwrap_or(0)));
+            let mut output = CliOutput;
+            let mut battle = Battle::new(player, Monster::new(index.unwrap_or(0)), &mut output);
             battle.start();
         }
     }
