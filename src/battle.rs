@@ -173,12 +173,10 @@ impl<'a> Battle<'a> {
         if self.monster_state.sleep {
             let is_wakeup = random_success_by_percent(33.33);
             if is_wakeup {
-                self.messages
-                    .push(format!("{}は めをさました！", self.monster.name()));
+                self.messages.monster_wake_up();
                 self.monster_state.sleep = false;
             } else {
-                self.messages
-                    .push(format!("{}は ねむっている⋯⋯⋯", self.monster.name()));
+                self.messages.monster_still_asleep();
                 return;
             }
         }
@@ -408,8 +406,7 @@ impl<'a> Battle<'a> {
                     self.messages
                         .push("しかし じゅもんは きかなかった！\n".to_string());
                 } else {
-                    self.messages
-                        .push(format!("{}を ねむらせた!", self.monster.name()));
+                    self.messages.monster_fall_asleep();
                     self.monster_state.sleep = true;
                 }
             }
