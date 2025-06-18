@@ -190,4 +190,9 @@ impl<'a> BattleMessages<'a> {
         self.add_empty_line();
         self.add_player_damage(damage);
     }
+
+    pub fn spell_resisted(&mut self) {
+        self.messages
+            .push("しかし じゅもんは きかなかった！\n".to_string());
+    }
 }

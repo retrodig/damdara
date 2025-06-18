@@ -270,8 +270,7 @@ impl<'a> Battle<'a> {
             self.messages.spells_sealed();
             self.player_state.seal = true;
         } else {
-            self.messages
-                .push("しかし じゅもんは きかなかった！".to_string());
+            self.messages.spell_resisted();
         }
     }
 
@@ -390,8 +389,7 @@ impl<'a> Battle<'a> {
                     random_success_by_percent(self.monster.behavior.resist.gira as f64);
 
                 if spell_invalid {
-                    self.messages
-                        .push("しかし じゅもんは きかなかった！\n".to_string());
+                    self.messages.spell_resisted();
                 } else {
                     let damage = player_spell_effect(selected_spell.spell);
                     self.add_monster_damage(damage);
@@ -403,8 +401,7 @@ impl<'a> Battle<'a> {
                     random_success_by_percent(self.monster.behavior.resist.rariho as f64);
 
                 if spell_invalid {
-                    self.messages
-                        .push("しかし じゅもんは きかなかった！\n".to_string());
+                    self.messages.spell_resisted();
                 } else {
                     self.messages.monster_fall_asleep();
                     self.monster_state.sleep = true;
@@ -415,8 +412,7 @@ impl<'a> Battle<'a> {
                     random_success_by_percent(self.monster.behavior.resist.mahoton as f64);
 
                 if spell_invalid {
-                    self.messages
-                        .push("しかし じゅもんは きかなかった！\n".to_string());
+                    self.messages.spell_resisted();
                 } else {
                     self.messages
                         .push(format!("{}の じゅもんを", self.monster.name()));
