@@ -156,6 +156,18 @@ impl<'a> BattleMessages<'a> {
         self.push(" かいふくした！".to_string());
     }
 
+    pub fn fall_asleep(&mut self) {
+        self.push(format!("{}は ねむってしまった！", self.player_name));
+    }
+
+    pub fn wake_up(&mut self) {
+        self.push(format!("{}は めをさました！", self.player_name));
+    }
+
+    pub fn still_asleep(&mut self) {
+        self.push(format!("{}は ねむっている⋯⋯⋯", self.player_name));
+    }
+
     pub fn add_enemy_special_skill_message(&mut self, name: &str, damage: u8) {
         self.push(format!(" {}は ", self.monster_name));
         if name.contains("ほのお") {

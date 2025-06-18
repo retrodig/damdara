@@ -256,8 +256,7 @@ impl<'a> Battle<'a> {
         if self.monster_state.seal {
             return self.add_monster_spell_sealed();
         }
-        self.messages
-            .push(format!("{}は ねむってしまった！", self.player.name));
+        self.messages.fall_asleep();
         self.player_state.sleep = true;
     }
 
@@ -301,12 +300,10 @@ impl<'a> Battle<'a> {
         if self.player_state.sleep {
             let is_wakeup = random_success_by_percent(33.33);
             if is_wakeup {
-                self.messages
-                    .push(format!("{}は めをさました！", self.player.name));
+                self.messages.wake_up();
                 self.player_state.sleep = false;
             } else {
-                self.messages
-                    .push(format!("{}は ねむっている⋯⋯⋯", self.player.name));
+                self.messages.still_asleep();
                 self.messages.display();
                 return;
             }
