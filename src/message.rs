@@ -155,4 +155,15 @@ impl<'a> BattleMessages<'a> {
         self.push(format!(" {}は きずが", self.monster_name));
         self.push(" かいふくした！".to_string());
     }
+
+    pub fn add_enemy_special_skill_message(&mut self, name: &str, damage: u8) {
+        self.push(format!(" {}は ", self.monster_name));
+        if name.contains("ほのお") {
+            self.push(" ほのおをはいた!".to_string());
+        } else {
+            self.push(format!(" {}を使った！", name));
+        }
+        self.add_empty_line();
+        self.add_player_damage(damage);
+    }
 }

@@ -77,18 +77,6 @@ impl<'a> Battle<'a> {
             .add_status(self.player.hp, self.player.mp, self.monster.hp);
     }
 
-    pub fn add_enemy_special_skill_message(&mut self, name: &str, damage: u8) {
-        self.messages
-            .push(format!(" {}は ", self.monster.stats.name));
-        if name.contains("ほのお") {
-            self.messages.push(" ほのおをはいた!".to_string());
-        } else {
-            self.messages.push(format!(" {}を使った！", name));
-        }
-        self.messages.add_empty_line();
-        self.messages.add_player_damage(damage);
-    }
-
     pub fn add_use_spell(&mut self, spell: &Spell) {
         self.messages.add_use_spell(spell.as_str());
     }
@@ -300,7 +288,7 @@ impl<'a> Battle<'a> {
             damage = self.player.reduce_spell_damage(damage);
         }
 
-        self.add_enemy_special_skill_message(name, damage);
+        self.messages.add_enemy_special_skill_message(name, damage);
         self.player.adjust_hp(-(damage as i16));
     }
 
