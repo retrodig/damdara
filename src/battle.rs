@@ -3,6 +3,7 @@ use crate::constants::spell::Spell;
 use crate::message::BattleMessages;
 use crate::monster::Monster;
 use crate::player::{ItemKind, Player, UnifiedItem};
+use crate::traits::message_output::MessageOutput;
 use crate::utility::monster_utils::choose_action;
 use crate::utility::random_utils::{
     check_escape_success, get_escape_rand_max_by_monster_index, random_success_by_percent,
@@ -12,12 +13,12 @@ use crate::utility::spell_utils::{monster_action_effect, player_spell_effect};
 use rand::Rng;
 use std::io::{self, Write};
 
-pub struct Battle {
+pub struct Battle<'a> {
     pub player: Player,
     pub monster: Monster,
     pub player_state: BattleState,
     pub monster_state: BattleState,
-    pub messages: BattleMessages,
+    pub messages: BattleMessages<'a>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -42,8 +43,8 @@ pub enum EnemyAction {
     Special(MonsterAction),
 }
 
-impl Battle {
-    pub fn new(player: Player, monster: Monster) -> Self {
+impl<'a> Battle<'a> {
+    pub fn new(player: Player, monster: Monster, output: &'a mut dyn MessageOutput) -> Self {
         let player_name = player.name.clone();
         let monster_name = monster.stats.name.to_string();
         Self {
@@ -51,7 +52,7 @@ impl Battle {
             monster,
             player_state: BattleState::default(),
             monster_state: BattleState::default(),
-            messages: BattleMessages::new(player_name, monster_name),
+            messages: BattleMessages::new(player_name, monster_name, output),
         }
     }
 
@@ -672,6 +673,14 @@ mod tests {
     use crate::monster::Monster;
     use crate::player::{Player, PlayerArgs};
 
+    struct DummyOutput;
+
+    impl MessageOutput for DummyOutput {
+        fn output(&mut self, _message: &str) {
+            todo!()
+        }
+    }
+
     #[test]
     fn test_real_player_high_agility() {
         let player = Player::new_with(PlayerArgs {
@@ -680,7 +689,8 @@ mod tests {
             ..Default::default()
         });
         let monster = Monster::new(0);
-        let battle = Battle::new(player, monster);
+        let mut dummy_output = DummyOutput;
+        let battle = Battle::new(player, monster, &mut dummy_output);
         let mut player_first = 0;
         for _ in 0..1000 {
             if battle.player_goes_first() {
@@ -696,7 +706,8 @@ mod tests {
         for index in 0..40 {
             let monster = Monster::new(index);
             let player = Player::new("ゆうてい");
-            let battle = Battle::new(player, monster);
+            let mut dummy_output = DummyOutput;
+            let battle = Battle::new(player, monster, &mut dummy_output);
 
             let action = battle.decide_enemy_action();
             // Test that EnemyAction always returns
