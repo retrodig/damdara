@@ -195,4 +195,8 @@ impl<'a> BattleMessages<'a> {
         self.messages
             .push("しかし じゅもんは きかなかった！\n".to_string());
     }
+
+    pub fn monster_escaped(&mut self) {
+        self.push(format!("{} は にげだした！", self.monster_name));
+    }
 }

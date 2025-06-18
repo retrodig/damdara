@@ -202,8 +202,7 @@ impl<'a> Battle<'a> {
                 }
             },
             EnemyAction::Escape => {
-                self.messages
-                    .push(format!("{} は にげだした！", self.monster.name()));
+                self.messages.monster_escaped();
                 self.monster_state.escaped = true;
             }
         }
