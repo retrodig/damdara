@@ -673,6 +673,14 @@ mod tests {
     use crate::monster::Monster;
     use crate::player::{Player, PlayerArgs};
 
+    struct DummyOutput;
+
+    impl MessageOutput for DummyOutput {
+        fn output(&mut self, _message: &str) {
+            todo!()
+        }
+    }
+
     #[test]
     fn test_real_player_high_agility() {
         let player = Player::new_with(PlayerArgs {
@@ -681,7 +689,8 @@ mod tests {
             ..Default::default()
         });
         let monster = Monster::new(0);
-        let battle = Battle::new(player, monster);
+        let mut dummy_output = DummyOutput;
+        let battle = Battle::new(player, monster, &mut dummy_output);
         let mut player_first = 0;
         for _ in 0..1000 {
             if battle.player_goes_first() {
@@ -697,7 +706,8 @@ mod tests {
         for index in 0..40 {
             let monster = Monster::new(index);
             let player = Player::new("ゆうてい");
-            let battle = Battle::new(player, monster);
+            let mut dummy_output = DummyOutput;
+            let battle = Battle::new(player, monster, &mut dummy_output);
 
             let action = battle.decide_enemy_action();
             // Test that EnemyAction always returns
