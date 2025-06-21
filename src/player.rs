@@ -410,6 +410,20 @@ impl Player {
         self.adjust_hp(heal as i16);
         self.herbs -= 1;
     }
+
+    pub fn equip_warrior_ring(&mut self) {
+        self.flags.has_warrior_ring = true;
+    }
+
+    pub fn equip_cursed_belt(&mut self) {
+        self.flags.has_cursed_necklace = true;
+        self.is_curse_belt = true;
+    }
+
+    pub fn equip_cursed_necklace(&mut self) {
+        self.flags.has_cursed_necklace = true;
+        self.is_curse_necklace = true;
+    }
 }
 
 #[cfg(test)]
