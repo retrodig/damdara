@@ -283,7 +283,7 @@ impl<'a> Battle<'a> {
             damage = self.player.reduce_spell_damage(damage);
         }
 
-        self.messages.add_enemy_special_skill_message(name, damage);
+        self.messages.enemy_special_skill(name, damage);
         self.player.adjust_hp(-(damage as i16));
     }
 
@@ -363,7 +363,7 @@ impl<'a> Battle<'a> {
         }
         let selected_spell = self.player.select_spell(spell_index - 1);
         if self.player.mp < selected_spell.mp_cost {
-            self.messages.push("MP が たりません。".to_string());
+            self.messages.mp_not_enough();
             self.messages.display();
             self.messages.clear();
             return self.commands_cancel();
@@ -372,8 +372,7 @@ impl<'a> Battle<'a> {
         self.player.consume_mp(selected_spell);
         self.add_use_spell(&selected_spell.spell);
         if self.player_state.seal {
-            self.messages
-                .push("しかし じゅもんは ふうじこまれている！".to_string());
+            self.messages.spell_sealed();
             self.messages.display();
             return;
         }
@@ -413,9 +412,7 @@ impl<'a> Battle<'a> {
                 if spell_invalid {
                     self.messages.spell_resisted();
                 } else {
-                    self.messages
-                        .push(format!("{}の じゅもんを", self.monster.name()));
-                    self.messages.push("ふうじこめた！".to_string());
+                    self.messages.seal_monster_spell();
                     self.monster_state.seal = true;
                 }
             }
@@ -431,8 +428,7 @@ impl<'a> Battle<'a> {
     // プレイヤー: どうぐ
     pub fn player_action_item(&mut self) {
         if !self.player.is_unified_item_list() {
-            self.messages.push("つかえるものを まだ".to_string());
-            self.messages.push("もっていない。".to_string());
+            self.messages.no_usable_items();
             self.messages.display();
             self.messages.clear();
             self.commands_cancel();
@@ -463,8 +459,7 @@ impl<'a> Battle<'a> {
     pub fn use_item(&mut self, item: UnifiedItem) {
         match item.kind {
             ItemKind::Herb => {
-                self.messages
-                    .push(format!("{}は やくそうを つかった！", self.player.name));
+                self.messages.used_item_herbs();
                 self.player.use_herbs();
             }
             ItemKind::Key => {
@@ -477,75 +472,48 @@ impl<'a> Battle<'a> {
             ItemKind::Equipment => match item.id {
                 4 => {
                     if self.player.flags.has_dragon_scale {
-                        self.messages.push("りゅうのうろこは すでに".to_string());
-                        self.messages.push("みにつけています。".to_string());
+                        self.messages.already_has_dragon_scale();
                     } else {
-                        self.messages
-                            .push(format!("{}は りゅうのうろこを", self.player.name));
-                        self.messages.push("みにつけた。".to_string());
+                        self.messages.used_dragon_scale();
                         self.player.flags.has_dragon_scale = true;
                     }
                 }
                 5 => {
-                    self.messages
-                        .push(format!("{}は ふえをふいた。", self.player.name));
+                    self.messages.used_flute();
                     if self.monster.id == 32 {
-                        self.messages
-                            .push(format!("{}は しずかに めをとじる⋯", self.monster.name()));
-                        self.messages.push("ねむってしまった！".to_string());
+                        self.messages.used_flute_monster_fell_asleep();
                         self.monster_state.sleep = true;
                     } else {
-                        self.messages
-                            .push("しかし なにも おきなかった。".to_string());
+                        self.messages.nothing_happened();
                     }
                 }
                 6 => {
-                    self.messages
-                        .push(format!("{}は せんしのゆびわを", self.player.name));
                     if self.player.flags.has_warrior_ring {
-                        self.messages.push("はめなおした。".to_string());
+                        self.messages.reequipped_warrior_ring();
                     } else {
-                        self.messages.push("はめた。".to_string());
+                        self.messages.used_warrior_ring();
+                        self.player.equip_warrior_ring();
                     }
                 }
                 9 => {
                     if self.player.is_curse_belt {
-                        self.messages.push("のろいのベルトが あなたの".to_string());
-                        self.messages.push("からだを しめつけている。".to_string());
+                        self.messages.cursed_belt_constricting();
                     } else {
-                        self.messages
-                            .push(format!("{}は のろいのベルトを", self.player.name));
-                        self.messages.push("みにつけた。".to_string());
-
-                        self.messages.push("のろいのベルトが あなたの".to_string());
-                        self.messages.push("からだを しめつける。".to_string());
-                        self.messages
-                            .push("あなたは のろわれてしまった。".to_string());
-
-                        self.player.is_curse_belt = true;
+                        self.messages.used_cursed_belt();
+                        self.messages.cursed_belt_activated();
+                        self.player.equip_cursed_belt();
                     }
                 }
                 10 => {
-                    self.messages
-                        .push(format!("{}は たてごとを かなでた。", self.player.name));
-                    self.messages
-                        .push(format!("{}は うれしそうだ!", self.monster.name()));
+                    self.messages.used_lyre_and_monster_rejoiced();
                 }
                 11 => {
                     if self.player.is_curse_necklace {
-                        self.messages.push("しのくびかざりが あなたの".to_string());
-                        self.messages.push("からだを しめつけている。".to_string());
+                        self.messages.cursed_necklace_constricting();
                     } else {
-                        self.messages
-                            .push(format!("{}は しのくびかざりを", self.player.name));
-                        self.messages.push("みにつけた。".to_string());
-
-                        self.messages.push("しのくびかざりが あなたの".to_string());
-                        self.messages.push("からだを しめつける。".to_string());
-                        self.messages
-                            .push("あなたは のろわれてしまった。".to_string());
-
-                        self.player.is_curse_necklace = true;
+                        self.messages.used_cursed_necklace();
+                        self.messages.cursed_necklace_activated();
+                        self.player.equip_cursed_necklace();
                     }
                 }
                 _ => {
@@ -561,14 +529,12 @@ impl<'a> Battle<'a> {
 
     // プレイヤー: にげる
     pub fn player_action_escape(&mut self) {
-        self.messages
-            .push(format!("{}は にげだした！", self.player.name));
+        self.messages.player_escaped();
         let is_escape = self.is_escape();
         if is_escape {
             self.player_state.escaped = true;
         } else {
-            self.messages
-                .push("しかし まわりこまれてしまった！ \n".to_string());
+            self.messages.escape_blocked();
         }
     }
 
