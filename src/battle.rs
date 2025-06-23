@@ -7,6 +7,7 @@ use crate::message::BattleMessages;
 use crate::monster::Monster;
 use crate::player::{ItemKind, Player, UnifiedItem};
 use crate::traits::message_output::MessageOutput;
+use crate::traits::player_input::PlayerInput;
 use crate::utility::monster_utils::choose_action;
 use crate::utility::random_utils::{
     check_escape_success, get_escape_rand_max_by_monster_index, random_success_by_percent,
@@ -14,7 +15,6 @@ use crate::utility::random_utils::{
 };
 use crate::utility::spell_utils::{monster_action_effect, player_spell_effect};
 use rand::Rng;
-use std::io::{self, Write};
 
 pub struct Battle<'a> {
     pub player: Player,
@@ -22,10 +22,16 @@ pub struct Battle<'a> {
     pub player_state: BattleState,
     pub monster_state: BattleState,
     pub messages: BattleMessages<'a>,
+    pub input: &'a mut dyn PlayerInput,
 }
 
 impl<'a> Battle<'a> {
-    pub fn new(player: Player, monster: Monster, output: &'a mut dyn MessageOutput) -> Self {
+    pub fn new(
+        player: Player,
+        monster: Monster,
+        input: &'a mut dyn PlayerInput,
+        output: &'a mut dyn MessageOutput,
+    ) -> Self {
         let player_name = player.name.clone();
         let monster_name = monster.stats.name.to_string();
         Self {
@@ -34,6 +40,7 @@ impl<'a> Battle<'a> {
             player_state: BattleState::default(),
             monster_state: BattleState::default(),
             messages: BattleMessages::new(player_name, monster_name, output),
+            input,
         }
     }
 
@@ -357,7 +364,7 @@ impl<'a> Battle<'a> {
         self.messages.display();
         self.messages.clear();
 
-        let spell_index = self.get_player_input(spell_len);
+        let spell_index = self.input.get_player_input(spell_len);
         if spell_index == 0 {
             return self.commands_cancel();
         }
@@ -449,7 +456,7 @@ impl<'a> Battle<'a> {
         self.messages.display();
         self.messages.clear();
 
-        let item_index = self.get_player_input(unified_item_list.len());
+        let item_index = self.input.get_player_input(unified_item_list.len());
         if item_index == 0 {
             return self.commands_cancel();
         }
@@ -538,25 +545,12 @@ impl<'a> Battle<'a> {
         }
     }
 
-    pub fn get_player_input(&mut self, max: usize) -> usize {
-        loop {
-            print!("番号を選んでください (0-{}): ", max);
-            io::stdout().flush().unwrap();
-
-            let mut input = String::new();
-            if let Ok(_) = io::stdin().read_line(&mut input) {
-                if let Ok(num) = input.trim().parse::<usize>() {
-                    if num <= max {
-                        return num;
-                    }
-                }
-            }
-            println!("無効な入力です。もう一度入力してください。");
-        }
-    }
-
     pub fn commands(&mut self) {
-        let action = self.get_player_action();
+        let action = self.input.get_player_action(&mut || {
+            self.messages.clear();
+            self.messages.display_command();
+            self.messages.display();
+        });
         match action {
             PlayerAction::Attack => self.player_action_attack(),
             PlayerAction::Spell => self.player_action_spell(),
@@ -569,25 +563,6 @@ impl<'a> Battle<'a> {
         self.display_command();
         self.commands();
         return;
-    }
-
-    fn get_player_action(&mut self) -> PlayerAction {
-        let mut input = String::new();
-        print!("> ");
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut input).unwrap();
-
-        match input.trim() {
-            "1" => PlayerAction::Attack,
-            "2" => PlayerAction::Spell,
-            "3" => PlayerAction::Item,
-            "4" => PlayerAction::Escape,
-            _ => {
-                println!("無効な入力です。もう一度選んでください。");
-                self.display_command();
-                self.get_player_action() // 再帰的にリトライ
-            }
-        }
     }
 }
 
