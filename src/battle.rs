@@ -573,10 +573,39 @@ mod tests {
     use crate::player::{Player, PlayerArgs};
 
     struct DummyOutput;
+    struct DummyInput {
+        pub predefined_input: Vec<PlayerAction>,
+        pub cursor: usize,
+    }
 
     impl MessageOutput for DummyOutput {
         fn output(&mut self, _message: &str) {
             todo!()
+        }
+    }
+
+    impl DummyInput {
+        pub fn new(predefined_input: Vec<PlayerAction>) -> Self {
+            Self {
+                predefined_input,
+                cursor: 0,
+            }
+        }
+    }
+
+    impl PlayerInput for DummyInput {
+        fn get_player_input(&mut self, _max: usize) -> usize {
+            0
+        }
+
+        fn get_player_action(&mut self, _display_commands: &mut dyn FnMut()) -> PlayerAction {
+            let action = self
+                .predefined_input
+                .get(self.cursor)
+                .cloned()
+                .unwrap_or(PlayerAction::Attack); // デフォルト行動
+            self.cursor += 1;
+            action
         }
     }
 
@@ -589,7 +618,8 @@ mod tests {
         });
         let monster = Monster::new(0);
         let mut dummy_output = DummyOutput;
-        let battle = Battle::new(player, monster, &mut dummy_output);
+        let mut dummy_input = DummyInput::new(vec![PlayerAction::Spell, PlayerAction::Escape]);
+        let battle = Battle::new(player, monster, &mut dummy_input, &mut dummy_output);
         let mut player_first = 0;
         for _ in 0..1000 {
             if battle.player_goes_first() {
@@ -606,7 +636,8 @@ mod tests {
             let monster = Monster::new(index);
             let player = Player::new("ゆうてい");
             let mut dummy_output = DummyOutput;
-            let battle = Battle::new(player, monster, &mut dummy_output);
+            let mut dummy_input = DummyInput::new(vec![PlayerAction::Spell, PlayerAction::Escape]);
+            let battle = Battle::new(player, monster, &mut dummy_input, &mut dummy_output);
 
             let action = battle.decide_enemy_action();
             // Test that EnemyAction always returns
