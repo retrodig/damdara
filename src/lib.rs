@@ -1,6 +1,7 @@
 pub mod battle;
 pub mod constants;
 pub mod growth_type;
+pub mod input;
 pub mod load;
 pub mod message;
 pub mod monster;
@@ -17,6 +18,7 @@ use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MA
 use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
+use input::cli_input::CliInput;
 use monster::Monster;
 use output::cli_output::CliOutput;
 use player::Player;
@@ -87,7 +89,13 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
         },
         Mode::Battle => {
             let mut output = CliOutput;
-            let mut battle = Battle::new(player, Monster::new(index.unwrap_or(0)), &mut output);
+            let mut input = CliInput;
+            let mut battle = Battle::new(
+                player,
+                Monster::new(index.unwrap_or(0)),
+                &mut input,
+                &mut output,
+            );
             battle.start();
         }
     }
