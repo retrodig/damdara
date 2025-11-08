@@ -245,7 +245,7 @@ interface BattleState {
 **Estimated Effort**: 1 day
 **Priority**: Critical (Blocker for others)
 
-- [ ] Add dependencies to `Cargo.toml`:
+- [x] Add dependencies to `Cargo.toml`:
   ```toml
   [dependencies]
   wasm-bindgen = "0.2"
@@ -259,18 +259,18 @@ interface BattleState {
   crate-type = ["cdylib", "rlib"]  # Add cdylib for WASM
   ```
 
-- [ ] Create `.cargo/config.toml` for WASM target:
+- [x] Create `.cargo/config.toml` for WASM target:
   ```toml
   [build]
   target = "wasm32-unknown-unknown"
   ```
 
-- [ ] Install wasm-pack:
+- [x] Install wasm-pack:
   ```bash
   cargo install wasm-pack
   ```
 
-- [ ] Add npm package structure:
+- [x] Add npm package structure:
   ```
   pkg/
   ├── package.json
@@ -282,14 +282,14 @@ interface BattleState {
 **Priority**: High
 **Dependencies**: Task 6.1
 
-- [ ] Create `src/wasm.rs` with basic structure
-- [ ] Implement `WasmGame` struct
-- [ ] Add player management methods:
-  - [ ] `new()` - Constructor
-  - [ ] `create_player(name)` - Create from name
-  - [ ] `generate_password()` - Export password
-  - [ ] `load_from_password(password)` - Import password
-  - [ ] `get_player_state()` - Export player stats
+- [x] Create `src/wasm.rs` with basic structure
+- [x] Implement `WasmGame` struct
+- [x] Add player management methods:
+  - [x] `new()` - Constructor
+  - [x] `create_player(name)` - Create from name
+  - [x] `generate_password()` - Export password
+  - [x] `load_from_password(password)` - Import password
+  - [x] `get_player_state()` - Export player stats
 
 **Code Template**:
 ```rust
@@ -324,16 +324,16 @@ impl WasmGame {
 **Priority**: High
 **Dependencies**: Task 6.2
 
-- [ ] Create `src/input/web_input.rs`
-- [ ] Implement `WebInput` struct with action queue
-- [ ] Implement `PlayerInput` trait for `WebInput`
-- [ ] Add conditional compilation:
+- [x] Create `src/input/web_input.rs`
+- [x] Implement `WebInput` struct with action queue
+- [x] Implement `PlayerInput` trait for `WebInput`
+- [x] Add conditional compilation:
   ```rust
   #[cfg(target_arch = "wasm32")]
   pub mod web_input;
   ```
 
-- [ ] Create action queue management:
+- [x] Create action queue management:
   ```rust
   pub struct WebInput {
       action_queue: VecDeque<PlayerAction>,
@@ -346,15 +346,15 @@ impl WasmGame {
 **Priority**: High
 **Dependencies**: Task 6.3
 
-- [ ] Add battle methods to `WasmGame`:
-  - [ ] `start_battle(monster_id)` - Initialize battle
-  - [ ] `player_action(action_type, parameter)` - Execute action
-  - [ ] `get_battle_state()` - Export current state
-  - [ ] `is_battle_active()` - Check if battle ongoing
+- [x] Add battle methods to `WasmGame`:
+  - [x] `start_battle(monster_id)` - Initialize battle
+  - [x] `player_action(action_type, parameter)` - Execute action
+  - [x] `get_battle_state()` - Export current state
+  - [x] `is_battle_active()` - Check if battle ongoing
 
-- [ ] Create `WebInput` instance for battle
-- [ ] Use `BufferOutput` for message capture
-- [ ] Export messages via `get_messages()`
+- [x] Create `WebInput` instance for battle
+- [x] Use `BufferOutput` for message capture
+- [x] Export messages via `get_messages()`
 
 **Challenge: Lifetime Management**:
 ```rust
@@ -374,7 +374,7 @@ pub struct WasmGame {
 **Priority**: Medium
 **Dependencies**: Task 6.2
 
-- [ ] Export monster data:
+- [x] Export monster data:
   ```rust
   #[wasm_bindgen]
   pub fn get_monster_list() -> JsValue {
@@ -387,10 +387,10 @@ pub struct WasmGame {
   }
   ```
 
-- [ ] Export item/equipment data
-- [ ] Export spell data
-- [ ] Export status table
-- [ ] Add Serde derives to constant structs:
+- [x] Export item/equipment data
+- [x] Export spell data
+- [x] Export status table
+- [x] Add Serde derives to constant structs:
   ```rust
   #[derive(Debug, Clone, Serialize, Deserialize)]
   pub struct MonsterStats { /* ... */ }
@@ -484,7 +484,7 @@ pub struct WasmGame {
 **Priority**: Medium
 **Dependencies**: Task 6.8
 
-- [ ] Create `examples/web/` directory structure:
+- [x] Create `examples/web/` directory structure:
   ```
   examples/web/
   ├── index.html
@@ -493,13 +493,13 @@ pub struct WasmGame {
   └── package.json
   ```
 
-- [ ] Create HTML interface:
+- [x] Create HTML interface:
   - Player creation form
   - Password input/output
   - Battle UI (command buttons, status display)
   - Message log area
 
-- [ ] Implement JavaScript integration:
+- [x] Implement JavaScript integration:
   ```javascript
   import init, { WasmGame } from './pkg/damdara.js';
 
@@ -523,7 +523,7 @@ pub struct WasmGame {
   run();
   ```
 
-- [ ] Add development server:
+- [x] Add development server:
   ```json
   {
     "scripts": {
