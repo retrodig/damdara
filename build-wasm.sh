@@ -19,12 +19,12 @@ echo "✅ WASM build complete!"
 echo "📦 Package output: ./pkg/"
 echo ""
 
-# Copy pkg to examples/web for local development
-echo "📋 Copying WASM package to examples/web/pkg/..."
-mkdir -p examples/web/pkg
-cp -r pkg/* examples/web/pkg/
-echo "✅ Package copied to examples/web/pkg/"
+# Copy pkg to docs for local development and GitHub Pages
+echo "📋 Copying WASM package to docs/pkg/..."
+mkdir -p docs/pkg
+cp -r pkg/* docs/pkg/
+echo "✅ Package copied to docs/pkg/"
 echo ""
 
 echo "To test the package:"
-echo "  cd examples/web && python -m http.server 8080"
+echo "  cd docs && python -m http.server 8080"

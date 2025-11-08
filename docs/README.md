@@ -2,6 +2,8 @@
 
 This is a web-based demo of the Damdara WASM module, showcasing the Dragon Quest password system and battle mechanics.
 
+🌐 **Live Demo**: This example is hosted on GitHub Pages for easy access.
+
 ## Features
 
 - **プレイヤー作成** - Create a new player with a custom name
@@ -22,7 +24,7 @@ This is a web-based demo of the Damdara WASM module, showcasing the Dragon Quest
 
    This will:
    - Build the WASM package to `pkg/`
-   - Automatically copy it to `examples/web/pkg/` for local development
+   - Automatically copy it to `docs/pkg/` for local development and GitHub Pages
 
 ### Start the Web Server
 
@@ -96,16 +98,18 @@ Click the buttons in the "マスターデータ" section to view:
 ## Architecture
 
 ```
-examples/web/
+docs/
 ├── index.html    # Main HTML structure
 ├── style.css     # Dragon Quest-themed styling
 ├── app.js        # JavaScript application logic
-├── pkg/          # WASM package (copied from ../../pkg/)
+├── pkg/          # WASM package (copied from ../pkg/)
 │   ├── damdara.js
 │   ├── damdara_bg.wasm
 │   └── damdara.d.ts
 └── README.md     # This file
 ```
+
+**Note**: This directory is served by GitHub Pages, making the demo accessible online.
 
 ## Browser Compatibility
 
