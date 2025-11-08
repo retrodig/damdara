@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damdara - Dragon Quest WASM Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Damdara - Dragon Quest</h1>
+        <p>ドラゴンクエスト復活の呪文システム WASM版</p>
+    </header>
+
+    <main>
+        <!-- Player Creation Section -->
+        <section class="card">
+            <h2>プレイヤー作成</h2>
+            <div class="form-group">
+                <label for="playerName">なまえ:</label>
+                <input type="text" id="playerName" placeholder="ゆうてい" maxlength="8">
+                <button onclick="createPlayer()">作成</button>
+            </div>
+        </section>
+
+        <!-- Password Section -->
+        <section class="card">
+            <h2>復活の呪文</h2>
+            <div class="form-group">
+                <label for="password">呪文:</label>
+                <input type="text" id="password" placeholder="20文字のひらがな">
+                <button onclick="loadFromPassword()">ロード</button>
+                <button onclick="generatePassword()">生成</button>
+            </div>
+            <div id="passwordOutput" class="output"></div>
+        </section>
+
+        <!-- Player Status Section -->
+        <section class="card">
+            <h2>プレイヤー情報</h2>
+            <div id="playerStatus" class="status-display">
+                <p>プレイヤーを作成してください</p>
+            </div>
+        </section>
+
+        <!-- Battle Section -->
+        <section class="card">
+            <h2>戦闘</h2>
+            <div class="form-group">
+                <label for="monsterId">モンスター選択:</label>
+                <select id="monsterId">
+                    <option value="0">スライム</option>
+                    <option value="1">スライムベス</option>
+                    <option value="2">ドラキー</option>
+                    <option value="3">ゴースト</option>
+                    <option value="4">まほうつかい</option>
+                </select>
+                <button onclick="startBattle()">戦闘開始</button>
+            </div>
+            <div id="battleLog" class="battle-log"></div>
+        </section>
+
+        <!-- Master Data Section -->
+        <section class="card">
+            <h2>マスターデータ</h2>
+            <div class="tabs">
+                <button onclick="showMasterData('monsters')">モンスター</button>
+                <button onclick="showMasterData('weapons')">武器</button>
+                <button onclick="showMasterData('armors')">防具</button>
+                <button onclick="showMasterData('spells')">呪文</button>
+            </div>
+            <div id="masterDataDisplay" class="data-table"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Damdara v0.8.4 - Rust + WebAssembly</p>
+    </footer>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

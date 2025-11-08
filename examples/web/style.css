@@ -1,0 +1,218 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+header p {
+    font-size: 1.2em;
+    color: #ffd700;
+}
+
+main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.card h2 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: #ffd700;
+    border-bottom: 2px solid #ffd700;
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ffd700;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    font-size: 1em;
+    font-family: inherit;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    background: #ffd700;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-right: 10px;
+}
+
+button:hover {
+    background: #ffed4e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.status-display {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+}
+
+.status-display p {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.output {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    min-height: 40px;
+}
+
+.battle-log {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.battle-log:empty::before {
+    content: "戦闘ログがここに表示されます";
+    color: #888;
+}
+
+.tabs {
+    margin-bottom: 15px;
+}
+
+.tabs button {
+    margin-bottom: 10px;
+}
+
+.data-table {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.data-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.data-table th {
+    background: rgba(255, 215, 0, 0.2);
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+}
+
+.data-table tr:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    color: #ffd700;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ffd700;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #ffed4e;
+}
+
+.error {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.success {
+    color: #51cf66;
+    font-weight: bold;
+}

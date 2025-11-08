@@ -11,6 +11,10 @@ pub mod save;
 pub mod traits;
 pub mod utility;
 
+// WASM module (only compiled for wasm32 target)
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;
+
 use battle::Battle;
 pub use constants::config::Cli;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};

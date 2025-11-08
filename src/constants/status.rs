@@ -1,8 +1,9 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use serde::{Deserialize, Serialize};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Flags {
     pub has_dragon_scale: bool,    // りゅうのうろこを装備したか
     pub has_warrior_ring: bool,    // せんしのゆびわを装備したか
@@ -56,7 +57,7 @@ pub struct Status {
     pub spell: Option<&'static str>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerSummary {
     pub name: String,
     pub level: u8,
@@ -66,7 +67,7 @@ pub struct PlayerSummary {
     pub experience: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct StrengthStatus {
     pub level: u8,
     pub strength: u8,

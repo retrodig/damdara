@@ -1,0 +1,16 @@
+# Cargo configuration for WASM builds
+
+[build]
+# Default target for WASM builds (uncomment when building for WASM)
+# target = "wasm32-unknown-unknown"
+
+[target.wasm32-unknown-unknown]
+# Runner for wasm-bindgen-test
+runner = 'wasm-bindgen-test-runner'
+
+# Enable getrandom for WASM
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
+
+# Optimize for size
+[profile.release]
+# Note: These are inherited from Cargo.toml but can be overridden here
