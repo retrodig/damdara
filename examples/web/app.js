@@ -1,5 +1,5 @@
 // Import the WASM module
-import init, { WasmGame } from '../../pkg/damdara.js';
+import init, { WasmGame } from './pkg/damdara.js';
 
 let game;
 

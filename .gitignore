@@ -1,6 +1,7 @@
 /target
 /pkg
 /target/wasm32-unknown-unknown
+/examples/web/pkg
 node_modules/
 *.wasm
 *.js.map
