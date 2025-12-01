@@ -8,6 +8,8 @@ license = "MIT"
 repository = "https://github.com/retrodig/damdara"
 homepage = "https://github.com/retrodig/damdara"
 readme = "README.md"
+keywords = ["game", "dragon-quest", "wasm", "retro", "rpg"]
+categories = ["game-engines", "wasm"]
 
 [lib]
 path = "src/lib.rs"
@@ -38,3 +40,7 @@ lto = true             # Link-time optimization
 codegen-units = 1      # Better optimization
 panic = "abort"        # Reduce binary size
 strip = true           # Strip symbols
+
+# wasm-pack metadata for npm package
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false       # Disable wasm-opt due to bulk memory compatibility issues

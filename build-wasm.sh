@@ -19,6 +19,13 @@ echo "✅ WASM build complete!"
 echo "📦 Package output: ./pkg/"
 echo ""
 
+# Copy npm-specific README to pkg
+if [ -f "README_NPM.md" ]; then
+    echo "📄 Copying npm-specific README..."
+    cp README_NPM.md pkg/README.md
+    echo "✅ npm README copied"
+fi
+
 # Copy pkg to docs for local development and GitHub Pages
 echo "📋 Copying WASM package to docs/pkg/..."
 mkdir -p docs/pkg
@@ -28,3 +35,6 @@ echo ""
 
 echo "To test the package:"
 echo "  cd docs && python -m http.server 8080"
+echo ""
+echo "To publish to npm:"
+echo "  cd pkg && npm publish"

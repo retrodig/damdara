@@ -1,0 +1,44 @@
+# Source files
+src/
+Cargo.toml
+Cargo.lock
+build-wasm.sh
+.cargo/
+
+# Tests
+tests/
+*.test.js
+*.spec.js
+
+# Documentation (CLI-specific)
+README.md
+README_ja.md
+DEPLOYMENT.md
+NPM_PUBLISH.md
+
+# Git
+.git
+.gitignore
+.github/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+target/
+docs/
+examples/
+ai_docs/
+assets/
+
+# Other
+*.log
+node_modules/
