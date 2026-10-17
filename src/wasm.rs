@@ -16,6 +16,10 @@ use crate::constants::town::TOWN_MASTER;
 use crate::constants::dialogue::DIALOGUE_MASTER;
 use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_map};
 use crate::utility::dialogue_utils::render_dialogue;
+use crate::constants::enemy_sprite::{Layer, NES_PALETTE};
+use crate::utility::enemy_sprite_utils::{
+    EnemySpriteSummary, enemy_sprite_rgba, enemy_sprite_summaries, find_enemy_sprite, monster_name,
+};
 use crate::utility::map_utils::{MapSummary, tile_at};
 use crate::battle::Battle;
 use crate::monster::Monster;
@@ -129,6 +133,63 @@ fn parse_player_action(action_str: &str) -> Result<PlayerAction, JsValue> {
         "escape" => Ok(PlayerAction::Escape),
         _ => Err(JsValue::from_str(&format!("Invalid action: {}", action_str))),
     }
+}
+
+/// Enemy sprite metadata for JavaScript (without pixels)
+#[derive(Serialize, Deserialize)]
+pub struct EnemySpriteSummaryData {
+    pub id: u8,
+    pub name: String,
+    pub mirror: bool,
+    pub x: u8,
+    pub y: u8,
+    pub width: u8,
+    pub height: u8,
+    pub part_count: usize,
+}
+
+impl From<EnemySpriteSummary> for EnemySpriteSummaryData {
+    fn from(summary: EnemySpriteSummary) -> Self {
+        Self {
+            id: summary.id,
+            name: summary.name.to_string(),
+            mirror: summary.mirror,
+            x: summary.x,
+            y: summary.y,
+            width: summary.width,
+            height: summary.height,
+            part_count: summary.part_count,
+        }
+    }
+}
+
+/// Enemy sprite part (8x8 tile) for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct SpritePartData {
+    pub layer: String,
+    pub tile: u8,
+    pub pattern: u16,
+    pub x: u8,
+    pub y: u8,
+    pub palette: u8,
+    pub flip_h: bool,
+    pub flip_v: bool,
+}
+
+/// Enemy sprite data for JavaScript (with pixels)
+#[derive(Serialize, Deserialize)]
+pub struct EnemySpriteData {
+    pub id: u8,
+    pub name: String,
+    pub mirror: bool,
+    pub palette: Vec<Vec<u8>>,
+    pub bg_palette: Option<Vec<Vec<u8>>>,
+    pub parts: Vec<SpritePartData>,
+    pub x: u8,
+    pub y: u8,
+    pub width: u8,
+    pub height: u8,
+    pub pixels: Vec<u8>,
 }
 
 /// Town data for JavaScript
@@ -662,6 +723,73 @@ impl WasmGame {
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
     }
 
+    /// Get all enemy sprite metadata (without pixels)
+    pub fn get_enemy_sprites(&self) -> Result<JsValue, JsValue> {
+        let sprites: Vec<EnemySpriteSummaryData> = enemy_sprite_summaries()
+            .into_iter()
+            .map(EnemySpriteSummaryData::from)
+            .collect();
+
+        serde_wasm_bindgen::to_value(&sprites)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get an enemy sprite by monster id (pixels are color numbers, 255 is transparent)
+    pub fn get_enemy_sprite(&self, id: u8) -> Result<JsValue, JsValue> {
+        let sprite = find_enemy_sprite(id)
+            .ok_or_else(|| JsValue::from_str(&format!("Sprite not found: {}", id)))?;
+        let data = EnemySpriteData {
+            id: sprite.id,
+            name: monster_name(sprite.id).to_string(),
+            mirror: sprite.mirror,
+            palette: sprite.palette.iter().map(|p| p.to_vec()).collect(),
+            bg_palette: sprite
+                .bg_palette
+                .map(|bg| bg.iter().map(|p| p.to_vec()).collect()),
+            parts: sprite
+                .parts
+                .iter()
+                .map(|part| SpritePartData {
+                    layer: match part.layer {
+                        Layer::Sprite => "sprite",
+                        Layer::Bg => "bg",
+                    }
+                    .to_string(),
+                    tile: part.tile,
+                    pattern: part.pattern,
+                    x: part.x,
+                    y: part.y,
+                    palette: part.palette,
+                    flip_h: part.flip_h,
+                    flip_v: part.flip_v,
+                })
+                .collect(),
+            x: sprite.x,
+            y: sprite.y,
+            width: sprite.width,
+            height: sprite.height,
+            pixels: sprite.pixels.to_vec(),
+        };
+
+        serde_wasm_bindgen::to_value(&data)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get an enemy sprite as RGBA bytes (width * height * 4) for Canvas ImageData
+    pub fn get_enemy_sprite_rgba(&self, id: u8) -> Result<Vec<u8>, JsValue> {
+        find_enemy_sprite(id)
+            .map(enemy_sprite_rgba)
+            .ok_or_else(|| JsValue::from_str(&format!("Sprite not found: {}", id)))
+    }
+
+    /// Get the NES color table (color number -> [r, g, b])
+    pub fn get_nes_palette(&self) -> Result<JsValue, JsValue> {
+        let palette: Vec<[u8; 3]> = NES_PALETTE.iter().map(|&(r, g, b)| [r, g, b]).collect();
+
+        serde_wasm_bindgen::to_value(&palette)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
     /// Get all warp (stairs / entrance) data
     pub fn get_warps(&self) -> Result<JsValue, JsValue> {
         let warps: Vec<WarpData> = WARP_MASTER
@@ -903,5 +1031,18 @@ mod tests {
         game.end_battle();
         assert!(!game.is_in_battle());
         assert!(game.has_player());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_enemy_sprites() {
+        let game = WasmGame::new();
+        assert!(game.get_enemy_sprites().is_ok());
+        assert!(game.get_enemy_sprite(0).is_ok());
+        assert!(game.get_enemy_sprite(40).is_err());
+        assert!(game.get_nes_palette().is_ok());
+
+        let sprite = find_enemy_sprite(0).unwrap();
+        let rgba = game.get_enemy_sprite_rgba(0).unwrap();
+        assert_eq!(rgba.len(), sprite.width as usize * sprite.height as usize * 4);
     }
 }

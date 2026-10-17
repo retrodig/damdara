@@ -31,6 +31,9 @@ use output::cli_output::CliOutput;
 use player::Player;
 use std::collections::HashSet;
 use utility::dialogue_utils::render_dialogue;
+use utility::enemy_sprite_utils::{
+    EnemySpriteSummary, enemy_sprite_ansi, enemy_sprite_summaries, find_enemy_sprite,
+};
 use utility::map_utils::map_summaries;
 use utility::status_utils::{get_status_by_level, get_status_list};
 
@@ -112,6 +115,19 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 _ => println!("{:?}", map_summaries()),
             },
             Some("tile") => print_list_or_index(&TILE_MASTER, is_list_mode, index),
+            Some("sprite") => match index {
+                // 番号はモンスターID
+                Some(id) if !is_list_mode => {
+                    match u8::try_from(id).ok().and_then(find_enemy_sprite) {
+                        Some(sprite) => {
+                            println!("{:?}", EnemySpriteSummary::from(sprite));
+                            print!("{}", enemy_sprite_ansi(sprite));
+                        }
+                        None => println!("Sprite not found: {}", id),
+                    }
+                }
+                _ => println!("{:?}", enemy_sprite_summaries()),
+            },
             None => println!("Category not specified"),
             _ => {}
         },

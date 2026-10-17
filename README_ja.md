@@ -38,6 +38,7 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] 名前で強化されたパラメータを計算
 - [x] モンスター一覧を見る
 - [x] モンスターの情報を参照する
+- [x] モンスターのグラフィックを見る
 - [x] 成長パラメータ一覧参照
 - [x] 任意のパラメータを参照
 - [x] アイテム一覧を見る
@@ -328,6 +329,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - dialogue
 - map（`--view map` はメタ情報の一覧、`--view map 1` でマップIDを指定して1マップ表示）
 - tile
+- sprite
 
 **城・街・ほこら**
 
@@ -345,7 +347,7 @@ Town { map_id: 4, name: "ラダトームのしろ", name_en: "Tantegel Castle", 
 
 **セリフ（Dialogue）**
 
-ROMから抽出したメッセージ（セリフ）の一覧を表示します。番号を指定すると、`{player}` を `-n` で指定した主人公の名前に置き換えて表示します（
+メッセージ（セリフ）の一覧を表示します。番号を指定すると、`{player}` を `-n` で指定した主人公の名前に置き換えて表示します（
 `{word}` `{number}` `{wait}` はそのままです）。
 
 ```
@@ -383,6 +385,21 @@ Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" }
 ```
 
 マップ名・タイル名は、慣用名を使用しています。
+
+**モンスターのグラフィック（Sprite）**
+
+番号を指定しない場合は、全モンスターのグラフィックのメタ情報（サイズ・表示位置など）を表示します。**モンスターID**を指定すると、ターミナルにグラフィックを描画します（24bitカラー対応のターミナルが必要です）。
+
+```
+cargo run -- -m display --view sprite
+[EnemySpriteSummary { id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }, ...]
+```
+
+```
+cargo run -- -m display --view sprite 0
+EnemySpriteSummary { id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }
+（ここにグラフィックが描画されます）
+```
 
 **■ Battle Mode**
 

@@ -97,6 +97,10 @@ console.log(monsters);
 //   ...
 // ]
 
+// Note: since 0.10.0, monster ids follow the in-game enemy order
+// (e.g. 7: メーダ, 11: がいこつ, 16: メタルスライム, 24: ゴーレム).
+// The id is shared by get_monsters, run_battle, start_battle and get_enemy_sprite.
+
 // Get all weapons
 const weapons = game.get_weapons();
 
@@ -163,7 +167,27 @@ const tiles = game.get_tiles(); // [{ id: 0, name: "そうげん", name_en: "gra
 const warps = game.get_warps(); // [{ from: [1, 2, 2], to: [9, 0, 14] }, ...]
 ```
 
-Map names and tile names are not stored in the ROM, so commonly used names are used.
+Map names and tile names use commonly used names.
+
+### Monster Sprite
+
+```javascript
+// Metadata of all monster graphics (without pixels)
+const sprites = game.get_enemy_sprites();
+// [{ id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }, ...]
+
+// Draw a monster on a canvas (id is the same as the monster id)
+const sprite = game.get_enemy_sprites()[0];
+const rgba = game.get_enemy_sprite_rgba(sprite.id); // Uint8Array (width * height * 4)
+const image = new ImageData(new Uint8ClampedArray(rgba), sprite.width, sprite.height);
+canvas.getContext('2d').putImageData(image, 0, 0);
+
+// Full data: color numbers (255 = transparent), palettes and 8x8 tile parts
+const detail = game.get_enemy_sprite(0);
+const nesPalette = game.get_nes_palette(); // color number -> [r, g, b]
+```
+
+The x / y values are the display position on the original game screen (256 x 240).
 
 ## API Reference
 
@@ -207,6 +231,10 @@ Main game interface.
 - `tile_at(map_id: number, x: number, y: number): number | undefined` - Get tile id (out of range returns the border tile)
 - `get_tiles(): TileData[]` - Get all tile definitions
 - `get_warps(): WarpData[]` - Get all warps as `(map, x, y)` pairs
+- `get_enemy_sprites(): EnemySpriteSummaryData[]` - Get all monster graphic metadata (without pixels)
+- `get_enemy_sprite(id: number): EnemySpriteData` - Get one monster graphic (color numbers, palettes, tile parts)
+- `get_enemy_sprite_rgba(id: number): Uint8Array` - Get one monster graphic as RGBA for `ImageData`
+- `get_nes_palette(): number[][]` - Get the color table (color number -> `[r, g, b]`)
 
 #### Messages
 - `get_messages(): string[]` - Get accumulated messages

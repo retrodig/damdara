@@ -188,6 +188,29 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_monster_id_order() {
+        let expected = [
+            (7, "メーダ"),
+            (11, "がいこつ"),
+            (16, "メタルスライム"),
+            (24, "ゴーレム"),
+            (25, "ゴールドマン"),
+            (31, "スターキメラ"),
+            (32, "だいまどう"),
+        ];
+        for (id, name) in expected {
+            assert_eq!(Monster::new(id).stats.name, name, "id {}", id);
+        }
+    }
+
+    #[test]
+    fn test_behavior_index_matches_id() {
+        for (id, behavior) in MONSTER_BEHAVIORS.iter().enumerate() {
+            assert_eq!(behavior.index, id);
+        }
+    }
+
+    #[test]
     fn test_monster_no_support_magic() {
         let monster = Monster::new(0);
         assert!(
@@ -198,7 +221,7 @@ mod tests {
 
     #[test]
     fn test_monster_with_support_magic() {
-        let monster = Monster::new(26);
+        let monster = Monster::new(27); // メイジキメラ
         assert!(
             monster.has_support_magic(),
             "Monster has auxiliary magic (Rariho)"

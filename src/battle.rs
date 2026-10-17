@@ -494,7 +494,8 @@ impl<'a> Battle<'a> {
                 }
                 5 => {
                     self.messages.used_flute();
-                    if self.monster.id == 32 {
+                    // ゴーレムのみ眠る
+                    if self.monster.id == 24 {
                         self.messages.used_flute_monster_fell_asleep();
                         self.monster_state.sleep = true;
                     } else {
@@ -660,6 +661,25 @@ mod tests {
         }
         let menu_count = output.lines.iter().filter(|l| *l == "コマンド？").count();
         assert_eq!(menu_count, 1);
+    }
+
+    #[test]
+    fn test_flute_puts_only_golem_to_sleep() {
+        let flute = UnifiedItem {
+            id: 5,
+            name: "ようせいのふえ",
+            count: 1,
+            kind: ItemKind::Equipment,
+        };
+        for (index, expected_sleep) in [(24, true), (32, false)] {
+            let player = Player::new("ゆうてい");
+            let monster = Monster::new(index);
+            let mut output = RecordingOutput::default();
+            let mut input = DummyInput::new(vec![]);
+            let mut battle = Battle::new(player, monster, &mut input, &mut output);
+            battle.use_item(flute.clone());
+            assert_eq!(battle.monster_state.sleep, expected_sleep, "index {}", index);
+        }
     }
 
     #[test]

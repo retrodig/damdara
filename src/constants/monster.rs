@@ -89,14 +89,6 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 15,
     },
     MonsterStats {
-        name: "がいこつ",
-        hp: 30,
-        attack: 28,
-        defense: 22,
-        exp: 11,
-        gold: 29,
-    },
-    MonsterStats {
         name: "メーダ",
         hp: 22,
         attack: 20,
@@ -127,6 +119,14 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         defense: 26,
         exp: 11,
         gold: 19,
+    },
+    MonsterStats {
+        name: "がいこつ",
+        hp: 30,
+        attack: 28,
+        defense: 22,
+        exp: 11,
+        gold: 29,
     },
     MonsterStats {
         name: "まどうし",
@@ -161,28 +161,12 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 59,
     },
     MonsterStats {
-        name: "リカントマムル",
-        hp: 38,
-        attack: 50,
-        defense: 36,
-        exp: 20,
-        gold: 79,
-    },
-    MonsterStats {
-        name: "キメラ",
-        hp: 42,
-        attack: 56,
-        defense: 48,
-        exp: 24,
-        gold: 99,
-    },
-    MonsterStats {
-        name: "ゴールドマン",
-        hp: 50,
-        attack: 48,
-        defense: 40,
-        exp: 6,
-        gold: 199,
+        name: "メタルスライム",
+        hp: 4,
+        attack: 10,
+        defense: 255,
+        exp: 115,
+        gold: 5,
     },
     MonsterStats {
         name: "ヘルゴースト",
@@ -191,6 +175,14 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         defense: 38,
         exp: 18,
         gold: 69,
+    },
+    MonsterStats {
+        name: "リカントマムル",
+        hp: 38,
+        attack: 50,
+        defense: 36,
+        exp: 20,
+        gold: 79,
     },
     MonsterStats {
         name: "メーダロード",
@@ -209,12 +201,12 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 89,
     },
     MonsterStats {
-        name: "しりょうのきし",
-        hp: 46,
-        attack: 68,
-        defense: 56,
-        exp: 28,
-        gold: 119,
+        name: "キメラ",
+        hp: 42,
+        attack: 56,
+        defense: 48,
+        exp: 24,
+        gold: 99,
     },
     MonsterStats {
         name: "しのさそり",
@@ -225,20 +217,36 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 109,
     },
     MonsterStats {
+        name: "しりょうのきし",
+        hp: 46,
+        attack: 68,
+        defense: 56,
+        exp: 28,
+        gold: 119,
+    },
+    MonsterStats {
+        name: "ゴーレム",
+        hp: 70,
+        attack: 120,
+        defense: 60,
+        exp: 5,
+        gold: 9,
+    },
+    MonsterStats {
+        name: "ゴールドマン",
+        hp: 50,
+        attack: 48,
+        defense: 40,
+        exp: 6,
+        gold: 199,
+    },
+    MonsterStats {
         name: "よろいのきし",
         hp: 55,
         attack: 76,
         defense: 78,
         exp: 33,
         gold: 129,
-    },
-    MonsterStats {
-        name: "かげのきし",
-        hp: 50,
-        attack: 79,
-        defense: 64,
-        exp: 37,
-        gold: 149,
     },
     MonsterStats {
         name: "メイジキメラ",
@@ -249,12 +257,12 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 139,
     },
     MonsterStats {
-        name: "メタルスライム",
-        hp: 4,
-        attack: 10,
-        defense: 255,
-        exp: 115,
-        gold: 5,
+        name: "かげのきし",
+        hp: 50,
+        attack: 79,
+        defense: 64,
+        exp: 37,
+        gold: 149,
     },
     MonsterStats {
         name: "キラーリカント",
@@ -265,19 +273,19 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         gold: 154,
     },
     MonsterStats {
-        name: "スターキメラ",
-        hp: 65,
-        attack: 86,
-        defense: 80,
-        exp: 43,
-        gold: 159,
-    },
-    MonsterStats {
         name: "ドラゴン",
         hp: 65,
         attack: 88,
         defense: 74,
         exp: 45,
+        gold: 159,
+    },
+    MonsterStats {
+        name: "スターキメラ",
+        hp: 65,
+        attack: 86,
+        defense: 80,
+        exp: 43,
         gold: 159,
     },
     MonsterStats {
@@ -287,14 +295,6 @@ pub const MONSTER_MASTER: [MonsterStats; 40] = [
         defense: 70,
         exp: 50,
         gold: 164,
-    },
-    MonsterStats {
-        name: "ゴーレム",
-        hp: 70,
-        attack: 120,
-        defense: 60,
-        exp: 5,
-        gold: 9,
     },
     MonsterStats {
         name: "あくまのきし",
@@ -440,21 +440,11 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
             rariho: 0,
             mahoton: 94,
         },
-        evade_rate: 6.2,
-        actions: &[],
-    },
-    MonsterBehavior {
-        index: 8,
-        resist: SpellResistance {
-            gira: 0,
-            rariho: 0,
-            mahoton: 94,
-        },
         evade_rate: 3.1,
         actions: &[],
     },
     MonsterBehavior {
-        index: 9,
+        index: 8,
         resist: SpellResistance {
             gira: 0,
             rariho: 0,
@@ -468,7 +458,7 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         }],
     },
     MonsterBehavior {
-        index: 10,
+        index: 9,
         resist: SpellResistance {
             gira: 0,
             rariho: 0,
@@ -478,7 +468,7 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         actions: &[],
     },
     MonsterBehavior {
-        index: 11,
+        index: 10,
         resist: SpellResistance {
             gira: 0,
             rariho: 12,
@@ -497,6 +487,16 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
                 rate: 50,
             },
         ],
+    },
+    MonsterBehavior {
+        index: 11,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 0,
+            mahoton: 94,
+        },
+        evade_rate: 6.2,
+        actions: &[],
     },
     MonsterBehavior {
         index: 12,
@@ -556,39 +556,19 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
     MonsterBehavior {
         index: 16,
         resist: SpellResistance {
-            gira: 0,
-            rariho: 25,
-            mahoton: 44,
+            gira: 94,
+            rariho: 94,
+            mahoton: 94,
         },
-        evade_rate: 3.1,
+        evade_rate: 1.6,
         actions: &[MonsterAction {
-            ab_type: "A",
-            action: ActionType::Spell(Spell::Mahoton),
-            rate: 50,
+            ab_type: "B",
+            action: ActionType::Spell(Spell::Gira),
+            rate: 75,
         }],
     },
     MonsterBehavior {
         index: 17,
-        resist: SpellResistance {
-            gira: 0,
-            rariho: 25,
-            mahoton: 94,
-        },
-        evade_rate: 3.1,
-        actions: &[],
-    },
-    MonsterBehavior {
-        index: 18,
-        resist: SpellResistance {
-            gira: 0,
-            rariho: 81,
-            mahoton: 94,
-        },
-        evade_rate: 1.6,
-        actions: &[],
-    },
-    MonsterBehavior {
-        index: 19,
         resist: SpellResistance {
             gira: 0,
             rariho: 19,
@@ -609,7 +589,21 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         ],
     },
     MonsterBehavior {
-        index: 20,
+        index: 18,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 25,
+            mahoton: 44,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "A",
+            action: ActionType::Spell(Spell::Mahoton),
+            rate: 50,
+        }],
+    },
+    MonsterBehavior {
+        index: 19,
         resist: SpellResistance {
             gira: 0,
             rariho: 94,
@@ -630,7 +624,7 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         ],
     },
     MonsterBehavior {
-        index: 21,
+        index: 20,
         resist: SpellResistance {
             gira: 0,
             rariho: 12,
@@ -644,7 +638,27 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         }],
     },
     MonsterBehavior {
+        index: 21,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 25,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
         index: 22,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 44,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 23,
         resist: SpellResistance {
             gira: 19,
             rariho: 31,
@@ -658,17 +672,27 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         }],
     },
     MonsterBehavior {
-        index: 23,
+        index: 24,
         resist: SpellResistance {
-            gira: 0,
-            rariho: 44,
+            gira: 94,
+            rariho: 94,
             mahoton: 94,
         },
-        evade_rate: 3.1,
+        evade_rate: 0.0,
         actions: &[],
     },
     MonsterBehavior {
-        index: 24,
+        index: 25,
+        resist: SpellResistance {
+            gira: 0,
+            rariho: 81,
+            mahoton: 94,
+        },
+        evade_rate: 1.6,
+        actions: &[],
+    },
+    MonsterBehavior {
+        index: 26,
         resist: SpellResistance {
             gira: 0,
             rariho: 38,
@@ -682,17 +706,7 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         }],
     },
     MonsterBehavior {
-        index: 25,
-        resist: SpellResistance {
-            gira: 94,
-            rariho: 94,
-            mahoton: 94,
-        },
-        evade_rate: 23.4,
-        actions: &[],
-    },
-    MonsterBehavior {
-        index: 26,
+        index: 27,
         resist: SpellResistance {
             gira: 0,
             rariho: 12,
@@ -706,21 +720,17 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         }],
     },
     MonsterBehavior {
-        index: 27,
+        index: 28,
         resist: SpellResistance {
             gira: 94,
             rariho: 94,
             mahoton: 94,
         },
-        evade_rate: 1.6,
-        actions: &[MonsterAction {
-            ab_type: "B",
-            action: ActionType::Spell(Spell::Gira),
-            rate: 75,
-        }],
+        evade_rate: 23.4,
+        actions: &[],
     },
     MonsterBehavior {
-        index: 28,
+        index: 29,
         resist: SpellResistance {
             gira: 0,
             rariho: 44,
@@ -730,7 +740,21 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         actions: &[],
     },
     MonsterBehavior {
-        index: 29,
+        index: 30,
+        resist: SpellResistance {
+            gira: 12,
+            rariho: 44,
+            mahoton: 94,
+        },
+        evade_rate: 3.1,
+        actions: &[MonsterAction {
+            ab_type: "B",
+            action: ActionType::Special("ほのお(弱)"),
+            rate: 25,
+        }],
+    },
+    MonsterBehavior {
+        index: 31,
         resist: SpellResistance {
             gira: 6,
             rariho: 50,
@@ -751,21 +775,7 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
         ],
     },
     MonsterBehavior {
-        index: 30,
-        resist: SpellResistance {
-            gira: 12,
-            rariho: 44,
-            mahoton: 94,
-        },
-        evade_rate: 3.1,
-        actions: &[MonsterAction {
-            ab_type: "B",
-            action: ActionType::Special("ほのお(弱)"),
-            rate: 25,
-        }],
-    },
-    MonsterBehavior {
-        index: 31,
+        index: 32,
         resist: SpellResistance {
             gira: 94,
             rariho: 94,
@@ -777,16 +787,6 @@ pub static MONSTER_BEHAVIORS: [MonsterBehavior; 40] = [
             action: ActionType::Spell(Spell::Begirama),
             rate: 50,
         }],
-    },
-    MonsterBehavior {
-        index: 32,
-        resist: SpellResistance {
-            gira: 94,
-            rariho: 94,
-            mahoton: 94,
-        },
-        evade_rate: 0.0,
-        actions: &[],
     },
     MonsterBehavior {
         index: 33,

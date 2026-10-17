@@ -43,6 +43,7 @@ WebAssembly!
 - [x] Calculate parameters enhanced by name
 - [x] See list of monsters
 - [x] Refer to any monster information
+- [x] See monster graphics
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item
@@ -334,6 +335,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - dialogue
 - map (`--view map` lists metadata only, `--view map 1` shows one map by map id)
 - tile
+- sprite
 
 **Town / Castle / Shrine**
 
@@ -351,7 +353,7 @@ Town { map_id: 4, name: "ラダトームのしろ", name_en: "Tantegel Castle", 
 
 **Dialogue**
 
-List of messages (dialogue) extracted. When a number is specified, `{player}` is replaced with the player name given by
+List of messages (dialogue). When a number is specified, `{player}` is replaced with the player name given by
 `-n`. (`{word}` `{number}` `{wait}` are left as they are.)
 
 ```
@@ -388,7 +390,22 @@ cargo run -- -m display --view tile 3
 Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" }
 ```
 
-Map names and tile names are not stored in the ROM, so commonly used names are used.
+Map names and tile names use commonly used names.
+
+**Monster Sprite**
+
+Without a number, the metadata (size, position, etc.) of all monster graphics is shown. Specify a **monster id** to draw the graphic in the terminal (requires a terminal that supports 24-bit color).
+
+```
+cargo run -- -m display --view sprite
+[EnemySpriteSummary { id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }, ...]
+```
+
+```
+cargo run -- -m display --view sprite 0
+EnemySpriteSummary { id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }
+(the graphic is drawn here)
+```
 
 **■ Battle Mode**
 

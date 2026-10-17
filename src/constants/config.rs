@@ -106,7 +106,7 @@ impl FromStr for Mode {
     }
 }
 
-pub const DISPLAY_CATEGORY_LIST: [&str; 11] = [
+pub const DISPLAY_CATEGORY_LIST: [&str; 12] = [
     "item", "weapon", "armor", "shield", "status", "spell", "monster", "town", "dialogue", "map",
-    "tile",
+    "tile", "sprite",
 ];
