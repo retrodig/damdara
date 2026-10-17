@@ -220,6 +220,27 @@ const script = game.get_event_script(112);
 Step types: `say`, `ask`, `ask_until_yes` (asks again after "no"), `if` (`condition`, `then`, `otherwise`), `random` (`choices: [{ weight, steps }]`) and `do` (`action`).
 Conditions and actions use `type` in snake_case, e.g. `{ type: "has_item", item: 7 }`, `{ type: "give_item", item: 14 }`.
 
+### Treasure
+
+```javascript
+// Treasure chests and items found by searching (all maps if map_id is omitted)
+const treasures = game.get_treasures(5);
+// [
+//   { map_id: 5, x: 4, y: 4, kind: "chest", content: { type: "gold", min: 120, max: 120 }, name: null, empty_if: null },
+//   { map_id: 5, x: 5, y: 4, kind: "chest", content: { type: "item", item: 1 }, name: "たいまつ", empty_if: null },
+//   { map_id: 5, x: 6, y: 1, kind: "chest", content: { type: "key" }, name: "かぎ", empty_if: { type: "keys_full" } },
+// ]
+
+// get_map also includes them
+const map = game.get_map(5);
+console.log(map.treasures);
+```
+
+- `kind`: `"chest"` (take) or `"hidden"` (found by searching)
+- `content.type`: `item`, `herb`, `key`, `weapon`, `armor`, `gold` (`min`..`max`), `item_or_gold` (`item` with a chance of 1 / `one_in` if not obtained yet, otherwise gold), `tablet`, `hidden_stairs`, `hint` (`dialogue_id`), `decoration`
+- `empty_if.type`: `herbs_full`, `keys_full`, `has_item`, `has_any_item`, `weapon_equipped`, `armor_equipped`, `hidden_stairs_found`
+- Taken chests come back when you go out to the field, as in the original game.
+
 ### Monster Sprite
 
 ```javascript
@@ -326,12 +347,13 @@ Main game interface.
 - `get_dialogues(): DialogueData[]` - Get all dialogues (raw, with `{player}` etc.)
 - `render_dialogue(id: number, player_name: string): string | undefined` - Get a dialogue with `{player}` replaced
 - `get_maps(): MapSummaryData[]` - Get all map metadata (without tiles)
-- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs (each NPC includes `talk_kind`, `items`, `price` and `role`)
+- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs (each NPC includes `talk_kind`, `items`, `price` and `role`) and `treasures`
 - `tile_at(map_id: number, x: number, y: number): number | undefined` - Get tile id (out of range returns the border tile)
 - `get_tiles(): TileData[]` - Get all tile definitions
 - `get_warps(): WarpData[]` - Get all warps as `(map, x, y)` pairs
 - `get_talk(talk_id: number): TalkData` - Get what an NPC does when spoken to (kind, shop items, price, dialogue, event role)
 - `get_talks(): TalkData[]` - Get all talks
+- `get_treasures(map_id?: number): TreasureData[]` - Get treasure chests and hidden items (position, content, name, condition to be empty)
 - `get_event_script(talk_id: number): StepData[] | null` - Get the event conversation as a tree of steps
 - `run_event(talk_id: number, map_id: number, story?: StoryState, answers?: boolean[], seed?: number): EventResultData | null` - Follow the conversation with the current player and return `lines`, `actions` and `status` (`"finished"` or `"waiting_answer"`). `null` for shops and inns
 - `get_enemy_sprites(): EnemySpriteSummaryData[]` - Get all monster graphic metadata (without pixels)

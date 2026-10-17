@@ -14,3 +14,4 @@ pub mod status;
 pub mod talk;
 pub mod text;
 pub mod town;
+pub mod treasure;
