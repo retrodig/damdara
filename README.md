@@ -46,6 +46,8 @@ WebAssembly!
 - [x] See monster graphics
 - [x] See map and character graphics
 - [x] See the battle background
+- [x] Refer to shops, inns and what people say
+- [x] Follow the conversations of events (the king, Princess Gwaelin, the Dragonlord, etc.)
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item
@@ -342,6 +344,8 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - tile_sprite
 - character
 - battle_bg
+- talk
+- event
 
 **Town / Castle / Shrine**
 
@@ -397,6 +401,24 @@ Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" }
 ```
 
 Map names and tile names use commonly used names.
+
+**Talk**
+
+What a person in a town does when spoken to. Specify the **talk_id** of an NPC (`--view map <id>`) to show one: the kind (weapon shop, item shop, key shop, fairy water shop, inn, message, question, event), the items and prices of a shop, the price of a key / fairy water / one night at the inn, and the role of an event.
+
+```
+cargo run -- -m display --view talk 0
+Talk { talk_id: 0, kind: WeaponShop, items: [ShopEntry { item: Weapon(3), name: "どうのつるぎ", price: 180 }, ...], price: None, ... }
+```
+
+**Event**
+
+The flow of an event conversation (the king, the princess, the Dragonlord, sages, etc.) as a tree of steps: lines, yes / no questions, conditions on the player and actions. Specify the **talk_id**.
+
+```
+cargo run -- -m display --view event 112
+EventScript { talk_id: 112, steps: [Say(199), Say(164), Ask { dialogue_id: 200, ... }] }
+```
 
 **Monster Sprite**
 

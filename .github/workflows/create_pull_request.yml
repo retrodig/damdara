@@ -25,20 +25,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
       - name: Switch to the release branch
         run: git checkout release
 
       - name: Set CURRENT_BRANCH
         run: echo "CURRENT_BRANCH=release" >> $GITHUB_ENV
-
-      - name: Authenticate GH CLI
-        run: |
-          echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
 
       - name: Create Pull Request
         run: |
@@ -61,4 +52,5 @@ jobs:
                          --head "$CURRENT_BRANCH"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          # Built-in token. Requires "Allow GitHub Actions to create and approve pull requests"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

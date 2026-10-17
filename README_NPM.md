@@ -169,6 +169,57 @@ const warps = game.get_warps(); // [{ from: [1, 2, 2], to: [9, 0, 14] }, ...]
 
 Map names and tile names use commonly used names.
 
+### Talk / Shop / Inn
+
+Each NPC of `get_map` has a `talk_id` and what happens when spoken to.
+
+```javascript
+const map = game.get_map(8); // ラダトーム
+for (const npc of map.npcs) {
+  // talk_kind: "weapon_shop" | "item_shop" | "key_shop" | "fairy_water_shop" | "inn" | "message" | "question" | "event"
+  console.log(npc.talk_kind, npc.items, npc.price, npc.role);
+}
+
+// Or get one talk by talk_id
+const talk = game.get_talk(0);
+// {
+//   talk_id: 0, kind: "weapon_shop",
+//   items: [{ kind: "weapon", index: 3, name: "どうのつるぎ", price: 180 }, ...],
+//   price: null,            // key / fairy water / one night at the inn
+//   dialogue_id: null,      // first dialogue of "message" / "question"
+//   yes_dialogue_id: null, no_dialogue_id: null,
+//   role: null, role_en: null, // role of an "event" (e.g. the king)
+//   related_dialogue_ids: [38, 39, ...]
+// }
+```
+
+`items[].index` is the index of `get_weapons` / `get_armors` / `get_shields` / `get_items`. Herbs (`kind: "herb"`) have no index.
+
+### Event
+
+`run_event` follows the conversation of an NPC with the current player, and returns the lines (with the player name etc. filled in) and the actions to perform. Actions are not applied to the player.
+
+```javascript
+game.create_player("ゆうてい");
+
+// Progress not stored in the password (all optional)
+const story = { carrying_princess: false, princess_delivered: false, left_throne_room: true, dragonlord_defeated: false };
+
+// The Dragonlord (talk_id 112 on map 6). Answer the questions one by one
+let result = game.run_event(112, 6, story, []);
+// { lines: [{ dialogue_id: 199, text: "＊「よくきた　ゆうていよ。..." }, ...], actions: [], status: "waiting_answer" }
+
+result = game.run_event(112, 6, story, [false]); // "いいえ"
+// { lines: [... 4 lines], actions: [{ type: "battle", monster_id: 38 }], status: "finished" }
+
+// The tree of steps (null for talks without an event)
+const script = game.get_event_script(112);
+// [{ type: "say", dialogue_id: 199 }, ..., { type: "ask", dialogue_id: 200, yes: [...], no: [...] }]
+```
+
+Step types: `say`, `ask`, `ask_until_yes` (asks again after "no"), `if` (`condition`, `then`, `otherwise`), `random` (`choices: [{ weight, steps }]`) and `do` (`action`).
+Conditions and actions use `type` in snake_case, e.g. `{ type: "has_item", item: 7 }`, `{ type: "give_item", item: 14 }`.
+
 ### Monster Sprite
 
 ```javascript
@@ -275,10 +326,14 @@ Main game interface.
 - `get_dialogues(): DialogueData[]` - Get all dialogues (raw, with `{player}` etc.)
 - `render_dialogue(id: number, player_name: string): string | undefined` - Get a dialogue with `{player}` replaced
 - `get_maps(): MapSummaryData[]` - Get all map metadata (without tiles)
-- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs
+- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs (each NPC includes `talk_kind`, `items`, `price` and `role`)
 - `tile_at(map_id: number, x: number, y: number): number | undefined` - Get tile id (out of range returns the border tile)
 - `get_tiles(): TileData[]` - Get all tile definitions
 - `get_warps(): WarpData[]` - Get all warps as `(map, x, y)` pairs
+- `get_talk(talk_id: number): TalkData` - Get what an NPC does when spoken to (kind, shop items, price, dialogue, event role)
+- `get_talks(): TalkData[]` - Get all talks
+- `get_event_script(talk_id: number): StepData[] | null` - Get the event conversation as a tree of steps
+- `run_event(talk_id: number, map_id: number, story?: StoryState, answers?: boolean[], seed?: number): EventResultData | null` - Follow the conversation with the current player and return `lines`, `actions` and `status` (`"finished"` or `"waiting_answer"`). `null` for shops and inns
 - `get_enemy_sprites(): EnemySpriteSummaryData[]` - Get all monster graphic metadata (without pixels)
 - `get_enemy_sprite(id: number): EnemySpriteData` - Get one monster graphic (color numbers, palettes, tile parts)
 - `get_enemy_sprite_rgba(id: number): Uint8Array` - Get one monster graphic as RGBA for `ImageData`
