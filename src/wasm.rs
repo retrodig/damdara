@@ -16,7 +16,11 @@ use crate::constants::town::TOWN_MASTER;
 use crate::constants::dialogue::DIALOGUE_MASTER;
 use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_map};
 use crate::utility::dialogue_utils::render_dialogue;
+use crate::constants::battle_background::{BATTLE_BACKDROP, battle_background};
 use crate::constants::enemy_sprite::{Layer, NES_PALETTE};
+use crate::utility::battle_background_utils::{
+    battle_background_pixels, battle_pixels_rgba, battle_scene,
+};
 use crate::constants::field_sprite::{
     CHARACTER_SPRITE_MASTER, MAP_TILE_SPRITE_MASTER, PaletteSet, hero_character_id,
     map_tile_pixels, npc_character_id,
@@ -197,6 +201,31 @@ pub struct EnemySpriteData {
     pub width: u8,
     pub height: u8,
     pub pixels: Vec<u8>,
+}
+
+/// Battle background for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct BattleBackgroundData {
+    pub x: u8,
+    pub y: u8,
+    pub width: u8,
+    pub height: u8,
+    pub tiles: Vec<u8>,
+    pub palette: Vec<Vec<u8>>,
+    pub block_palettes: Vec<u8>,
+    pub reveal_order: Vec<(u8, u8)>,
+    pub pixels: Vec<u8>,
+}
+
+/// Battle scene (background + monster) for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct BattleSceneData {
+    pub x: u8,
+    pub y: u8,
+    pub width: u8,
+    pub height: u8,
+    /// RGBA bytes (width * height * 4)
+    pub rgba: Vec<u8>,
 }
 
 /// Map tile sprite (16x16) for JavaScript
@@ -935,6 +964,54 @@ impl WasmGame {
         hero_character_id(has_weapon, has_shield, with_princess)
     }
 
+    /// Get the battle background of a map (field only). Returns null if the map has no background
+    pub fn get_battle_background(&self, map_id: u8) -> Result<JsValue, JsValue> {
+        let Some(bg) = battle_background(map_id) else {
+            return Ok(JsValue::NULL);
+        };
+        let data = BattleBackgroundData {
+            x: bg.x,
+            y: bg.y,
+            width: bg.width,
+            height: bg.height,
+            tiles: bg.tiles.to_vec(),
+            palette: bg.palette.iter().map(|p| p.to_vec()).collect(),
+            block_palettes: bg.block_palettes.to_vec(),
+            reveal_order: bg.reveal_order.to_vec(),
+            pixels: bg.pixels.to_vec(),
+        };
+
+        serde_wasm_bindgen::to_value(&data)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get the color number used to fill battles without a background
+    pub fn get_battle_backdrop(&self) -> u8 {
+        BATTLE_BACKDROP
+    }
+
+    /// Get the battle background as RGBA bytes (112 * 112 * 4). Maps without a background are filled with the backdrop.
+    /// With `reveal_blocks`, only that many 16x16 blocks are drawn in reveal order (for the opening animation)
+    pub fn get_battle_background_rgba(&self, map_id: u8, reveal_blocks: Option<usize>) -> Vec<u8> {
+        battle_pixels_rgba(&battle_background_pixels(map_id, reveal_blocks))
+    }
+
+    /// Get a battle scene (background + monster) as RGBA with its screen position
+    pub fn get_battle_scene(&self, monster_id: u8, map_id: u8) -> Result<JsValue, JsValue> {
+        let scene = battle_scene(monster_id, map_id)
+            .ok_or_else(|| JsValue::from_str(&format!("Monster not found: {}", monster_id)))?;
+        let data = BattleSceneData {
+            x: scene.x,
+            y: scene.y,
+            width: scene.width,
+            height: scene.height,
+            rgba: battle_pixels_rgba(&scene.pixels),
+        };
+
+        serde_wasm_bindgen::to_value(&data)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
     /// Get all warp (stairs / entrance) data
     pub fn get_warps(&self) -> Result<JsValue, JsValue> {
         let warps: Vec<WarpData> = WARP_MASTER
@@ -1189,6 +1266,17 @@ mod tests {
         let sprite = find_enemy_sprite(0).unwrap();
         let rgba = game.get_enemy_sprite_rgba(0).unwrap();
         assert_eq!(rgba.len(), sprite.width as usize * sprite.height as usize * 4);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_battle_background() {
+        let game = WasmGame::new();
+        assert!(game.get_battle_background(1).is_ok());
+        assert!(game.get_battle_background(15).unwrap().is_null());
+        assert_eq!(game.get_battle_background_rgba(1, None).len(), 112 * 112 * 4);
+        assert_eq!(game.get_battle_background_rgba(15, Some(3)).len(), 112 * 112 * 4);
+        assert!(game.get_battle_scene(0, 1).is_ok());
+        assert!(game.get_battle_scene(40, 1).is_err());
     }
 
     #[wasm_bindgen_test]

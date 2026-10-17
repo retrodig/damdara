@@ -1,4 +1,5 @@
 pub mod battle;
+pub mod battle_background;
 pub mod config;
 pub mod dialogue;
 pub mod enemy_sprite;

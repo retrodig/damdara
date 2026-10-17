@@ -1,3 +1,4 @@
+pub mod battle_background_utils;
 pub mod binary_utils;
 pub mod dialogue_utils;
 pub mod enemy_sprite_utils;
