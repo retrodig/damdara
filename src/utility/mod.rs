@@ -11,3 +11,4 @@ pub mod status_utils;
 pub mod string_utils;
 pub mod talk_utils;
 pub mod town_utils;
+pub mod treasure_utils;

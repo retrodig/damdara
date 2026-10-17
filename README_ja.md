@@ -43,6 +43,7 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] 戦闘の背景を見る
 - [x] お店・宿屋・人の話を参照する
 - [x] イベント（王様・ローラ姫・竜王など）の会話の流れをたどる
+- [x] 宝箱・しらべると見つかる物を参照する
 - [x] 成長パラメータ一覧参照
 - [x] 任意のパラメータを参照
 - [x] アイテム一覧を見る
@@ -340,6 +341,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - battle_bg
 - talk
 - event
+- treasure
 
 **城・街・ほこら**
 
@@ -413,6 +415,19 @@ Talk { talk_id: 0, kind: WeaponShop, items: [ShopEntry { item: Weapon(3), name: 
 cargo run -- -m display --view event 112
 EventScript { talk_id: 112, steps: [Say(199), Say(164), Ask { dialogue_id: 200, ... }] }
 ```
+
+**宝箱（Treasure）**
+
+宝箱と、しらべると見つかる物（`kind: Chest` / `Hidden`）の位置・中身・名前・空になる条件を表示します。**マップID** を指定すると、そのマップだけに絞り込みます。
+
+```
+cargo run -- -m display --view treasure 5
+Treasure { map_id: 5, x: 4, y: 4, kind: Chest, content: Gold { min: 120, max: 120 }, name: None, empty_if: None }
+Treasure { map_id: 5, x: 5, y: 4, kind: Chest, content: Item(1), name: Some("たいまつ"), empty_if: None }
+Treasure { map_id: 5, x: 6, y: 1, kind: Chest, content: Key, name: Some("かぎ"), empty_if: Some(KeysFull) }
+```
+
+取った宝箱は、原作と同じくフィールドに出ると元に戻ります。
 
 **モンスターのグラフィック（Sprite）**
 

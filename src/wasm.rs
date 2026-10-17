@@ -18,6 +18,10 @@ use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_
 use crate::utility::dialogue_utils::render_dialogue;
 use crate::constants::battle_background::{BATTLE_BACKDROP, battle_background};
 use crate::constants::enemy_sprite::{Layer, NES_PALETTE};
+use crate::constants::treasure::{
+    EmptyIf, TREASURE_MASTER, Treasure, TreasureContent, treasures_in_map,
+};
+use crate::utility::treasure_utils::treasure_kind_str;
 use crate::constants::event::{Action, Condition, Step, find_event_script};
 use crate::event::{EventStatus, StoryState, run_event};
 use crate::utility::random_utils::random_value;
@@ -578,6 +582,97 @@ pub struct MapData {
     pub border_tile: u8,
     pub tiles: Vec<u8>,
     pub npcs: Vec<NpcData>,
+    pub treasures: Vec<TreasureData>,
+}
+
+/// Treasure chest / hidden item for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct TreasureData {
+    pub map_id: u8,
+    pub x: u8,
+    pub y: u8,
+    /// "chest" | "hidden"
+    pub kind: String,
+    pub content: TreasureContentData,
+    pub name: Option<String>,
+    /// The treasure is empty under this condition
+    pub empty_if: Option<EmptyIfData>,
+}
+
+/// Content of a treasure. `item` is an ITEM_MASTER index, `weapon` a WEAPON_MASTER index, `armor` an ARMOR_MASTER index
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum TreasureContentData {
+    Item { item: u8 },
+    Herb,
+    Key,
+    Weapon { weapon: u8 },
+    Armor { armor: u8 },
+    Gold { min: u16, max: u16 },
+    /// `item` with a chance of 1 / `one_in` if not obtained yet, otherwise gold
+    ItemOrGold { item: u8, one_in: u8, gold_min: u16, gold_max: u16 },
+    Tablet,
+    HiddenStairs,
+    Hint { dialogue_id: u16 },
+    Decoration,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum EmptyIfData {
+    HerbsFull,
+    KeysFull,
+    HasItem { item: u8 },
+    HasAnyItem { items: Vec<u8> },
+    WeaponEquipped { weapon: u8 },
+    ArmorEquipped { armor: u8 },
+    HiddenStairsFound,
+}
+
+impl From<&Treasure> for TreasureData {
+    fn from(t: &Treasure) -> Self {
+        Self {
+            map_id: t.map_id,
+            x: t.x,
+            y: t.y,
+            kind: treasure_kind_str(t.kind).to_string(),
+            content: match t.content {
+                TreasureContent::Item(item) => TreasureContentData::Item { item },
+                TreasureContent::Herb => TreasureContentData::Herb,
+                TreasureContent::Key => TreasureContentData::Key,
+                TreasureContent::Weapon(weapon) => TreasureContentData::Weapon { weapon },
+                TreasureContent::Armor(armor) => TreasureContentData::Armor { armor },
+                TreasureContent::Gold { min, max } => TreasureContentData::Gold { min, max },
+                TreasureContent::ItemOrGold {
+                    item,
+                    one_in,
+                    gold_min,
+                    gold_max,
+                } => TreasureContentData::ItemOrGold {
+                    item,
+                    one_in,
+                    gold_min,
+                    gold_max,
+                },
+                TreasureContent::Tablet => TreasureContentData::Tablet,
+                TreasureContent::HiddenStairs => TreasureContentData::HiddenStairs,
+                TreasureContent::Hint(dialogue_id) => TreasureContentData::Hint { dialogue_id },
+                TreasureContent::Decoration => TreasureContentData::Decoration,
+            },
+            name: t.name.map(str::to_string),
+            empty_if: t.empty_if.map(|e| match e {
+                EmptyIf::HerbsFull => EmptyIfData::HerbsFull,
+                EmptyIf::KeysFull => EmptyIfData::KeysFull,
+                EmptyIf::HasItem(item) => EmptyIfData::HasItem { item },
+                EmptyIf::HasAnyItem(items) => EmptyIfData::HasAnyItem {
+                    items: items.to_vec(),
+                },
+                EmptyIf::WeaponEquipped(weapon) => EmptyIfData::WeaponEquipped { weapon },
+                EmptyIf::ArmorEquipped(armor) => EmptyIfData::ArmorEquipped { armor },
+                EmptyIf::HiddenStairsFound => EmptyIfData::HiddenStairsFound,
+            }),
+        }
+    }
 }
 
 /// Warp data for JavaScript
@@ -1006,6 +1101,7 @@ impl WasmGame {
             height: map.height,
             border_tile: map.border_tile,
             tiles: map.tiles.to_vec(),
+            treasures: treasures_in_map(map.id).map(TreasureData::from).collect(),
             npcs: map
                 .npcs
                 .iter()
@@ -1361,6 +1457,18 @@ impl WasmGame {
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
     }
 
+    /// Get treasure chests and hidden items (found by searching). All maps if `map_id` is omitted
+    pub fn get_treasures(&self, map_id: Option<u8>) -> Result<JsValue, JsValue> {
+        let treasures: Vec<TreasureData> = TREASURE_MASTER
+            .iter()
+            .filter(|t| map_id.is_none_or(|id| t.map_id == id))
+            .map(TreasureData::from)
+            .collect();
+
+        serde_wasm_bindgen::to_value(&treasures)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
     /// Get all warp (stairs / entrance) data
     pub fn get_warps(&self) -> Result<JsValue, JsValue> {
         let warps: Vec<WarpData> = WARP_MASTER
@@ -1615,6 +1723,18 @@ mod tests {
         let sprite = find_enemy_sprite(0).unwrap();
         let rgba = game.get_enemy_sprite_rgba(0).unwrap();
         assert_eq!(rgba.len(), sprite.width as usize * sprite.height as usize * 4);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_treasures() {
+        let game = WasmGame::new();
+        let all: Vec<TreasureData> = serde_wasm_bindgen::from_value(game.get_treasures(None).unwrap()).unwrap();
+        assert_eq!(all.len(), TREASURE_MASTER.len());
+
+        let map: Vec<TreasureData> = serde_wasm_bindgen::from_value(game.get_treasures(Some(5)).unwrap()).unwrap();
+        assert!(!map.is_empty());
+        assert!(map.iter().all(|t| t.map_id == 5));
+        assert!(game.get_map(5).is_ok());
     }
 
     #[wasm_bindgen_test]

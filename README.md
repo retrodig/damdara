@@ -48,6 +48,7 @@ WebAssembly!
 - [x] See the battle background
 - [x] Refer to shops, inns and what people say
 - [x] Follow the conversations of events (the king, Princess Gwaelin, the Dragonlord, etc.)
+- [x] Refer to treasure chests and hidden items
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item
@@ -346,6 +347,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - battle_bg
 - talk
 - event
+- treasure
 
 **Town / Castle / Shrine**
 
@@ -419,6 +421,19 @@ The flow of an event conversation (the king, the princess, the Dragonlord, sages
 cargo run -- -m display --view event 112
 EventScript { talk_id: 112, steps: [Say(199), Say(164), Ask { dialogue_id: 200, ... }] }
 ```
+
+**Treasure**
+
+Treasure chests and items found by searching (`kind: Chest` / `Hidden`): position, content, name and the condition under which it is empty. Specify a **map id** to filter.
+
+```
+cargo run -- -m display --view treasure 5
+Treasure { map_id: 5, x: 4, y: 4, kind: Chest, content: Gold { min: 120, max: 120 }, name: None, empty_if: None }
+Treasure { map_id: 5, x: 5, y: 4, kind: Chest, content: Item(1), name: Some("たいまつ"), empty_if: None }
+Treasure { map_id: 5, x: 6, y: 1, kind: Chest, content: Key, name: Some("かぎ"), empty_if: Some(KeysFull) }
+```
+
+Taken chests come back when you go out to the field, as in the original game.
 
 **Monster Sprite**
 

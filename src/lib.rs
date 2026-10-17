@@ -33,6 +33,7 @@ use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
 use constants::talk::{TALK_MASTER, find_talk};
 use constants::town::TOWN_MASTER;
+use constants::treasure::TREASURE_MASTER;
 use field::{FIELD_MAP_ID, Field};
 use input::cli_input::CliInput;
 use monster::Monster;
@@ -212,6 +213,16 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             },
+            Some("treasure") => {
+                // 番号はマップID。指定がなければ全マップ
+                let map_id = index.and_then(|i| u8::try_from(i).ok());
+                for treasure in TREASURE_MASTER
+                    .iter()
+                    .filter(|t| is_list_mode || map_id.is_none_or(|id| t.map_id == id))
+                {
+                    println!("{:?}", treasure);
+                }
+            }
             None => println!("Category not specified"),
             _ => {}
         },
