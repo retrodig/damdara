@@ -17,7 +17,8 @@ fully recreating the "Fukkatsu no Jumon" system from the NES version of Dragon Q
 
 while also having the ability to generate status by player name, equip items, and handle combat.
 
-🌐 **[Try the Web Demo](https://retrodig.github.io/damdara/)** - Experience Damdara directly in your browser via WebAssembly!
+🌐 **[Try the Web Demo](https://retrodig.github.io/damdara/)** - Experience Damdara directly in your browser via
+WebAssembly!
 
 ## Table of Contents
 
@@ -53,10 +54,10 @@ while also having the ability to generate status by player name, equip items, an
 - [x] See list of Shield
 - [x] Refer to any Shield information
 - [x] Reproduction of battle scenes
-- [ ] See list of Town
-- [ ] Refer to any Town information
-- [ ] Refer to any World information
-- [ ] See list of Message
+- [x] See list of Town
+- [x] Refer to any Town information
+- [x] Refer to any World information
+- [x] See list of Message
 - [ ] Explore the field
 - [ ] Explore the Town
 
@@ -327,9 +328,67 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - armor
 - shield
 - status
+- spell
 - monster
 - town
-- message
+- dialogue
+- map (`--view map` lists metadata only, `--view map 1` shows one map by map id)
+- tile
+
+**Town / Castle / Shrine**
+
+List of towns, castles and shrines. Specify a number (list index, starting from 0) to show one.
+
+```
+cargo run -- -m display --view town
+[Town { map_id: 3, name: "ドムドーラ", name_en: "Hauksness", kind: "town", world_entrance: Some((25, 89)), npc_count: 0, dialogue_ids: [] }, Town { map_id: 4, name: "ラダトームのしろ", ... }, ...]
+```
+
+```
+cargo run -- -m display --view town 1
+Town { map_id: 4, name: "ラダトームのしろ", name_en: "Tantegel Castle", kind: "castle", world_entrance: Some((43, 43)), npc_count: 20, dialogue_ids: [69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81] }
+```
+
+**Dialogue**
+
+List of messages (dialogue) extracted. When a number is specified, `{player}` is replaced with the player name given by
+`-n`. (`{word}` `{number}` `{wait}` are left as they are.)
+
+```
+cargo run -- -m display --view dialogue
+["{word}は　めをさました\n{wait}", "あなたは　しにました", ...]
+```
+
+```
+cargo run -- -n だい -m display --view dialogue 4
+た゛いは　にじのしずくを
+てんに　かざした。
+▼
+```
+
+**Map**
+
+Without a number, only the metadata (size, kind, number of NPCs, etc.) of all maps is shown, without tile data. Specify
+a **map id** (1: Alefgard field) to show one map with its tiles (row-major, `index = y * width + x`) and NPCs.
+
+```
+cargo run -- -m display --view map
+[MapSummary { id: 1, name: "アレフガルド", name_en: "Alefgard", kind: "field", width: 120, height: 120, border_tile: 15, npc_count: 0 }, MapSummary { id: 2, name: "りゅうおうのしろ", name_en: "Charlock Castle", kind: "castle", ... }, ...]
+```
+
+```
+cargo run -- -m display --view map 5
+GameMap { id: 5, name: "ラダトームのしろ おうのま", name_en: "Tantegel Throne Room", kind: "castle", width: 10, height: 10, border_tile: 21, tiles: [16, 16, 16, ...], npcs: [...] }
+```
+
+**Tile**
+
+```
+cargo run -- -m display --view tile 3
+Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" }
+```
+
+Map names and tile names are not stored in the ROM, so commonly used names are used.
 
 **■ Battle Mode**
 

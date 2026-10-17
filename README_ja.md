@@ -49,10 +49,10 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] たて一覧を見る
 - [x] たての情報を参照する
 - [x] 戦闘シーンの再現
-- [ ] 城、街一覧を見る
-- [ ] 城、街情報を参照する
-- [ ] 世界のあらゆる情報を参照する
-- [ ] メッセージ一覧を見る
+- [x] 城、街一覧を見る
+- [x] 城、街情報を参照する
+- [x] 世界のあらゆる情報を参照する
+- [x] メッセージ一覧を見る
 - [ ] フィールドを探索する
 - [ ] 城、街を探索する
 
@@ -322,9 +322,67 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - armor
 - shield
 - status
+- spell
 - monster
 - town
-- message
+- dialogue
+- map（`--view map` はメタ情報の一覧、`--view map 1` でマップIDを指定して1マップ表示）
+- tile
+
+**城・街・ほこら**
+
+城・街・ほこらの一覧を表示します。番号（0始まりの一覧の添字）を指定すると1件だけ表示します。
+
+```
+cargo run -- -m display --view town
+[Town { map_id: 3, name: "ドムドーラ", name_en: "Hauksness", kind: "town", world_entrance: Some((25, 89)), npc_count: 0, dialogue_ids: [] }, Town { map_id: 4, name: "ラダトームのしろ", ... }, ...]
+```
+
+```
+cargo run -- -m display --view town 1
+Town { map_id: 4, name: "ラダトームのしろ", name_en: "Tantegel Castle", kind: "castle", world_entrance: Some((43, 43)), npc_count: 20, dialogue_ids: [69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81] }
+```
+
+**セリフ（Dialogue）**
+
+ROMから抽出したメッセージ（セリフ）の一覧を表示します。番号を指定すると、`{player}` を `-n` で指定した主人公の名前に置き換えて表示します（
+`{word}` `{number}` `{wait}` はそのままです）。
+
+```
+cargo run -- -m display --view dialogue
+["{word}は　めをさました\n{wait}", "あなたは　しにました", ...]
+```
+
+```
+cargo run -- -n だい -m display --view dialogue 4
+た゛いは　にじのしずくを
+てんに　かざした。
+▼
+```
+
+**マップ（Map）**
+
+番号を指定しない場合は、タイルデータを除いた全マップのメタ情報（サイズ・種類・NPC数など）を表示します。**マップID**（1:
+アレフガルドのフィールド）を指定すると、タイル配列（行優先、`index = y * width + x`）とNPCを含めて1マップを表示します。
+
+```
+cargo run -- -m display --view map
+[MapSummary { id: 1, name: "アレフガルド", name_en: "Alefgard", kind: "field", width: 120, height: 120, border_tile: 15, npc_count: 0 }, MapSummary { id: 2, name: "りゅうおうのしろ", name_en: "Charlock Castle", kind: "castle", ... }, ...]
+```
+
+```
+cargo run -- -m display --view map 5
+GameMap { id: 5, name: "ラダトームのしろ おうのま", name_en: "Tantegel Throne Room", kind: "castle", width: 10, height: 10, border_tile: 21, tiles: [16, 16, 16, ...], npcs: [...] }
+```
+
+**タイル（Tile）**
+
+```
+cargo run -- -m display --view tile 3
+Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" }
+```
+
+マップ名・タイル名は、慣用名を使用しています。
 
 **■ Battle Mode**
 

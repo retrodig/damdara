@@ -52,9 +52,10 @@ impl<'a> BattleMessages<'a> {
         &self.messages
     }
 
+    /// メッセージを出力してバッファを空にする
     pub fn display(&mut self) {
-        for message in &self.messages {
-            self.output.output(message);
+        for message in self.messages.drain(..) {
+            self.output.output(&message);
         }
     }
 

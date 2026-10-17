@@ -18,15 +18,20 @@ pub mod wasm;
 use battle::Battle;
 pub use constants::config::Cli;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
+use constants::dialogue::DIALOGUE_MASTER;
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
+use constants::map::{TILE_MASTER, find_map};
 use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
+use constants::town::TOWN_MASTER;
 use input::cli_input::CliInput;
 use monster::Monster;
 use output::cli_output::CliOutput;
 use player::Player;
 use std::collections::HashSet;
+use utility::dialogue_utils::render_dialogue;
+use utility::map_utils::map_summaries;
 use utility::status_utils::{get_status_by_level, get_status_list};
 
 pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
@@ -88,6 +93,25 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
             Some("status") => print_list_or_index(&STATUS_TABLE, is_list_mode, index),
             Some("spell") => print_list_or_index(&SPELL_INFO_LIST, is_list_mode, index),
             Some("monster") => print_list_or_index(&MONSTER_MASTER, is_list_mode, index),
+            Some("town") => print_list_or_index(&TOWN_MASTER, is_list_mode, index),
+            Some("dialogue") => match index {
+                Some(i) if !is_list_mode => {
+                    match render_dialogue(i, player.name.trim_end_matches('　')) {
+                        Some(text) => println!("{}", text),
+                        None => println!("Dialogue not found: {}", i),
+                    }
+                }
+                _ => println!("{:?}", DIALOGUE_MASTER),
+            },
+            Some("map") => match index {
+                // 番号はマップID（1: フィールド）
+                Some(id) if !is_list_mode => match u8::try_from(id).ok().and_then(find_map) {
+                    Some(map) => println!("{:?}", map),
+                    None => println!("Map not found: {}", id),
+                },
+                _ => println!("{:?}", map_summaries()),
+            },
+            Some("tile") => print_list_or_index(&TILE_MASTER, is_list_mode, index),
             None => println!("Category not specified"),
             _ => {}
         },

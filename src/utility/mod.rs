@@ -1,6 +1,9 @@
 pub mod binary_utils;
+pub mod dialogue_utils;
+pub mod map_utils;
 pub mod monster_utils;
 pub mod random_utils;
 pub mod spell_utils;
 pub mod status_utils;
 pub mod string_utils;
+pub mod town_utils;

@@ -8,10 +8,15 @@ use crate::player::Player;
 use crate::output::buffer_output::BufferOutput;
 use crate::input::web_input::WebInput;
 use crate::constants::status::{PlayerSummary, StrengthStatus, STATUS_TABLE};
-use crate::constants::battle::PlayerAction;
+use crate::constants::battle::{BattleState, PlayerAction};
 use crate::constants::monster::MONSTER_MASTER;
 use crate::constants::item_weapon::{ITEM_MASTER, WEAPON_MASTER, ARMOR_MASTER, SHIELD_MASTER};
 use crate::constants::spell::SPELL_INFO_LIST;
+use crate::constants::town::TOWN_MASTER;
+use crate::constants::dialogue::DIALOGUE_MASTER;
+use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_map};
+use crate::utility::dialogue_utils::render_dialogue;
+use crate::utility::map_utils::{MapSummary, tile_at};
 use crate::battle::Battle;
 use crate::monster::Monster;
 
@@ -21,6 +26,15 @@ pub struct WasmGame {
     player: Option<Player>,
     output_buffer: BufferOutput,
     web_input: WebInput,
+    battle_session: Option<BattleSession>,
+}
+
+/// Battle state kept between turns (used by start_battle / battle_turn)
+struct BattleSession {
+    monster: Monster,
+    player_state: BattleState,
+    monster_state: BattleState,
+    turn: u32,
 }
 
 /// Player state for JavaScript
@@ -87,6 +101,125 @@ pub struct StatusData {
     pub spell: Option<String>,
 }
 
+/// Turn-based battle result for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct BattleTurnResult {
+    pub turn: u32,
+    pub is_finished: bool,
+    pub player_survived: bool,
+    pub monster_defeated: bool,
+    pub player_escaped: bool,
+    pub monster_escaped: bool,
+    pub monster_id: u8,
+    pub monster_name: String,
+    pub monster_hp: u8,
+    pub player_sleep: bool,
+    pub player_seal: bool,
+    pub monster_sleep: bool,
+    pub monster_seal: bool,
+    pub messages: Vec<String>,
+    pub player_state: PlayerState,
+}
+
+fn parse_player_action(action_str: &str) -> Result<PlayerAction, JsValue> {
+    match action_str.to_lowercase().as_str() {
+        "attack" => Ok(PlayerAction::Attack),
+        "spell" => Ok(PlayerAction::Spell),
+        "item" => Ok(PlayerAction::Item),
+        "escape" => Ok(PlayerAction::Escape),
+        _ => Err(JsValue::from_str(&format!("Invalid action: {}", action_str))),
+    }
+}
+
+/// Town data for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct TownData {
+    pub map_id: u8,
+    pub name: String,
+    pub name_en: String,
+    pub kind: String,
+    pub world_entrance: Option<(u8, u8)>,
+    pub npc_count: u8,
+    pub dialogue_ids: Vec<u16>,
+}
+
+/// Dialogue data for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct DialogueData {
+    pub id: usize,
+    pub text: String,
+}
+
+/// Tile data for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct TileData {
+    pub id: u8,
+    pub name: String,
+    pub name_en: String,
+}
+
+/// NPC data for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct NpcData {
+    pub x: u8,
+    pub y: u8,
+    pub sprite: u8,
+    pub direction: u8,
+    pub moving: bool,
+    pub talk_id: u8,
+    pub dialogue_id: Option<u16>,
+}
+
+/// Map metadata for JavaScript (without tiles)
+#[derive(Serialize, Deserialize)]
+pub struct MapSummaryData {
+    pub id: u8,
+    pub name: String,
+    pub name_en: String,
+    pub kind: String,
+    pub width: u8,
+    pub height: u8,
+    pub border_tile: u8,
+    pub npc_count: usize,
+}
+
+/// Map data for JavaScript (with tiles)
+#[derive(Serialize, Deserialize)]
+pub struct MapData {
+    pub id: u8,
+    pub name: String,
+    pub name_en: String,
+    pub kind: String,
+    pub width: u8,
+    pub height: u8,
+    pub border_tile: u8,
+    pub tiles: Vec<u8>,
+    pub npcs: Vec<NpcData>,
+}
+
+/// Warp data for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct WarpData {
+    pub from: (u8, u8, u8),
+    pub to: (u8, u8, u8),
+}
+
+impl From<&GameMap> for MapSummaryData {
+    fn from(map: &GameMap) -> Self {
+        let summary = MapSummary::from(map);
+        Self {
+            id: summary.id,
+            name: summary.name.to_string(),
+            name_en: summary.name_en.to_string(),
+            kind: summary.kind.to_string(),
+            width: summary.width,
+            height: summary.height,
+            border_tile: summary.border_tile,
+            npc_count: summary.npc_count,
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl WasmGame {
     /// Create a new WasmGame instance
@@ -100,6 +233,7 @@ impl WasmGame {
             player: None,
             output_buffer: BufferOutput::new(),
             web_input: WebInput::new(),
+            battle_session: None,
         }
     }
 
@@ -183,13 +317,7 @@ impl WasmGame {
     /// Queue a battle action (Attack, Spell, Item, Escape)
     /// Actions should be queued before running battle
     pub fn queue_battle_action(&mut self, action_str: &str) -> Result<(), JsValue> {
-        let action = match action_str.to_lowercase().as_str() {
-            "attack" => PlayerAction::Attack,
-            "spell" => PlayerAction::Spell,
-            "item" => PlayerAction::Item,
-            "escape" => PlayerAction::Escape,
-            _ => return Err(JsValue::from_str(&format!("Invalid action: {}", action_str))),
-        };
+        let action = parse_player_action(action_str)?;
         self.web_input.push_action(action);
         Ok(())
     }
@@ -250,6 +378,52 @@ impl WasmGame {
 
         serde_wasm_bindgen::to_value(&result)
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Start a turn-based battle
+    /// Returns BattleTurnResult (turn 0: monster appears)
+    /// Starting a new battle discards the battle in progress
+    pub fn start_battle(&mut self, monster_id: usize) -> Result<JsValue, JsValue> {
+        if self.player.is_none() {
+            return Err(JsValue::from_str("プレイヤーが作成されていません"));
+        }
+        self.battle_session = Some(BattleSession {
+            monster: Monster::new(monster_id),
+            player_state: BattleState::default(),
+            monster_state: BattleState::default(),
+            turn: 0,
+        });
+        self.step_battle(None, None)
+    }
+
+    /// Run one turn (player -> monster) of the battle started by start_battle
+    /// action: "attack" | "spell" | "item" | "escape"
+    /// selection: spell / item number (1-based) when action is "spell" or "item"
+    pub fn battle_turn(
+        &mut self,
+        action: &str,
+        selection: Option<usize>,
+    ) -> Result<JsValue, JsValue> {
+        let action = parse_player_action(action)?;
+        if matches!(action, PlayerAction::Spell | PlayerAction::Item)
+            && selection.unwrap_or(0) == 0
+        {
+            return Err(JsValue::from_str("selection (1以上) を指定してください"));
+        }
+        if self.battle_session.is_none() {
+            return Err(JsValue::from_str("戦闘中ではありません"));
+        }
+        self.step_battle(Some(action), selection)
+    }
+
+    /// Check if a turn-based battle is in progress
+    pub fn is_in_battle(&self) -> bool {
+        self.battle_session.is_some()
+    }
+
+    /// Abort the turn-based battle in progress (player state is kept)
+    pub fn end_battle(&mut self) {
+        self.battle_session = None;
     }
 
     /// Clear battle input queue
@@ -389,6 +563,211 @@ impl WasmGame {
         serde_wasm_bindgen::to_value(&statuses)
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
     }
+
+    /// Get all town / castle / shrine data
+    pub fn get_towns(&self) -> Result<JsValue, JsValue> {
+        let towns: Vec<TownData> = TOWN_MASTER
+            .iter()
+            .map(|town| TownData {
+                map_id: town.map_id,
+                name: town.name.to_string(),
+                name_en: town.name_en.to_string(),
+                kind: town.kind.to_string(),
+                world_entrance: town.world_entrance,
+                npc_count: town.npc_count,
+                dialogue_ids: town.dialogue_ids.to_vec(),
+            })
+            .collect();
+
+        serde_wasm_bindgen::to_value(&towns)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get all dialogue data (variables such as {player} are not replaced)
+    pub fn get_dialogues(&self) -> Result<JsValue, JsValue> {
+        let dialogues: Vec<DialogueData> = DIALOGUE_MASTER
+            .iter()
+            .enumerate()
+            .map(|(id, text)| DialogueData {
+                id,
+                text: text.to_string(),
+            })
+            .collect();
+
+        serde_wasm_bindgen::to_value(&dialogues)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get a dialogue with {player} replaced by the given name
+    pub fn render_dialogue(&self, id: usize, player_name: &str) -> Option<String> {
+        render_dialogue(id, player_name)
+    }
+
+    /// Get all map metadata (without tiles)
+    pub fn get_maps(&self) -> Result<JsValue, JsValue> {
+        let maps: Vec<MapSummaryData> = MAP_MASTER.iter().map(MapSummaryData::from).collect();
+
+        serde_wasm_bindgen::to_value(&maps)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get a map by id (with tiles and NPCs)
+    pub fn get_map(&self, id: u8) -> Result<JsValue, JsValue> {
+        let map = find_map(id).ok_or_else(|| JsValue::from_str(&format!("Map not found: {}", id)))?;
+        let data = MapData {
+            id: map.id,
+            name: map.name.to_string(),
+            name_en: map.name_en.to_string(),
+            kind: map.kind.to_string(),
+            width: map.width,
+            height: map.height,
+            border_tile: map.border_tile,
+            tiles: map.tiles.to_vec(),
+            npcs: map
+                .npcs
+                .iter()
+                .map(|npc| NpcData {
+                    x: npc.x,
+                    y: npc.y,
+                    sprite: npc.sprite,
+                    direction: npc.direction,
+                    moving: npc.moving,
+                    talk_id: npc.talk_id,
+                    dialogue_id: npc.dialogue_id,
+                })
+                .collect(),
+        };
+
+        serde_wasm_bindgen::to_value(&data)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get tile id at (x, y). Out of range returns the map's border tile
+    pub fn tile_at(&self, map_id: u8, x: i32, y: i32) -> Option<u8> {
+        tile_at(map_id, x, y)
+    }
+
+    /// Get all tile definitions
+    pub fn get_tiles(&self) -> Result<JsValue, JsValue> {
+        let tiles: Vec<TileData> = TILE_MASTER
+            .iter()
+            .map(|tile| TileData {
+                id: tile.id,
+                name: tile.name.to_string(),
+                name_en: tile.name_en.to_string(),
+            })
+            .collect();
+
+        serde_wasm_bindgen::to_value(&tiles)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get all warp (stairs / entrance) data
+    pub fn get_warps(&self) -> Result<JsValue, JsValue> {
+        let warps: Vec<WarpData> = WARP_MASTER
+            .iter()
+            .map(|warp| WarpData {
+                from: warp.from,
+                to: warp.to,
+            })
+            .collect();
+
+        serde_wasm_bindgen::to_value(&warps)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+}
+
+impl WasmGame {
+    /// Run the battle start (action: None) or one turn, and store the state back
+    fn step_battle(
+        &mut self,
+        action: Option<PlayerAction>,
+        selection: Option<usize>,
+    ) -> Result<JsValue, JsValue> {
+        let player = self
+            .player
+            .take()
+            .ok_or_else(|| JsValue::from_str("プレイヤーが作成されていません"))?;
+        let session = self
+            .battle_session
+            .take()
+            .ok_or_else(|| JsValue::from_str("戦闘中ではありません"))?;
+
+        self.output_buffer.buffer.clear();
+        self.web_input.clear();
+        if let Some(action) = &action {
+            self.web_input.push_action(action.clone());
+        }
+        if let Some(value) = selection {
+            self.web_input.push_input(value);
+        }
+
+        let mut battle = Battle::new(
+            player,
+            session.monster,
+            &mut self.web_input,
+            &mut self.output_buffer,
+        );
+        battle.player_state = session.player_state;
+        battle.monster_state = session.monster_state;
+
+        let turn = if action.is_some() {
+            battle.run_turn();
+            session.turn + 1
+        } else {
+            battle.begin();
+            session.turn
+        };
+
+        let is_finished = !battle.is_battle_continue();
+        if is_finished {
+            battle.finish();
+        }
+
+        let Battle {
+            player,
+            monster,
+            player_state,
+            monster_state,
+            ..
+        } = battle;
+        self.web_input.clear();
+
+        let result = BattleTurnResult {
+            turn,
+            is_finished,
+            player_survived: player.is_alive(),
+            monster_defeated: !monster.is_alive(),
+            player_escaped: player_state.escaped,
+            monster_escaped: monster_state.escaped,
+            monster_id: monster.id,
+            monster_name: monster.name().to_string(),
+            monster_hp: monster.hp,
+            player_sleep: player_state.sleep,
+            player_seal: player_state.seal,
+            monster_sleep: monster_state.sleep,
+            monster_seal: monster_state.seal,
+            messages: self.output_buffer.buffer.clone(),
+            player_state: PlayerState {
+                summary: player.summary(),
+                strength_status: player.strength_status(),
+                items: player.item_list().iter().map(|s| s.to_string()).collect(),
+            },
+        };
+
+        self.player = Some(player);
+        if !is_finished {
+            self.battle_session = Some(BattleSession {
+                monster,
+                player_state,
+                monster_state,
+                turn,
+            });
+        }
+
+        serde_wasm_bindgen::to_value(&result)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
 }
 
 // Default implementation
@@ -472,5 +851,57 @@ mod tests {
         game.queue_battle_action("attack").unwrap();
         let result = game.run_battle(0);
         assert!(result.is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_get_towns_and_dialogues() {
+        let game = WasmGame::new();
+        assert!(game.get_towns().is_ok());
+        assert!(game.get_dialogues().is_ok());
+        assert_eq!(game.render_dialogue(4, "だい").unwrap(), render_dialogue(4, "だい").unwrap());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_get_map_data() {
+        let game = WasmGame::new();
+        assert!(game.get_maps().is_ok());
+        assert!(game.get_map(1).is_ok());
+        assert!(game.get_map(0).is_err());
+        assert!(game.get_tiles().is_ok());
+        assert!(game.get_warps().is_ok());
+        assert_eq!(game.tile_at(1, -1, 0), Some(MAP_MASTER[0].border_tile));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_turn_based_battle() {
+        let mut game = WasmGame::new();
+        assert!(game.start_battle(0).is_err());
+
+        game.create_player("だい").unwrap();
+        assert!(game.battle_turn("attack", None).is_err());
+
+        game.start_battle(0).unwrap();
+        assert!(game.is_in_battle());
+        assert!(game.battle_turn("spell", None).is_err());
+        assert!(game.battle_turn("dance", None).is_err());
+
+        let mut turns = 0;
+        while game.is_in_battle() && turns < 200 {
+            game.battle_turn("attack", None).unwrap();
+            turns += 1;
+        }
+        assert!(!game.is_in_battle());
+        assert!(game.has_player());
+        assert!(game.battle_turn("attack", None).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_end_battle() {
+        let mut game = WasmGame::new();
+        game.create_player("だい").unwrap();
+        game.start_battle(0).unwrap();
+        game.end_battle();
+        assert!(!game.is_in_battle());
+        assert!(game.has_player());
     }
 }

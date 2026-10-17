@@ -107,6 +107,64 @@ const spells = game.get_spells();
 const statusTable = game.get_status_table();
 ```
 
+### Turn-based Battle
+
+`run_battle` runs the whole battle at once. To run it one turn at a time, use `start_battle` and `battle_turn`.
+
+```javascript
+let result = game.start_battle(0); // スライム
+console.log(result.messages); // ["スライムがあらわれた！", ...]
+
+while (game.is_in_battle()) {
+  // "attack" | "spell" | "item" | "escape"
+  result = game.battle_turn("attack");
+  // result = game.battle_turn("spell", 1); // first spell in the list
+  console.log(result.turn, result.messages, result.monster_hp);
+}
+
+console.log(result.is_finished);      // true
+console.log(result.monster_defeated); // true if the monster was defeated
+```
+
+`BattleTurnResult` contains `turn`, `is_finished`, `player_survived`, `monster_defeated`, `player_escaped`, `monster_escaped`, `monster_id`, `monster_name`, `monster_hp`, `player_sleep`, `player_seal`, `monster_sleep`, `monster_seal`, `messages` (this turn only) and `player_state`.
+
+### Town / Dialogue / Map Data
+
+```javascript
+// Get all towns, castles and shrines
+const towns = game.get_towns();
+// [
+//   { map_id: 3, name: "ドムドーラ", name_en: "Hauksness", kind: "town", world_entrance: [25, 89], npc_count: 0, dialogue_ids: [] },
+//   { map_id: 4, name: "ラダトームのしろ", name_en: "Tantegel Castle", kind: "castle", ... },
+//   ...
+// ]
+
+// Get all dialogues (variables such as {player} are kept as is)
+const dialogues = game.get_dialogues();
+// [{ id: 0, text: "{word}は　めをさました\n{wait}" }, ...]
+
+// Get a dialogue with {player} replaced
+const text = game.render_dialogue(4, "だい");
+// "だいは　にじのしずくを\nてんに　かざした。\n▼"
+
+// Get all map metadata (without tiles)
+const maps = game.get_maps();
+// [{ id: 1, name: "アレフガルド", name_en: "Alefgard", kind: "field", width: 120, height: 120, border_tile: 15, npc_count: 0 }, ...]
+
+// Get one map by map id (1: Alefgard field) with tiles and NPCs
+const map = game.get_map(5);
+const tileId = map.tiles[y * map.width + x];
+
+// Or get a tile id directly (out of range returns the border tile)
+const tile = game.tile_at(1, 43, 43);
+
+// Tile definitions and warps (stairs / entrances)
+const tiles = game.get_tiles(); // [{ id: 0, name: "そうげん", name_en: "grass" }, ...]
+const warps = game.get_warps(); // [{ from: [1, 2, 2], to: [9, 0, 14] }, ...]
+```
+
+Map names and tile names are not stored in the ROM, so commonly used names are used.
+
 ## API Reference
 
 ### `WasmGame`
@@ -128,6 +186,10 @@ Main game interface.
 - `queue_battle_input(value: number): void` - Queue numeric input (menu selection)
 - `run_battle(monster_id: number): BattleResult` - Execute battle
 - `clear_battle_input(): void` - Clear action queue
+- `start_battle(monster_id: number): BattleTurnResult` - Start a turn-based battle (turn 0: monster appears)
+- `battle_turn(action: string, selection?: number): BattleTurnResult` - Run one turn. `selection` (1-based spell / item number) is required for `"spell"` and `"item"`
+- `is_in_battle(): boolean` - Check if a turn-based battle is in progress
+- `end_battle(): void` - Abort the turn-based battle in progress
 
 #### Master Data
 - `get_monsters(): MonsterData[]` - Get all monsters
@@ -137,6 +199,14 @@ Main game interface.
 - `get_items(): EquipmentData[]` - Get all items
 - `get_spells(): SpellData[]` - Get all spells
 - `get_status_table(): StatusData[]` - Get level progression data
+- `get_towns(): TownData[]` - Get all towns / castles / shrines
+- `get_dialogues(): DialogueData[]` - Get all dialogues (raw, with `{player}` etc.)
+- `render_dialogue(id: number, player_name: string): string | undefined` - Get a dialogue with `{player}` replaced
+- `get_maps(): MapSummaryData[]` - Get all map metadata (without tiles)
+- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs
+- `tile_at(map_id: number, x: number, y: number): number | undefined` - Get tile id (out of range returns the border tile)
+- `get_tiles(): TileData[]` - Get all tile definitions
+- `get_warps(): WarpData[]` - Get all warps as `(map, x, y)` pairs
 
 #### Messages
 - `get_messages(): string[]` - Get accumulated messages

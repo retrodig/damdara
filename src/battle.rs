@@ -45,25 +45,38 @@ impl<'a> Battle<'a> {
     }
 
     pub fn start(&mut self) {
+        self.begin();
+
+        while self.is_battle_continue() {
+            self.run_turn();
+        }
+
+        self.finish();
+    }
+
+    /// 戦闘開始（モンスター出現とステータス表示）
+    pub fn begin(&mut self) {
         self.messages.add_monster_appears();
         self.update_status();
         self.messages.display();
-        self.messages.clear();
+    }
 
-        while self.is_battle_continue() {
-            self.player_turn();
+    /// 1ターン分（プレイヤー → モンスター）を実行する
+    pub fn run_turn(&mut self) {
+        self.player_turn();
 
-            if !self.player_state.escaped {
-                if self.monster.is_alive() {
-                    self.monster_turn();
-                }
-                self.update_status();
+        if !self.player_state.escaped {
+            if self.monster.is_alive() {
+                self.monster_turn();
             }
-
-            self.messages.display();
-            self.messages.clear();
+            self.update_status();
         }
 
+        self.messages.display();
+    }
+
+    /// 戦闘終了（逃走・勝利・全滅のメッセージ）
+    pub fn finish(&mut self) {
         if self.player_state.escaped {
             self.messages.add_empty_line();
             self.messages.display();
@@ -362,7 +375,6 @@ impl<'a> Battle<'a> {
                 .push(format!("{}: {}", i + 1, spell_info.spell.as_str()));
         }
         self.messages.display();
-        self.messages.clear();
 
         let spell_index = self.input.get_player_input(spell_len);
         if spell_index == 0 {
@@ -372,7 +384,6 @@ impl<'a> Battle<'a> {
         if self.player.mp < selected_spell.mp_cost {
             self.messages.mp_not_enough();
             self.messages.display();
-            self.messages.clear();
             return self.commands_cancel();
         }
 
@@ -426,7 +437,6 @@ impl<'a> Battle<'a> {
             _ => {
                 self.messages.can_not_use_by_battle();
                 self.messages.display();
-                self.messages.clear();
                 self.commands_cancel()
             }
         }
@@ -437,7 +447,6 @@ impl<'a> Battle<'a> {
         if !self.player.is_unified_item_list() {
             self.messages.no_usable_items();
             self.messages.display();
-            self.messages.clear();
             self.commands_cancel();
             return;
         }
@@ -454,7 +463,6 @@ impl<'a> Battle<'a> {
             }
         }
         self.messages.display();
-        self.messages.clear();
 
         let item_index = self.input.get_player_input(unified_item_list.len());
         if item_index == 0 {
@@ -472,7 +480,6 @@ impl<'a> Battle<'a> {
             ItemKind::Key => {
                 self.messages.can_not_use_by_battle();
                 self.messages.display();
-                self.messages.clear();
                 self.commands_cancel();
                 return;
             }
@@ -526,7 +533,6 @@ impl<'a> Battle<'a> {
                 _ => {
                     self.messages.can_not_use_by_battle();
                     self.messages.display();
-                    self.messages.clear();
                     self.commands_cancel();
                     return;
                 }
@@ -628,6 +634,32 @@ mod tests {
         }
         // println!("Player Preemption Rate: {}%", player_first / 10);
         assert!(player_first > 700);
+    }
+
+    #[derive(Default)]
+    struct RecordingOutput {
+        pub lines: Vec<String>,
+    }
+
+    impl MessageOutput for RecordingOutput {
+        fn output(&mut self, message: &str) {
+            self.lines.push(message.to_string());
+        }
+    }
+
+    #[test]
+    fn test_run_turn_displays_command_menu_once() {
+        let player = Player::new("ゆうてい");
+        let monster = Monster::new(0);
+        let mut output = RecordingOutput::default();
+        let mut input = DummyInput::new(vec![PlayerAction::Attack]);
+        {
+            let mut battle = Battle::new(player, monster, &mut input, &mut output);
+            battle.begin();
+            battle.run_turn();
+        }
+        let menu_count = output.lines.iter().filter(|l| *l == "コマンド？").count();
+        assert_eq!(menu_count, 1);
     }
 
     #[test]
