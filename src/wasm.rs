@@ -18,6 +18,11 @@ use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_
 use crate::utility::dialogue_utils::render_dialogue;
 use crate::constants::battle_background::{BATTLE_BACKDROP, battle_background};
 use crate::constants::enemy_sprite::{Layer, NES_PALETTE};
+use crate::constants::event::{Action, Condition, Step, find_event_script};
+use crate::event::{EventStatus, StoryState, run_event};
+use crate::utility::random_utils::random_value;
+use crate::constants::talk::{ShopEntry, TALK_MASTER, Talk, find_talk};
+use crate::utility::talk_utils::{shop_item_index, shop_item_kind};
 use crate::utility::battle_background_utils::{
     battle_background_pixels, battle_pixels_rgba, battle_scene,
 };
@@ -203,6 +208,191 @@ pub struct EnemySpriteData {
     pub pixels: Vec<u8>,
 }
 
+/// Event step (tree) for JavaScript
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum StepData {
+    Say {
+        dialogue_id: u16,
+    },
+    Ask {
+        dialogue_id: u16,
+        yes: Vec<StepData>,
+        no: Vec<StepData>,
+    },
+    AskUntilYes {
+        dialogue_id: u16,
+        yes: Vec<StepData>,
+        no: Vec<StepData>,
+    },
+    If {
+        condition: ConditionData,
+        then: Vec<StepData>,
+        otherwise: Vec<StepData>,
+    },
+    Random {
+        choices: Vec<RandomChoiceData>,
+    },
+    Do {
+        action: ActionData,
+    },
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RandomChoiceData {
+    pub weight: u8,
+    pub steps: Vec<StepData>,
+}
+
+/// Event condition for JavaScript. `items` are ITEM_MASTER indexes, `weapon` is a WEAPON_MASTER index
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ConditionData {
+    PrincessRescued,
+    CarryingPrincess,
+    LeftThroneRoom,
+    HasItem { item: u8 },
+    HasAnyItem { items: Vec<u8> },
+    HasAllItems { items: Vec<u8> },
+    WeaponEquipped { weapon: u8 },
+    RingEquipped,
+    Cursed,
+    InventoryFull,
+    MaxLevel,
+}
+
+/// Event action for JavaScript. `monster_id` is a MONSTER_MASTER index
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ActionData {
+    RemoveCurses,
+    RestoreMp,
+    Flash,
+    TakeItem { item: u8 },
+    GiveItem { item: u8 },
+    PrincessTakesItem { items: Vec<u8> },
+    NpcDisappears,
+    LeaveMap,
+    DeliverPrincess,
+    TellPassword,
+    ExpToNextLevel,
+    ResetPlayer,
+    GameOver,
+    Battle { monster_id: u8 },
+}
+
+fn steps_data(steps: &[Step]) -> Vec<StepData> {
+    steps.iter().map(StepData::from).collect()
+}
+
+impl From<&Step> for StepData {
+    fn from(step: &Step) -> Self {
+        match *step {
+            Step::Say(dialogue_id) => StepData::Say { dialogue_id },
+            Step::Ask {
+                dialogue_id,
+                yes,
+                no,
+            } => StepData::Ask {
+                dialogue_id,
+                yes: steps_data(yes),
+                no: steps_data(no),
+            },
+            Step::AskUntilYes {
+                dialogue_id,
+                yes,
+                no,
+            } => StepData::AskUntilYes {
+                dialogue_id,
+                yes: steps_data(yes),
+                no: steps_data(no),
+            },
+            Step::If {
+                condition,
+                then,
+                otherwise,
+            } => StepData::If {
+                condition: condition.into(),
+                then: steps_data(then),
+                otherwise: steps_data(otherwise),
+            },
+            Step::Random(choices) => StepData::Random {
+                choices: choices
+                    .iter()
+                    .map(|&(weight, steps)| RandomChoiceData {
+                        weight,
+                        steps: steps_data(steps),
+                    })
+                    .collect(),
+            },
+            Step::Do(action) => StepData::Do {
+                action: action.into(),
+            },
+        }
+    }
+}
+
+impl From<Condition> for ConditionData {
+    fn from(condition: Condition) -> Self {
+        match condition {
+            Condition::PrincessRescued => ConditionData::PrincessRescued,
+            Condition::CarryingPrincess => ConditionData::CarryingPrincess,
+            Condition::LeftThroneRoom => ConditionData::LeftThroneRoom,
+            Condition::HasItem(item) => ConditionData::HasItem { item },
+            Condition::HasAnyItem(items) => ConditionData::HasAnyItem {
+                items: items.to_vec(),
+            },
+            Condition::HasAllItems(items) => ConditionData::HasAllItems {
+                items: items.to_vec(),
+            },
+            Condition::WeaponEquipped(weapon) => ConditionData::WeaponEquipped { weapon },
+            Condition::RingEquipped => ConditionData::RingEquipped,
+            Condition::Cursed => ConditionData::Cursed,
+            Condition::InventoryFull => ConditionData::InventoryFull,
+            Condition::MaxLevel => ConditionData::MaxLevel,
+        }
+    }
+}
+
+impl From<Action> for ActionData {
+    fn from(action: Action) -> Self {
+        match action {
+            Action::RemoveCurses => ActionData::RemoveCurses,
+            Action::RestoreMp => ActionData::RestoreMp,
+            Action::Flash => ActionData::Flash,
+            Action::TakeItem(item) => ActionData::TakeItem { item },
+            Action::GiveItem(item) => ActionData::GiveItem { item },
+            Action::PrincessTakesItem(items) => ActionData::PrincessTakesItem {
+                items: items.to_vec(),
+            },
+            Action::NpcDisappears => ActionData::NpcDisappears,
+            Action::LeaveMap => ActionData::LeaveMap,
+            Action::DeliverPrincess => ActionData::DeliverPrincess,
+            Action::TellPassword => ActionData::TellPassword,
+            Action::ExpToNextLevel => ActionData::ExpToNextLevel,
+            Action::ResetPlayer => ActionData::ResetPlayer,
+            Action::GameOver => ActionData::GameOver,
+            Action::Battle(monster_id) => ActionData::Battle { monster_id },
+        }
+    }
+}
+
+/// One line of an event for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct EventLineData {
+    pub dialogue_id: u16,
+    pub text: String,
+}
+
+/// Result of run_event for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct EventResultData {
+    pub lines: Vec<EventLineData>,
+    pub actions: Vec<ActionData>,
+    /// "finished" | "waiting_answer"
+    pub status: String,
+}
+
 /// Battle background for JavaScript
 #[derive(Serialize, Deserialize)]
 pub struct BattleBackgroundData {
@@ -302,6 +492,65 @@ pub struct NpcData {
     pub moving: bool,
     pub talk_id: u8,
     pub dialogue_id: Option<u16>,
+    /// "weapon_shop" | "item_shop" | "key_shop" | "fairy_water_shop" | "inn" | "message" | "question" | "event"
+    pub talk_kind: Option<String>,
+    pub items: Vec<ShopItemData>,
+    pub price: Option<u16>,
+    pub role: Option<String>,
+}
+
+/// Shop item for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct ShopItemData {
+    /// "weapon" | "armor" | "shield" | "item" | "herb"
+    pub kind: String,
+    /// Index of WEAPON_MASTER / ARMOR_MASTER / SHIELD_MASTER / ITEM_MASTER (none for herb)
+    pub index: Option<u8>,
+    pub name: String,
+    pub price: u16,
+}
+
+impl From<&ShopEntry> for ShopItemData {
+    fn from(entry: &ShopEntry) -> Self {
+        Self {
+            kind: shop_item_kind(entry.item).to_string(),
+            index: shop_item_index(entry.item),
+            name: entry.name.to_string(),
+            price: entry.price,
+        }
+    }
+}
+
+/// Talk (what an NPC does when spoken to) for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct TalkData {
+    pub talk_id: u8,
+    pub kind: String,
+    pub items: Vec<ShopItemData>,
+    pub price: Option<u16>,
+    pub dialogue_id: Option<u16>,
+    pub yes_dialogue_id: Option<u16>,
+    pub no_dialogue_id: Option<u16>,
+    pub role: Option<String>,
+    pub role_en: Option<String>,
+    pub related_dialogue_ids: Vec<u16>,
+}
+
+impl From<&Talk> for TalkData {
+    fn from(talk: &Talk) -> Self {
+        Self {
+            talk_id: talk.talk_id,
+            kind: talk.kind.as_str().to_string(),
+            items: talk.items.iter().map(ShopItemData::from).collect(),
+            price: talk.price,
+            dialogue_id: talk.dialogue_id,
+            yes_dialogue_id: talk.yes_dialogue_id,
+            no_dialogue_id: talk.no_dialogue_id,
+            role: talk.role.map(str::to_string),
+            role_en: talk.role_en.map(str::to_string),
+            related_dialogue_ids: talk.related_dialogue_ids.to_vec(),
+        }
+    }
 }
 
 /// Map metadata for JavaScript (without tiles)
@@ -760,14 +1009,23 @@ impl WasmGame {
             npcs: map
                 .npcs
                 .iter()
-                .map(|npc| NpcData {
-                    x: npc.x,
-                    y: npc.y,
-                    sprite: npc.sprite,
-                    direction: npc.direction,
-                    moving: npc.moving,
-                    talk_id: npc.talk_id,
-                    dialogue_id: npc.dialogue_id,
+                .map(|npc| {
+                    let talk = find_talk(npc.talk_id);
+                    NpcData {
+                        x: npc.x,
+                        y: npc.y,
+                        sprite: npc.sprite,
+                        direction: npc.direction,
+                        moving: npc.moving,
+                        talk_id: npc.talk_id,
+                        dialogue_id: npc.dialogue_id,
+                        talk_kind: talk.map(|t| t.kind.as_str().to_string()),
+                        items: talk
+                            .map(|t| t.items.iter().map(ShopItemData::from).collect())
+                            .unwrap_or_default(),
+                        price: talk.and_then(|t| t.price),
+                        role: talk.and_then(|t| t.role).map(str::to_string),
+                    }
                 })
                 .collect(),
         };
@@ -1006,6 +1264,97 @@ impl WasmGame {
             width: scene.width,
             height: scene.height,
             rgba: battle_pixels_rgba(&scene.pixels),
+        };
+
+        serde_wasm_bindgen::to_value(&data)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get what an NPC does when spoken to, by `NpcData.talk_id`
+    /// (kind, shop items, price of a key / fairy water / one night at the inn, dialogue, event role)
+    pub fn get_talk(&self, talk_id: u8) -> Result<JsValue, JsValue> {
+        let talk = find_talk(talk_id)
+            .ok_or_else(|| JsValue::from_str(&format!("Talk not found: {}", talk_id)))?;
+
+        serde_wasm_bindgen::to_value(&TalkData::from(talk))
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get all talks
+    pub fn get_talks(&self) -> Result<JsValue, JsValue> {
+        let talks: Vec<TalkData> = TALK_MASTER.iter().map(TalkData::from).collect();
+
+        serde_wasm_bindgen::to_value(&talks)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get the event script (tree of steps) of a talk_id. Returns null if the talk has no script
+    pub fn get_event_script(&self, talk_id: u8) -> Result<JsValue, JsValue> {
+        let Some(script) = find_event_script(talk_id) else {
+            return Ok(JsValue::NULL);
+        };
+
+        serde_wasm_bindgen::to_value(&steps_data(script.steps))
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Run what happens when the player talks to an NPC, and return the dialogue lines and actions.
+    /// - `story`: `{ carrying_princess, princess_delivered, left_throne_room, dragonlord_defeated }` (all optional)
+    /// - `answers`: yes / no answers in order (`[true, false]`). If they run out, `status` is `"waiting_answer"`
+    /// - `seed`: random seed for random dialogues (random if omitted)
+    ///
+    /// Actions are not applied to the player. Returns null for shops and inns
+    pub fn run_event(
+        &self,
+        talk_id: u8,
+        map_id: u8,
+        story: JsValue,
+        answers: JsValue,
+        seed: Option<u32>,
+    ) -> Result<JsValue, JsValue> {
+        let player = self
+            .player
+            .as_ref()
+            .ok_or_else(|| JsValue::from_str("No player created"))?;
+        let story: StoryState = if story.is_undefined() || story.is_null() {
+            StoryState::default()
+        } else {
+            serde_wasm_bindgen::from_value(story)
+                .map_err(|e| JsValue::from_str(&format!("Invalid story: {}", e)))?
+        };
+        let answers: Vec<bool> = if answers.is_undefined() || answers.is_null() {
+            Vec::new()
+        } else {
+            serde_wasm_bindgen::from_value(answers)
+                .map_err(|e| JsValue::from_str(&format!("Invalid answers: {}", e)))?
+        };
+        let seed = seed.unwrap_or_else(|| {
+            u32::from_le_bytes([
+                random_value(255),
+                random_value(255),
+                random_value(255),
+                random_value(255),
+            ])
+        });
+
+        let Some(result) = run_event(talk_id, map_id, player, &story, &answers, seed) else {
+            return Ok(JsValue::NULL);
+        };
+        let data = EventResultData {
+            lines: result
+                .lines
+                .into_iter()
+                .map(|line| EventLineData {
+                    dialogue_id: line.dialogue_id,
+                    text: line.text,
+                })
+                .collect(),
+            actions: result.actions.into_iter().map(ActionData::from).collect(),
+            status: match result.status {
+                EventStatus::Finished => "finished",
+                EventStatus::WaitingAnswer => "waiting_answer",
+            }
+            .to_string(),
         };
 
         serde_wasm_bindgen::to_value(&data)
@@ -1266,6 +1615,47 @@ mod tests {
         let sprite = find_enemy_sprite(0).unwrap();
         let rgba = game.get_enemy_sprite_rgba(0).unwrap();
         assert_eq!(rgba.len(), sprite.width as usize * sprite.height as usize * 4);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_event() {
+        let mut game = WasmGame::new();
+        assert!(game.get_event_script(112).is_ok());
+        assert!(game.get_event_script(0).unwrap().is_null());
+        assert!(game.run_event(112, 6, JsValue::NULL, JsValue::NULL, Some(1)).is_err());
+
+        game.create_player("ゆうてい").unwrap();
+        let answers = serde_wasm_bindgen::to_value(&vec![false]).unwrap();
+        let result = game
+            .run_event(112, 6, JsValue::UNDEFINED, answers, Some(1))
+            .unwrap();
+        let result: EventResultData = serde_wasm_bindgen::from_value(result).unwrap();
+        assert_eq!(result.status, "finished");
+        assert_eq!(
+            result.lines.iter().map(|l| l.dialogue_id).collect::<Vec<_>>(),
+            vec![199, 164, 200, 201]
+        );
+
+        let story = serde_wasm_bindgen::to_value(&StoryState {
+            left_throne_room: true,
+            ..Default::default()
+        })
+        .unwrap();
+        assert!(game.run_event(110, 5, story, JsValue::UNDEFINED, None).is_ok());
+        assert!(game.run_event(0, 7, JsValue::UNDEFINED, JsValue::UNDEFINED, None).unwrap().is_null());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_talk() {
+        let game = WasmGame::new();
+        assert!(game.get_talks().is_ok());
+        assert!(game.get_talk(0).is_ok());
+        assert!(game.get_talk(254).is_ok());
+        assert!(game.get_talk(200).is_err());
+
+        let data = TalkData::from(find_talk(0).unwrap());
+        assert_eq!(data.kind, "weapon_shop");
+        assert!(!data.items.is_empty());
     }
 
     #[wasm_bindgen_test]

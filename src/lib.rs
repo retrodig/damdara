@@ -1,5 +1,6 @@
 pub mod battle;
 pub mod constants;
+pub mod event;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod explore;
 pub mod field;
@@ -23,12 +24,14 @@ pub use constants::config::Cli;
 use constants::battle_background::BATTLE_BACKGROUND;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::dialogue::DIALOGUE_MASTER;
+use constants::event::{EVENT_SCRIPT_MASTER, find_event_script};
 use constants::field_sprite::{CHARACTER_SPRITE_MASTER, map_tile_sprite};
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
 use constants::map::{TILE_MASTER, find_map};
 use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
+use constants::talk::{TALK_MASTER, find_talk};
 use constants::town::TOWN_MASTER;
 use field::{FIELD_MAP_ID, Field};
 use input::cli_input::CliInput;
@@ -181,6 +184,32 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 _ => {
                     let pixels = battle_background_pixels(FIELD_MAP_ID, None);
                     print!("{}", color_pixels_ansi(&pixels, BATTLE_BACKGROUND.width as usize, 1));
+                }
+            },
+            Some("talk") => match index {
+                // 番号は NPC の talk_id
+                Some(id) if !is_list_mode => match u8::try_from(id).ok().and_then(find_talk) {
+                    Some(talk) => println!("{:?}", talk),
+                    None => println!("Talk not found: {}", id),
+                },
+                _ => {
+                    for talk in TALK_MASTER.iter() {
+                        println!("{:?}", talk);
+                    }
+                }
+            },
+            Some("event") => match index {
+                // 番号は NPC の talk_id
+                Some(id) if !is_list_mode => {
+                    match u8::try_from(id).ok().and_then(find_event_script) {
+                        Some(script) => println!("{:?}", script),
+                        None => println!("Event not found: {}", id),
+                    }
+                }
+                _ => {
+                    for script in EVENT_SCRIPT_MASTER.iter() {
+                        println!("{:?}", script);
+                    }
                 }
             },
             None => println!("Category not specified"),

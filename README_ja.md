@@ -41,6 +41,8 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] モンスターのグラフィックを見る
 - [x] マップ・キャラクターのグラフィックを見る
 - [x] 戦闘の背景を見る
+- [x] お店・宿屋・人の話を参照する
+- [x] イベント（王様・ローラ姫・竜王など）の会話の流れをたどる
 - [x] 成長パラメータ一覧参照
 - [x] 任意のパラメータを参照
 - [x] アイテム一覧を見る
@@ -336,6 +338,8 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - tile_sprite
 - character
 - battle_bg
+- talk
+- event
 
 **城・街・ほこら**
 
@@ -391,6 +395,24 @@ Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" }
 ```
 
 マップ名・タイル名は、慣用名を使用しています。
+
+**会話（Talk）**
+
+町の人に話しかけたときの内容です。NPC の **talk_id**（`--view map <id>` で確認できます）を指定すると、1件を表示します。種類（武器屋・道具屋・かぎ屋・せいすい屋・宿屋・メッセージ・質問・イベント）、お店の品物と値段、かぎ・せいすい1つ・宿屋1泊の値段、イベントの役割を含みます。
+
+```
+cargo run -- -m display --view talk 0
+Talk { talk_id: 0, kind: WeaponShop, items: [ShopEntry { item: Weapon(3), name: "どうのつるぎ", price: 180 }, ...], price: None, ... }
+```
+
+**イベント（Event）**
+
+王様・ローラ姫・竜王・賢者などのイベントの会話の流れを、セリフ・はい／いいえの質問・プレイヤーの状態による条件・処理の木で表示します。**talk_id** を指定します。
+
+```
+cargo run -- -m display --view event 112
+EventScript { talk_id: 112, steps: [Say(199), Say(164), Ask { dialogue_id: 200, ... }] }
+```
 
 **モンスターのグラフィック（Sprite）**
 

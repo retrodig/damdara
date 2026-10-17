@@ -180,8 +180,8 @@ pub const ITEM_MASTER: [Equipment; 15] = [
     },
     Equipment {
         name: "キメラのつばさ",
-        price: 24,
-        sell: 12,
+        price: 70,
+        sell: 35,
         attack: 0,
         defense: 0,
     },
