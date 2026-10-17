@@ -20,6 +20,8 @@ while also having the ability to generate status by player name, equip items, an
 🌐 **[Try the Web Demo](https://retrodig.github.io/damdara/)** - Experience Damdara directly in your browser via
 WebAssembly!
 
+🏰 **[Alefgard](https://retrodig.github.io/alefgard/)** - A site built with Damdara.
+
 ## Table of Contents
 
 - [Features](#features)
@@ -49,6 +51,7 @@ WebAssembly!
 - [x] Refer to shops, inns and what people say
 - [x] Follow the conversations of events (the king, Princess Gwaelin, the Dragonlord, etc.)
 - [x] Refer to treasure chests and hidden items
+- [x] Refer to which monsters appear where
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item
@@ -348,6 +351,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - talk
 - event
 - treasure
+- encounter
 
 **Town / Castle / Shrine**
 
@@ -434,6 +438,15 @@ Treasure { map_id: 5, x: 6, y: 1, kind: Chest, content: Key, name: Some("かぎ"
 ```
 
 Taken chests come back when you go out to the field, as in the original game.
+
+**Encounter**
+
+The 20 encounter groups (5 monsters each, chosen with 1/5). Specify a **group number** to show one. The field is divided into 8 x 8 zones of 15 x 15 tiles, each with its own group. Dungeons have one group per map, and no monsters appear in towns, castles and shrines.
+
+```
+cargo run -- -m display --view encounter 0
+0: スライム スライムベス スライム スライムベス スライム
+```
 
 **Monster Sprite**
 
@@ -625,6 +638,10 @@ cargo run -- --format <input>
 ### Example
 
 ## Additional Resources
+
+### Made with Damdara
+
+- [Alefgard](https://retrodig.github.io/alefgard/) - A site built with Damdara (WebAssembly)
 
 ## Contributing to Damdara
 

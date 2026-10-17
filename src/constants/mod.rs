@@ -3,6 +3,7 @@ pub mod battle_background;
 pub mod config;
 pub mod dialogue;
 pub mod event;
+pub mod encounter;
 pub mod enemy_sprite;
 pub mod field_sprite;
 pub mod item_weapon;

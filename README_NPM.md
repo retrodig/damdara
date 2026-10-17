@@ -7,6 +7,8 @@ Dragon Quest core module compiled to WebAssembly. Experience the classic "Fukkat
 
 🌐 **[Try Live Demo](https://retrodig.github.io/damdara/)**
 
+🏰 **[Alefgard](https://retrodig.github.io/alefgard/)** - A site built with this package
+
 ## Features
 
 - 🔐 **Password System** - Generate and decode 20-character hiragana passwords
@@ -241,6 +243,32 @@ console.log(map.treasures);
 - `empty_if.type`: `herbs_full`, `keys_full`, `has_item`, `has_any_item`, `weapon_equipped`, `armor_equipped`, `hidden_stairs_found`
 - Taken chests come back when you go out to the field, as in the original game.
 
+### Encounter
+
+```javascript
+// Monsters that appear at a position
+const enc = game.get_encounters(1, 43, 44); // the field near Tantegel Castle
+// {
+//   map_id: 1, x: 43, y: 44, group: 0,
+//   monsters: [{ id: 0, name: "スライム" }, { id: 1, name: "スライムベス" }, ...], // 5, each with 1/5
+//   one_in: 16,  // a battle starts with 1/16 per step (depends on the tile)
+//   fixed: null  // a monster that always appears here (e.g. the golem)
+// }
+
+// Roll a battle for one step (monster id or undefined)
+const monsterId = game.roll_encounter(1, 43, 44, false); // fairy_water: false
+if (monsterId !== undefined) {
+  game.start_battle(monsterId);
+}
+
+// Groups of a map
+const map = game.get_map(1);
+map.encounter_zones;     // field: [zone_y][zone_x] groups, zone = encounter_zone_size (15) tiles
+game.get_map(15).encounter_group; // dungeons: one group (null in towns / castles / shrines)
+```
+
+`roll_encounter` checks, in order, the fixed monster of the place (the golem and the dragon only until defeated), the rate per step, the group and one of its 5 monsters. Near Tantegel Castle (group 0), half of the battles are cancelled (3/4 on hills). With `fairy_water`, weak monsters do not appear on the field.
+
 ### Monster Sprite
 
 ```javascript
@@ -347,12 +375,15 @@ Main game interface.
 - `get_dialogues(): DialogueData[]` - Get all dialogues (raw, with `{player}` etc.)
 - `render_dialogue(id: number, player_name: string): string | undefined` - Get a dialogue with `{player}` replaced
 - `get_maps(): MapSummaryData[]` - Get all map metadata (without tiles)
-- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs (each NPC includes `talk_kind`, `items`, `price` and `role`) and `treasures`
+- `get_map(id: number): MapData` - Get one map with tiles (row-major, `y * width + x`) and NPCs (each NPC includes `talk_kind`, `items`, `price` and `role`), `treasures` and encounter groups (`encounter_group`, `encounter_zone_size`, `encounter_zones`)
 - `tile_at(map_id: number, x: number, y: number): number | undefined` - Get tile id (out of range returns the border tile)
 - `get_tiles(): TileData[]` - Get all tile definitions
 - `get_warps(): WarpData[]` - Get all warps as `(map, x, y)` pairs
 - `get_talk(talk_id: number): TalkData` - Get what an NPC does when spoken to (kind, shop items, price, dialogue, event role)
 - `get_talks(): TalkData[]` - Get all talks
+- `get_encounters(map_id: number, x: number, y: number): EncounterData` - Get the encounter group, its 5 monsters, the rate per step and the fixed monster at a position
+- `get_encounter_groups(): number[][]` - Get all 20 encounter groups (5 monster ids each)
+- `roll_encounter(map_id: number, x: number, y: number, fairy_water: boolean): number | undefined` - Roll a battle for one step with the current player
 - `get_treasures(map_id?: number): TreasureData[]` - Get treasure chests and hidden items (position, content, name, condition to be empty)
 - `get_event_script(talk_id: number): StepData[] | null` - Get the event conversation as a tree of steps
 - `run_event(talk_id: number, map_id: number, story?: StoryState, answers?: boolean[], seed?: number): EventResultData | null` - Follow the conversation with the current player and return `lines`, `actions` and `status` (`"finished"` or `"waiting_answer"`). `null` for shops and inns
@@ -416,6 +447,8 @@ See the [live demo](https://retrodig.github.io/damdara/) for a complete web appl
 
 Source code: [GitHub Repository](https://github.com/retrodig/damdara)
 
+Made with Damdara: [Alefgard](https://retrodig.github.io/alefgard/)
+
 ## License
 
 MIT © Daisuke Takayama
@@ -424,6 +457,7 @@ MIT © Daisuke Takayama
 
 - 📖 [Full Documentation](https://github.com/retrodig/damdara)
 - 🌐 [Live Demo](https://retrodig.github.io/damdara/)
+- 🏰 [Alefgard](https://retrodig.github.io/alefgard/) - A site built with Damdara
 - 🐛 [Report Issues](https://github.com/retrodig/damdara/issues)
 - 📦 [npm Package](https://www.npmjs.com/package/damdara)
 - 📦 [crates.io](https://crates.io/crates/damdara)
