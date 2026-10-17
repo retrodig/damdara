@@ -17,7 +17,11 @@ use crate::constants::dialogue::DIALOGUE_MASTER;
 use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_map};
 use crate::utility::dialogue_utils::render_dialogue;
 use crate::constants::battle_background::{BATTLE_BACKDROP, battle_background};
+use crate::constants::encounter::{
+    ENCOUNTER_GROUPS, FIELD_ZONE_SIZE, FIELD_ZONES, encounter_group, encounter_one_in,
+};
 use crate::constants::enemy_sprite::{Layer, NES_PALETTE};
+use crate::encounter::{EncounterContext, fixed_encounter_at, roll_encounter};
 use crate::constants::treasure::{
     EmptyIf, TREASURE_MASTER, Treasure, TreasureContent, treasures_in_map,
 };
@@ -583,6 +587,51 @@ pub struct MapData {
     pub tiles: Vec<u8>,
     pub npcs: Vec<NpcData>,
     pub treasures: Vec<TreasureData>,
+    /// Encounter group of the whole map (null on the field and where no monsters appear)
+    pub encounter_group: Option<u8>,
+    /// Field only: size (in tiles) of an encounter zone
+    pub encounter_zone_size: Option<u8>,
+    /// Field only: encounter group of each zone, `[zone_y][zone_x]`
+    pub encounter_zones: Option<Vec<Vec<u8>>>,
+}
+
+/// Monster of an encounter for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct EncounterMonsterData {
+    pub id: u8,
+    pub name: String,
+}
+
+impl EncounterMonsterData {
+    fn new(id: u8) -> Self {
+        Self {
+            id,
+            name: MONSTER_MASTER[id as usize].name.to_string(),
+        }
+    }
+}
+
+/// Monster that always appears at a fixed place
+#[derive(Serialize, Deserialize)]
+pub struct FixedEncounterData {
+    pub monster: EncounterMonsterData,
+    /// Never appears again once defeated
+    pub once: bool,
+}
+
+/// Encounters at a position for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct EncounterData {
+    pub map_id: u8,
+    pub x: u8,
+    pub y: u8,
+    /// null where no monsters appear (towns, castles, shrines, etc.)
+    pub group: Option<u8>,
+    /// 5 monsters of the group, each chosen with 1/5 (the same monster may appear more than once)
+    pub monsters: Vec<EncounterMonsterData>,
+    /// A battle starts with 1 / one_in per step
+    pub one_in: Option<u8>,
+    pub fixed: Option<FixedEncounterData>,
 }
 
 /// Treasure chest / hidden item for JavaScript
@@ -1102,6 +1151,14 @@ impl WasmGame {
             border_tile: map.border_tile,
             tiles: map.tiles.to_vec(),
             treasures: treasures_in_map(map.id).map(TreasureData::from).collect(),
+            encounter_group: if map.id == 1 {
+                None
+            } else {
+                encounter_group(map.id, 0, 0)
+            },
+            encounter_zone_size: (map.id == 1).then_some(FIELD_ZONE_SIZE),
+            encounter_zones: (map.id == 1)
+                .then(|| FIELD_ZONES.iter().map(|row| row.to_vec()).collect()),
             npcs: map
                 .npcs
                 .iter()
@@ -1469,6 +1526,54 @@ impl WasmGame {
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
     }
 
+    /// Get the encounter group, its 5 monsters, the rate per step and the fixed monster at a position
+    pub fn get_encounters(&self, map_id: u8, x: u8, y: u8) -> Result<JsValue, JsValue> {
+        let tile = tile_at(map_id, x as i32, y as i32)
+            .ok_or_else(|| JsValue::from_str(&format!("Map not found: {}", map_id)))?;
+        let group = encounter_group(map_id, x, y);
+        let data = EncounterData {
+            map_id,
+            x,
+            y,
+            group,
+            monsters: group
+                .map(|g| {
+                    ENCOUNTER_GROUPS[g as usize]
+                        .iter()
+                        .map(|&id| EncounterMonsterData::new(id))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            one_in: group.map(|_| encounter_one_in(tile, x, y)),
+            fixed: fixed_encounter_at(map_id, x, y).map(|f| FixedEncounterData {
+                monster: EncounterMonsterData::new(f.monster),
+                once: f.once,
+            }),
+        };
+
+        serde_wasm_bindgen::to_value(&data)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get all 20 encounter groups (5 monster ids each)
+    pub fn get_encounter_groups(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(&ENCOUNTER_GROUPS)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Roll a battle for one step at a position. Returns the monster id, or undefined if no battle.
+    /// Uses the current player (defeated dragon / golem, defense power for fairy water) if created
+    pub fn roll_encounter(&self, map_id: u8, x: u8, y: u8, fairy_water: bool) -> Option<u8> {
+        let tile = tile_at(map_id, x as i32, y as i32)?;
+        let context = self
+            .player
+            .as_ref()
+            .map(|p| EncounterContext::from_player(p, fairy_water))
+            .unwrap_or_default();
+        let mut rng = |n: u32| random_value((n - 1) as u8) as u32;
+        roll_encounter(map_id, x, y, tile, &context, &mut rng)
+    }
+
     /// Get all warp (stairs / entrance) data
     pub fn get_warps(&self) -> Result<JsValue, JsValue> {
         let warps: Vec<WarpData> = WARP_MASTER
@@ -1723,6 +1828,26 @@ mod tests {
         let sprite = find_enemy_sprite(0).unwrap();
         let rgba = game.get_enemy_sprite_rgba(0).unwrap();
         assert_eq!(rgba.len(), sprite.width as usize * sprite.height as usize * 4);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_encounters() {
+        let game = WasmGame::new();
+        let data: EncounterData =
+            serde_wasm_bindgen::from_value(game.get_encounters(1, 43, 44).unwrap()).unwrap();
+        assert_eq!(data.group, Some(0));
+        assert_eq!(data.monsters.len(), 5);
+        assert!(data.one_in.is_some());
+
+        let town: EncounterData =
+            serde_wasm_bindgen::from_value(game.get_encounters(8, 5, 5).unwrap()).unwrap();
+        assert!(town.group.is_none() && town.monsters.is_empty());
+        assert!(game.get_encounters(0, 0, 0).is_err());
+
+        // ゴーレムの場所は必ず戦闘になる
+        assert_eq!(game.roll_encounter(1, 73, 100, false), Some(24));
+        assert_eq!(game.roll_encounter(8, 5, 5, false), None);
+        assert!(game.get_encounter_groups().is_ok());
     }
 
     #[wasm_bindgen_test]

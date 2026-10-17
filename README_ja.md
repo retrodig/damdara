@@ -15,6 +15,8 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 
 プレイヤーの名前によるステータス生成、アイテム装備、戦闘処理などの機能を持つ、Rustで構築可能にしたレトロファンタジー向けコアロジッククレートです。
 
+🏰 **[アレフガルド](https://retrodig.github.io/alefgard/)** - Damdara を活用したサイトです。
+
 ## Table of Contents
 
 - [Features](#features)
@@ -44,6 +46,7 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] お店・宿屋・人の話を参照する
 - [x] イベント（王様・ローラ姫・竜王など）の会話の流れをたどる
 - [x] 宝箱・しらべると見つかる物を参照する
+- [x] どこでどの敵が出るかを参照する
 - [x] 成長パラメータ一覧参照
 - [x] 任意のパラメータを参照
 - [x] アイテム一覧を見る
@@ -342,6 +345,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - talk
 - event
 - treasure
+- encounter
 
 **城・街・ほこら**
 
@@ -428,6 +432,15 @@ Treasure { map_id: 5, x: 6, y: 1, kind: Chest, content: Key, name: Some("かぎ"
 ```
 
 取った宝箱は、原作と同じくフィールドに出ると元に戻ります。
+
+**敵の出現（Encounter）**
+
+敵の出現グループ（全20種、各5体から 1/5 ずつ選ばれる）を表示します。**グループ番号** を指定すると1つだけ表示します。フィールドは 15×15 マスの区画が 8×8 あり、区画ごとにグループが決まっています。ダンジョンはマップごとに1つのグループで、町・城・ほこらでは敵が出ません。
+
+```
+cargo run -- -m display --view encounter 0
+0: スライム スライムベス スライム スライムベス スライム
+```
 
 **モンスターのグラフィック（Sprite）**
 
@@ -619,6 +632,10 @@ cargo run -- --format <input>
 ### Example
 
 ## Additional Resources
+
+### Damdara を活用したサイト
+
+- [アレフガルド](https://retrodig.github.io/alefgard/) - Damdara（WebAssembly）を使って作られたサイト
 
 ## Contributing to Damdara
 

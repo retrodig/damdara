@@ -1,5 +1,6 @@
 pub mod battle;
 pub mod constants;
+pub mod encounter;
 pub mod event;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod explore;
@@ -24,6 +25,7 @@ pub use constants::config::Cli;
 use constants::battle_background::BATTLE_BACKGROUND;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::dialogue::DIALOGUE_MASTER;
+use constants::encounter::ENCOUNTER_GROUPS;
 use constants::event::{EVENT_SCRIPT_MASTER, find_event_script};
 use constants::field_sprite::{CHARACTER_SPRITE_MASTER, map_tile_sprite};
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
@@ -221,6 +223,19 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                     .filter(|t| is_list_mode || map_id.is_none_or(|id| t.map_id == id))
                 {
                     println!("{:?}", treasure);
+                }
+            }
+            Some("encounter") => {
+                // 番号はグループ番号。指定がなければ全グループ
+                for (group, monsters) in ENCOUNTER_GROUPS.iter().enumerate() {
+                    if !is_list_mode && index.is_some_and(|i| i != group) {
+                        continue;
+                    }
+                    let names: Vec<&str> = monsters
+                        .iter()
+                        .map(|&m| MONSTER_MASTER[m as usize].name)
+                        .collect();
+                    println!("{}: {}", group, names.join(" "));
                 }
             }
             None => println!("Category not specified"),
