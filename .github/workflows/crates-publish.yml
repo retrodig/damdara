@@ -1,0 +1,50 @@
+name: Publish to crates.io
+
+# Runs when create_tag.yml pushes a version tag (v1.2.3), or manually.
+# Requires the CARGO_REGISTRY_TOKEN secret (https://crates.io/settings/tokens, scope: publish-update).
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag name to publish (e.g., v1.0.0)"
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag_name || github.ref }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check if this version is already published
+        id: check
+        run: |
+          name=$(grep '^name' Cargo.toml | head -n 1 | sed -E 's/name = "(.*)"/\1/')
+          version=$(grep '^version' Cargo.toml | head -n 1 | sed -E 's/version = "(.*)"/\1/')
+          status=$(curl -s -o /dev/null -w '%{http_code}' -A "${name}-ci (github.com/${GITHUB_REPOSITORY})" \
+            "https://crates.io/api/v1/crates/${name}/${version}")
+          if [ "$status" = "200" ]; then
+            echo "${name} ${version} is already published. Skipping..."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Test
+        if: steps.check.outputs.skip == 'false'
+        run: cargo test --verbose
+
+      - name: Publish
+        if: steps.check.outputs.skip == 'false'
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

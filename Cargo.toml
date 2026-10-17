@@ -10,6 +10,19 @@ homepage = "https://github.com/retrodig/damdara"
 readme = "README.md"
 keywords = ["game", "dragon-quest", "wasm", "retro", "rpg"]
 categories = ["game-engines", "wasm"]
+# Files not needed by the crate (docs site, images, CI, npm files)
+exclude = [
+    ".cargo/",
+    ".github/",
+    ".npmignore",
+    "ai_docs/",
+    "assets/",
+    "docs/",
+    "build-wasm.sh",
+    "DEPLOYMENT.md",
+    "NPM_PUBLISH.md",
+    "README_NPM.md",
+]
 
 [lib]
 path = "src/lib.rs"
