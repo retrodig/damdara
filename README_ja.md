@@ -40,6 +40,7 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] モンスターの情報を参照する
 - [x] モンスターのグラフィックを見る
 - [x] マップ・キャラクターのグラフィックを見る
+- [x] 戦闘の背景を見る
 - [x] 成長パラメータ一覧参照
 - [x] 任意のパラメータを参照
 - [x] アイテム一覧を見る
@@ -334,6 +335,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - sprite
 - tile_sprite
 - character
+- battle_bg
 
 **城・街・ほこら**
 
@@ -431,6 +433,18 @@ cargo run -- -m display --view character 8
 8: ゆうしゃ (hero)
 （ここにグラフィックが描画されます）
 ```
+
+**戦闘の背景（Battle Background）**
+
+`battle_bg` はフィールドでの戦闘の背景（112 x 112）を描画します。**モンスターID**を指定すると、背景にモンスターを重ねて描画します。
+
+```
+cargo run -- -m display --view battle_bg
+cargo run -- -m display --view battle_bg 0
+（ここにグラフィックが描画されます）
+```
+
+バトルモードでも、モンスターがあらわれたときに戦闘画面を描画します。りゅうおうとの戦闘は城の中なので背景はありません。
 
 **■ Battle Mode**
 

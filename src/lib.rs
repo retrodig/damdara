@@ -20,6 +20,7 @@ pub mod wasm;
 
 use battle::Battle;
 pub use constants::config::Cli;
+use constants::battle_background::BATTLE_BACKGROUND;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::dialogue::DIALOGUE_MASTER;
 use constants::field_sprite::{CHARACTER_SPRITE_MASTER, map_tile_sprite};
@@ -29,19 +30,23 @@ use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
 use constants::town::TOWN_MASTER;
-use field::Field;
+use field::{FIELD_MAP_ID, Field};
 use input::cli_input::CliInput;
 use monster::Monster;
 use output::cli_output::CliOutput;
 use player::Player;
 use std::collections::HashSet;
+use utility::battle_background_utils::{battle_background_pixels, battle_scene};
 use utility::dialogue_utils::render_dialogue;
 use utility::enemy_sprite_utils::{
     EnemySpriteSummary, enemy_sprite_ansi, enemy_sprite_summaries, find_enemy_sprite,
 };
-use utility::field_sprite_utils::{field_pixels_ansi, find_character_sprite};
+use utility::field_sprite_utils::{color_pixels_ansi, field_pixels_ansi, find_character_sprite};
 use utility::map_utils::{find_tile, map_summaries};
 use utility::status_utils::{get_status_by_level, get_status_list};
+
+/// りゅうおうと戦う「りゅうおうのしろ さいかそう」
+const FINAL_BOSS_MAP_ID: u8 = 6;
 
 pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
     let views: HashSet<String> = args
@@ -165,18 +170,36 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             },
+            Some("battle_bg") => match index {
+                // 番号はモンスターID。フィールドの背景に重ねて表示する
+                Some(id) if !is_list_mode => {
+                    match u8::try_from(id).ok().and_then(|id| battle_scene(id, FIELD_MAP_ID)) {
+                        Some(scene) => print!("{}", color_pixels_ansi(&scene.pixels, scene.width as usize, 1)),
+                        None => println!("Monster not found: {}", id),
+                    }
+                }
+                _ => {
+                    let pixels = battle_background_pixels(FIELD_MAP_ID, None);
+                    print!("{}", color_pixels_ansi(&pixels, BATTLE_BACKGROUND.width as usize, 1));
+                }
+            },
             None => println!("Category not specified"),
             _ => {}
         },
         Mode::Battle => {
             let mut output = CliOutput;
             let mut input = CliInput;
-            let mut battle = Battle::new(
-                player,
-                Monster::new(index.unwrap_or(0)),
-                &mut input,
-                &mut output,
-            );
+            let monster = Monster::new(index.unwrap_or(0));
+            // りゅうおうとの戦闘は城の中なので背景なし
+            let map_id = if monster.is_final_boss() {
+                FINAL_BOSS_MAP_ID
+            } else {
+                FIELD_MAP_ID
+            };
+            if let Some(scene) = battle_scene(monster.id, map_id) {
+                print!("{}", color_pixels_ansi(&scene.pixels, scene.width as usize, 2));
+            }
+            let mut battle = Battle::new(player, monster, &mut input, &mut output);
             battle.start();
         }
         Mode::Explore => {

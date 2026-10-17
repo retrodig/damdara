@@ -219,6 +219,24 @@ for (const npc of map.npcs) {
 const heroId = game.hero_character_id(true, true, false);
 ```
 
+### Battle Background
+
+Battles on the field (map id 1) have a background (112 x 112). Other maps have no background and are filled with `get_battle_backdrop()`.
+
+```javascript
+// Background + monster, with the screen position (256 x 240)
+const scene = game.get_battle_scene(0, 1); // スライム on the field
+const image = new ImageData(new Uint8ClampedArray(scene.rgba), scene.width, scene.height);
+canvas.getContext('2d').putImageData(image, scene.x, scene.y);
+
+// Opening animation: the background appears block by block (16 x 16) from the center
+const bg = game.get_battle_background(1); // null on maps without a background
+for (let blocks = 0; blocks <= bg.reveal_order.length; blocks++) {
+  const rgba = game.get_battle_background_rgba(1, blocks); // 112 * 112 * 4
+  // ... draw at (bg.x, bg.y)
+}
+```
+
 ## API Reference
 
 ### `WasmGame`
@@ -272,6 +290,10 @@ Main game interface.
 - `get_character_sprite_rgba(id: number, frame: number): Uint8Array` - Get one character frame (0 or 1) as RGBA (16 x 16)
 - `npc_character_id(sprite: number, map_id: number, after_ending: boolean): number` - Get the character id of an NPC (`npc.sprite`) on the map
 - `hero_character_id(has_weapon: boolean, has_shield: boolean, with_princess: boolean): number` - Get the character id of the hero
+- `get_battle_background(map_id: number): BattleBackgroundData | null` - Get the battle background (tiles, palettes, reveal order, color numbers). `null` if the map has none
+- `get_battle_background_rgba(map_id: number, reveal_blocks?: number): Uint8Array` - Get the battle background as RGBA (112 x 112). `reveal_blocks` draws only that many blocks in reveal order
+- `get_battle_backdrop(): number` - Get the color number for battles without a background
+- `get_battle_scene(monster_id: number, map_id: number): BattleSceneData` - Get the background + monster as RGBA with `x`, `y`, `width`, `height`
 
 #### Messages
 - `get_messages(): string[]` - Get accumulated messages

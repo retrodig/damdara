@@ -45,6 +45,7 @@ WebAssembly!
 - [x] Refer to any monster information
 - [x] See monster graphics
 - [x] See map and character graphics
+- [x] See the battle background
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item
@@ -340,6 +341,7 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - sprite
 - tile_sprite
 - character
+- battle_bg
 
 **Town / Castle / Shrine**
 
@@ -437,6 +439,18 @@ cargo run -- -m display --view character 8
 8: ゆうしゃ (hero)
 (the graphic is drawn here)
 ```
+
+**Battle Background**
+
+`battle_bg` draws the battle background of the field (112 x 112). Specify a **monster id** to draw the monster over it.
+
+```
+cargo run -- -m display --view battle_bg
+cargo run -- -m display --view battle_bg 0
+(the graphic is drawn here)
+```
+
+The battle mode also draws the battle scene when the monster appears. The battle with りゅうおう takes place in the castle, so it has no background.
 
 **■ Battle Mode**
 
