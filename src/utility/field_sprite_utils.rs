@@ -1,7 +1,9 @@
 use crate::constants::field_sprite::{
-    CHARACTER_SPRITE_MASTER, CharacterSprite, PaletteSet, map_tile_pixels, pixel_rgb,
+    CHARACTER_SPRITE_MASTER, CharacterSprite, PaletteSet, TRANSPARENT, map_tile_pixels,
+    npc_character_id, pixel_rgb,
 };
 use crate::constants::map::find_map;
+use crate::field::Field;
 
 /// マップチップ・キャラクターの1辺の画素数
 pub const FIELD_SPRITE_SIZE: usize = 16;
@@ -78,6 +80,98 @@ pub fn field_pixels_ansi(images: &[&[u8; 256]]) -> String {
             out.push(' ');
         }
         out.push('\n');
+    }
+    out
+}
+
+/// 現在地を中心に cols x rows タイルを色番号の画素で描く (NPC と勇者を重ねる)。幅は cols * 16
+pub fn field_view_pixels(field: &Field, cols: u8, rows: u8, hero_id: u8, frame: usize) -> Vec<u8> {
+    let (cols, rows) = (cols as i32, rows as i32);
+    let width = cols as usize * FIELD_SPRITE_SIZE;
+    let mut out = vec![TRANSPARENT; width * rows as usize * FIELD_SPRITE_SIZE];
+    let (left, top) = (field.x as i32 - cols / 2, field.y as i32 - rows / 2);
+
+    let mut draw = |pixels: &[u8; 256], tx: i32, ty: i32| {
+        for (i, &color) in pixels.iter().enumerate() {
+            if color == TRANSPARENT {
+                continue;
+            }
+            let px = tx as usize * FIELD_SPRITE_SIZE + i % FIELD_SPRITE_SIZE;
+            let py = ty as usize * FIELD_SPRITE_SIZE + i / FIELD_SPRITE_SIZE;
+            out[py * width + px] = color;
+        }
+    };
+
+    for ty in 0..rows {
+        for tx in 0..cols {
+            let tile = field.tile(left + tx, top + ty);
+            if let Some(pixels) = map_tile_pixels(tile, field.map_id) {
+                draw(pixels, tx, ty);
+            }
+        }
+    }
+
+    let mut characters: Vec<(u8, i32, i32)> = field
+        .map()
+        .npcs
+        .iter()
+        .map(|npc| {
+            let id = npc_character_id(npc.sprite, field.map_id, false);
+            (id, npc.x as i32, npc.y as i32)
+        })
+        .collect();
+    characters.push((hero_id, field.x as i32, field.y as i32));
+
+    for (id, x, y) in characters {
+        let (tx, ty) = (x - left, y - top);
+        if !(0..cols).contains(&tx) || !(0..rows).contains(&ty) {
+            continue;
+        }
+        if let Some(sprite) = find_character_sprite(id) {
+            draw(sprite.frames[frame % 2].pixels, tx, ty);
+        }
+    }
+    out
+}
+
+/// 色番号の画素をターミナル表示用 (24bit カラーの ANSI エスケープ) にする。
+/// scale 画素ごとに間引き、上下2画素を「▀」1文字で表す
+pub fn color_pixels_ansi(pixels: &[u8], width: usize, scale: usize) -> String {
+    let height = pixels.len() / width;
+    let pixel = |x: usize, y: usize| {
+        (y < height)
+            .then(|| pixels[y * width + x])
+            .and_then(pixel_rgb)
+    };
+
+    // 色は変わったときだけ出力して、1画面の文字数を抑える
+    let (mut fg, mut bg) = (None, None);
+    let mut out = String::new();
+    for y in (0..height).step_by(scale * 2) {
+        for x in (0..width).step_by(scale) {
+            let (top, bottom) = (pixel(x, y), pixel(x, y + scale));
+            let (next_fg, next_bg, ch) = match (top, bottom) {
+                (Some(_), _) => (top, bottom, '▀'),
+                (None, Some(_)) => (bottom, None, '▄'),
+                (None, None) => (fg, None, ' '),
+            };
+            if next_fg != fg {
+                if let Some((r, g, b)) = next_fg {
+                    out.push_str(&format!("\x1b[38;2;{r};{g};{b}m"));
+                }
+                fg = next_fg;
+            }
+            if next_bg != bg {
+                match next_bg {
+                    Some((r, g, b)) => out.push_str(&format!("\x1b[48;2;{r};{g};{b}m")),
+                    None => out.push_str("\x1b[49m"),
+                }
+                bg = next_bg;
+            }
+            out.push(ch);
+        }
+        out.push_str("\x1b[0m\n");
+        (fg, bg) = (None, None);
     }
     out
 }
@@ -187,6 +281,23 @@ mod tests {
         let expected = field_pixels_rgba(map_tile_pixels(border, 1).unwrap());
         assert_eq!(&rgba[0..64], &expected[0..64]);
         assert!(render_map_rgba(0, 0, 0, 1, 1).is_none());
+    }
+
+    #[test]
+    fn test_field_view_pixels() {
+        let field = Field::default();
+        let pixels = field_view_pixels(&field, 5, 3, 8, 0);
+        assert_eq!(pixels.len(), 5 * 3 * 256);
+        // 中央に勇者が描かれる
+        let hero = find_character_sprite(8).unwrap().frames[0].pixels;
+        let (cx, cy) = (2 * 16, 16);
+        for (i, &color) in hero.iter().enumerate() {
+            if color != TRANSPARENT {
+                assert_eq!(pixels[(cy + i / 16) * 80 + cx + i % 16], color);
+            }
+        }
+        let ansi = color_pixels_ansi(&pixels, 80, 2);
+        assert_eq!(ansi.lines().count(), 3 * 16 / 4);
     }
 
     #[test]

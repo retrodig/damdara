@@ -1,5 +1,8 @@
 pub mod battle;
 pub mod constants;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod explore;
+pub mod field;
 pub mod growth_type;
 pub mod input;
 pub mod load;
@@ -26,6 +29,7 @@ use constants::monster::MONSTER_MASTER;
 use constants::spell::SPELL_INFO_LIST;
 use constants::status::STATUS_TABLE;
 use constants::town::TOWN_MASTER;
+use field::Field;
 use input::cli_input::CliInput;
 use monster::Monster;
 use output::cli_output::CliOutput;
@@ -174,6 +178,24 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 &mut output,
             );
             battle.start();
+        }
+        Mode::Explore => {
+            // --view <マップID> <x> <y> で開始位置を指定できる
+            let numbers: Vec<u8> = args
+                .view
+                .clone()
+                .unwrap_or_default()
+                .iter()
+                .filter_map(|s| s.parse().ok())
+                .collect();
+            let field = match numbers[..] {
+                [map_id, x, y, ..] if find_map(map_id).is_some() => Field::new(map_id, x, y),
+                _ => Field::default(),
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            explore::run_explore(&mut player, field)?;
+            #[cfg(target_arch = "wasm32")]
+            let _ = field;
         }
     }
     Ok(())

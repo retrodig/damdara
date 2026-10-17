@@ -60,8 +60,8 @@ WebAssembly!
 - [x] Refer to any Town information
 - [x] Refer to any World information
 - [x] See list of Message
-- [ ] Explore the field
-- [ ] Explore the Town
+- [x] Explore the field
+- [x] Explore the Town
 
 This diagram shows the 120-bit structure of the “Fufutsu no Jumon”.
 
@@ -248,6 +248,7 @@ cargo run -- -m <input>
  load      | Restore name/parameters from the "Fukkatsu no Jumon"                          |
  display   | Supports list and individual display of master data                           |
  battle    | Can battle any monster.                                                       |
+ explore   | Walk around the field, towns and castles with the arrow keys                  |
 
 **■ Start Mode**
 
@@ -506,6 +507,31 @@ Beware of strong flames.
 
 た゛い　 HP: 146
 りゅうおう HP: 129
+```
+
+**■ Explore Mode**
+
+Walk around the field, towns and castles. The map around the hero is drawn in the terminal (requires a terminal that supports 24-bit color).
+
+```
+cargo run -- -m explore
+```
+
+ Key                      | Action          
+--------------------------|-----------------|
+ ← ↑ ↓ → / W A S D / H J K L | Move            |
+ q / Esc                  | Quit            |
+
+- You start at the entrance of Tantegel Castle (ラダトームのしろ). Walk off the edge of a town or castle to return to the field.
+- Step on a town, castle or cave on the field to enter it. Step on stairs to go up or down.
+- Sea, mountains, walls, counters and people cannot be passed.
+- A door opens with a key (`--keys`). Opened doors close again when you leave the map.
+
+You can also specify the start position with `--view <map id> <x> <y>` (map ids: `--view map`).
+
+```
+cargo run -- -m explore --keys 3
+cargo run -- -m explore --view 1 43 44
 ```
 
 ### Status Option
