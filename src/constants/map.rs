@@ -1,6 +1,3 @@
-// このファイルは rom解析/tools/gen_rust.py で自動生成したもの。直接編集しないこと。
-// データ出典: ファミコン版『ドラゴンクエスト』ROM。マップ名・タイル名は ROM に格納されていないため慣用名。
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tile {
     pub id: u8,
