@@ -2,6 +2,7 @@ pub mod battle;
 pub mod config;
 pub mod dialogue;
 pub mod enemy_sprite;
+pub mod field_sprite;
 pub mod item_weapon;
 pub mod map;
 pub mod monster;

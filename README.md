@@ -44,6 +44,7 @@ WebAssembly!
 - [x] See list of monsters
 - [x] Refer to any monster information
 - [x] See monster graphics
+- [x] See map and character graphics
 - [x] See parameter list
 - [x] Refer to any parameter
 - [x] See list of Item
@@ -336,6 +337,8 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - map (`--view map` lists metadata only, `--view map 1` shows one map by map id)
 - tile
 - sprite
+- tile_sprite
+- character
 
 **Town / Castle / Shrine**
 
@@ -404,6 +407,33 @@ cargo run -- -m display --view sprite
 ```
 cargo run -- -m display --view sprite 0
 EnemySpriteSummary { id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }
+(the graphic is drawn here)
+```
+
+**Map Tile Sprite / Character Sprite**
+
+`tile_sprite` draws a map tile (16x16) by **tile id**, side by side in the field, town and dungeon colors. Without a number, the tile list is shown.
+
+```
+cargo run -- -m display --view tile_sprite 3
+Some(Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" })
+(the graphic is drawn here)
+```
+
+`character` draws the two walking frames of a character (16x16) such as the hero, the king or townspeople. Without a number, the character list is shown.
+
+```
+cargo run -- -m display --view character
+0: まち の ひと（おとこ） (townsman)
+1: せんし (warrior)
+...
+8: ゆうしゃ (hero)
+...
+```
+
+```
+cargo run -- -m display --view character 8
+8: ゆうしゃ (hero)
 (the graphic is drawn here)
 ```
 

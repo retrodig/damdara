@@ -17,6 +17,13 @@ use crate::constants::dialogue::DIALOGUE_MASTER;
 use crate::constants::map::{GameMap, MAP_MASTER, TILE_MASTER, WARP_MASTER, find_map};
 use crate::utility::dialogue_utils::render_dialogue;
 use crate::constants::enemy_sprite::{Layer, NES_PALETTE};
+use crate::constants::field_sprite::{
+    CHARACTER_SPRITE_MASTER, MAP_TILE_SPRITE_MASTER, PaletteSet, hero_character_id,
+    map_tile_pixels, npc_character_id,
+};
+use crate::utility::field_sprite_utils::{
+    field_pixels_rgba, find_character_sprite, palette_set_name, render_map_rgba,
+};
 use crate::utility::enemy_sprite_utils::{
     EnemySpriteSummary, enemy_sprite_rgba, enemy_sprite_summaries, find_enemy_sprite, monster_name,
 };
@@ -190,6 +197,43 @@ pub struct EnemySpriteData {
     pub width: u8,
     pub height: u8,
     pub pixels: Vec<u8>,
+}
+
+/// Map tile sprite (16x16) for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct MapTileSpriteData {
+    pub id: u8,
+    pub tiles: [u8; 4],
+    pub palette: u8,
+    /// Palette set name -> pixels ("field" | "town" | "dungeon")
+    pub pixels: Vec<(String, Vec<u8>)>,
+}
+
+/// Character sprite part (8x8 tile) for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct CharacterPartData {
+    pub tile: u8,
+    pub x: u8,
+    pub y: u8,
+    pub palette: u8,
+    pub flip_h: bool,
+    pub flip_v: bool,
+}
+
+/// Character sprite frame (16x16) for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct CharacterFrameData {
+    pub parts: Vec<CharacterPartData>,
+    pub pixels: Vec<u8>,
+}
+
+/// Character sprite for JavaScript
+#[derive(Serialize, Deserialize)]
+pub struct CharacterSpriteData {
+    pub id: u8,
+    pub name: String,
+    pub name_en: String,
+    pub frames: Vec<CharacterFrameData>,
 }
 
 /// Town data for JavaScript
@@ -790,6 +834,107 @@ impl WasmGame {
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
     }
 
+    /// Get all map tile sprites (16x16, pixels for each palette set)
+    pub fn get_map_tile_sprites(&self) -> Result<JsValue, JsValue> {
+        let sets = [PaletteSet::Field, PaletteSet::Town, PaletteSet::Dungeon];
+        let tiles: Vec<MapTileSpriteData> = MAP_TILE_SPRITE_MASTER
+            .iter()
+            .map(|tile| MapTileSpriteData {
+                id: tile.id,
+                tiles: tile.tiles,
+                palette: tile.palette,
+                pixels: sets
+                    .iter()
+                    .map(|&set| {
+                        (
+                            palette_set_name(set).to_string(),
+                            tile.pixels[set.index()].to_vec(),
+                        )
+                    })
+                    .collect(),
+            })
+            .collect();
+
+        serde_wasm_bindgen::to_value(&tiles)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get a map tile as RGBA bytes (16 * 16 * 4). The colors depend on the map id
+    pub fn get_map_tile_rgba(&self, tile_id: u8, map_id: u8) -> Result<Vec<u8>, JsValue> {
+        map_tile_pixels(tile_id, map_id)
+            .map(|pixels| field_pixels_rgba(pixels))
+            .ok_or_else(|| JsValue::from_str(&format!("Tile sprite not found: {}", tile_id)))
+    }
+
+    /// Render a map area (in tiles) as RGBA bytes (width * 16 * height * 16 * 4).
+    /// Out of range tiles are drawn with the border tile
+    pub fn render_map_rgba(
+        &self,
+        map_id: u8,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+    ) -> Result<Vec<u8>, JsValue> {
+        if width == 0 || height == 0 {
+            return Err(JsValue::from_str("Invalid size"));
+        }
+        render_map_rgba(map_id, x, y, width, height)
+            .ok_or_else(|| JsValue::from_str(&format!("Map not found: {}", map_id)))
+    }
+
+    /// Get all character sprites (16x16, 2 walking frames)
+    pub fn get_character_sprites(&self) -> Result<JsValue, JsValue> {
+        let sprites: Vec<CharacterSpriteData> = CHARACTER_SPRITE_MASTER
+            .iter()
+            .map(|sprite| CharacterSpriteData {
+                id: sprite.id,
+                name: sprite.name.to_string(),
+                name_en: sprite.name_en.to_string(),
+                frames: sprite
+                    .frames
+                    .iter()
+                    .map(|frame| CharacterFrameData {
+                        parts: frame
+                            .parts
+                            .iter()
+                            .map(|part| CharacterPartData {
+                                tile: part.tile,
+                                x: part.x,
+                                y: part.y,
+                                palette: part.palette,
+                                flip_h: part.flip_h,
+                                flip_v: part.flip_v,
+                            })
+                            .collect(),
+                        pixels: frame.pixels.to_vec(),
+                    })
+                    .collect(),
+            })
+            .collect();
+
+        serde_wasm_bindgen::to_value(&sprites)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    /// Get a character frame (0 or 1) as RGBA bytes (16 * 16 * 4)
+    pub fn get_character_sprite_rgba(&self, id: u8, frame: usize) -> Result<Vec<u8>, JsValue> {
+        find_character_sprite(id)
+            .and_then(|sprite| sprite.frames.get(frame))
+            .map(|frame| field_pixels_rgba(frame.pixels))
+            .ok_or_else(|| JsValue::from_str(&format!("Character not found: {} ({})", id, frame)))
+    }
+
+    /// Get the character sprite id of an NPC (`NpcData.sprite`) on the map
+    pub fn npc_character_id(&self, sprite: u8, map_id: u8, after_ending: bool) -> u8 {
+        npc_character_id(sprite, map_id, after_ending)
+    }
+
+    /// Get the character sprite id of the hero
+    pub fn hero_character_id(&self, has_weapon: bool, has_shield: bool, with_princess: bool) -> u8 {
+        hero_character_id(has_weapon, has_shield, with_princess)
+    }
+
     /// Get all warp (stairs / entrance) data
     pub fn get_warps(&self) -> Result<JsValue, JsValue> {
         let warps: Vec<WarpData> = WARP_MASTER
@@ -1044,5 +1189,21 @@ mod tests {
         let sprite = find_enemy_sprite(0).unwrap();
         let rgba = game.get_enemy_sprite_rgba(0).unwrap();
         assert_eq!(rgba.len(), sprite.width as usize * sprite.height as usize * 4);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_field_sprites() {
+        let game = WasmGame::new();
+        assert!(game.get_map_tile_sprites().is_ok());
+        assert_eq!(game.get_map_tile_rgba(0, 1).unwrap().len(), 16 * 16 * 4);
+        assert!(game.get_map_tile_rgba(24, 1).is_err());
+        assert_eq!(game.render_map_rgba(1, 0, 0, 2, 3).unwrap().len(), 2 * 3 * 16 * 16 * 4);
+        assert!(game.render_map_rgba(0, 0, 0, 1, 1).is_err());
+
+        assert!(game.get_character_sprites().is_ok());
+        assert_eq!(game.get_character_sprite_rgba(8, 1).unwrap().len(), 16 * 16 * 4);
+        assert!(game.get_character_sprite_rgba(8, 2).is_err());
+        assert!(game.get_character_sprite_rgba(16, 0).is_err());
+        assert_eq!(game.hero_character_id(false, false, false), 8);
     }
 }

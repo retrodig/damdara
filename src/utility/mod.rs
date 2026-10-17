@@ -1,6 +1,7 @@
 pub mod binary_utils;
 pub mod dialogue_utils;
 pub mod enemy_sprite_utils;
+pub mod field_sprite_utils;
 pub mod map_utils;
 pub mod monster_utils;
 pub mod random_utils;

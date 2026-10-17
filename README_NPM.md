@@ -189,6 +189,36 @@ const nesPalette = game.get_nes_palette(); // color number -> [r, g, b]
 
 The x / y values are the display position on the original game screen (256 x 240).
 
+### Map / Character Sprite
+
+Map tiles and characters are 16 x 16 pixels.
+
+```javascript
+// Draw a map area (in tiles) on a canvas. Out of range tiles are drawn with the border tile
+const [x, y, w, h] = [0, 0, 20, 15];
+const rgba = game.render_map_rgba(4, x, y, w, h); // 4: ラダトームのしろ
+const image = new ImageData(new Uint8ClampedArray(rgba), w * 16, h * 16);
+canvas.getContext('2d').putImageData(image, 0, 0);
+
+// One map tile. The colors depend on the map (field / town / dungeon)
+const tile = game.get_map_tile_rgba(3, 4); // tile id 3 on map 4
+
+// Characters (2 walking frames each)
+const characters = game.get_character_sprites();
+// [{ id: 0, name: "まち の ひと（おとこ）", name_en: "townsman", frames: [{ parts: [...], pixels: [...] }, ...] }, ...]
+
+// Draw the NPCs of a map
+const map = game.get_map(4);
+for (const npc of map.npcs) {
+  const id = game.npc_character_id(npc.sprite, map.id, false);
+  const frame = game.get_character_sprite_rgba(id, 0); // frame 0 or 1, transparent pixels have alpha 0
+  // ... draw at (npc.x * 16, npc.y * 16)
+}
+
+// The hero (with weapon / shield / princess)
+const heroId = game.hero_character_id(true, true, false);
+```
+
 ## API Reference
 
 ### `WasmGame`
@@ -235,6 +265,13 @@ Main game interface.
 - `get_enemy_sprite(id: number): EnemySpriteData` - Get one monster graphic (color numbers, palettes, tile parts)
 - `get_enemy_sprite_rgba(id: number): Uint8Array` - Get one monster graphic as RGBA for `ImageData`
 - `get_nes_palette(): number[][]` - Get the color table (color number -> `[r, g, b]`)
+- `get_map_tile_sprites(): MapTileSpriteData[]` - Get all map tile graphics (color numbers for field / town / dungeon)
+- `get_map_tile_rgba(tile_id: number, map_id: number): Uint8Array` - Get one map tile as RGBA (16 x 16)
+- `render_map_rgba(map_id: number, x: number, y: number, width: number, height: number): Uint8Array` - Render a map area (in tiles) as RGBA (`width * 16` x `height * 16`)
+- `get_character_sprites(): CharacterSpriteData[]` - Get all character graphics (2 walking frames each)
+- `get_character_sprite_rgba(id: number, frame: number): Uint8Array` - Get one character frame (0 or 1) as RGBA (16 x 16)
+- `npc_character_id(sprite: number, map_id: number, after_ending: boolean): number` - Get the character id of an NPC (`npc.sprite`) on the map
+- `hero_character_id(has_weapon: boolean, has_shield: boolean, with_princess: boolean): number` - Get the character id of the hero
 
 #### Messages
 - `get_messages(): string[]` - Get accumulated messages

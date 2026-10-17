@@ -39,6 +39,7 @@ Damdara（ドムドーラ） は、ファミコン版『ドラゴンクエスト
 - [x] モンスター一覧を見る
 - [x] モンスターの情報を参照する
 - [x] モンスターのグラフィックを見る
+- [x] マップ・キャラクターのグラフィックを見る
 - [x] 成長パラメータ一覧参照
 - [x] 任意のパラメータを参照
 - [x] アイテム一覧を見る
@@ -330,6 +331,8 @@ item: Equipment { name: "ようせいのふえ", price: 0, sell: 0, attack: 0, d
 - map（`--view map` はメタ情報の一覧、`--view map 1` でマップIDを指定して1マップ表示）
 - tile
 - sprite
+- tile_sprite
+- character
 
 **城・街・ほこら**
 
@@ -398,6 +401,33 @@ cargo run -- -m display --view sprite
 ```
 cargo run -- -m display --view sprite 0
 EnemySpriteSummary { id: 0, name: "スライム", mirror: false, x: 128, y: 112, width: 20, height: 19, part_count: 7 }
+（ここにグラフィックが描画されます）
+```
+
+**マップチップ・キャラクターのグラフィック（Tile Sprite / Character）**
+
+`tile_sprite` は**タイルID**を指定すると、マップチップ（16x16）をフィールド・街・ダンジョンの色で並べて描画します。番号を指定しない場合はタイル一覧を表示します。
+
+```
+cargo run -- -m display --view tile_sprite 3
+Some(Tile { id: 3, name: "かいだん（のぼり）", name_en: "stairs_up" })
+（ここにグラフィックが描画されます）
+```
+
+`character` は勇者・王様・街の人などのキャラクター（16x16）を、歩行アニメーションの2コマ並べて描画します。番号を指定しない場合はキャラクター一覧を表示します。
+
+```
+cargo run -- -m display --view character
+0: まち の ひと（おとこ） (townsman)
+1: せんし (warrior)
+...
+8: ゆうしゃ (hero)
+...
+```
+
+```
+cargo run -- -m display --view character 8
+8: ゆうしゃ (hero)
 （ここにグラフィックが描画されます）
 ```
 

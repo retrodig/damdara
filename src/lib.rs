@@ -19,6 +19,7 @@ use battle::Battle;
 pub use constants::config::Cli;
 use constants::config::{DISPLAY_CATEGORY_LIST, Mode};
 use constants::dialogue::DIALOGUE_MASTER;
+use constants::field_sprite::{CHARACTER_SPRITE_MASTER, map_tile_sprite};
 use constants::item_weapon::{ARMOR_MASTER, ITEM_MASTER, SHIELD_MASTER, WEAPON_MASTER};
 use constants::map::{TILE_MASTER, find_map};
 use constants::monster::MONSTER_MASTER;
@@ -34,7 +35,8 @@ use utility::dialogue_utils::render_dialogue;
 use utility::enemy_sprite_utils::{
     EnemySpriteSummary, enemy_sprite_ansi, enemy_sprite_summaries, find_enemy_sprite,
 };
-use utility::map_utils::map_summaries;
+use utility::field_sprite_utils::{field_pixels_ansi, find_character_sprite};
+use utility::map_utils::{find_tile, map_summaries};
 use utility::status_utils::{get_status_by_level, get_status_list};
 
 pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
@@ -127,6 +129,37 @@ pub fn run_from_args(args: Cli) -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
                 _ => println!("{:?}", enemy_sprite_summaries()),
+            },
+            Some("tile_sprite") => match index {
+                // 番号はタイルID。フィールド・街・ダンジョンの色を並べて表示する
+                Some(id) if !is_list_mode => {
+                    match u8::try_from(id).ok().and_then(map_tile_sprite) {
+                        Some(tile) => {
+                            println!("{:?}", find_tile(tile.id));
+                            print!("{}", field_pixels_ansi(&tile.pixels));
+                        }
+                        None => println!("Tile sprite not found: {}", id),
+                    }
+                }
+                _ => println!("{:?}", TILE_MASTER),
+            },
+            Some("character") => match index {
+                // 歩行アニメーションの2コマを並べて表示する
+                Some(id) if !is_list_mode => {
+                    match u8::try_from(id).ok().and_then(find_character_sprite) {
+                        Some(sprite) => {
+                            println!("{}: {} ({})", sprite.id, sprite.name, sprite.name_en);
+                            let frames = sprite.frames.each_ref().map(|f| f.pixels);
+                            print!("{}", field_pixels_ansi(&frames));
+                        }
+                        None => println!("Character not found: {}", id),
+                    }
+                }
+                _ => {
+                    for sprite in CHARACTER_SPRITE_MASTER.iter() {
+                        println!("{}: {} ({})", sprite.id, sprite.name, sprite.name_en);
+                    }
+                }
             },
             None => println!("Category not specified"),
             _ => {}
